@@ -28,10 +28,10 @@ export default function NewListingPage() {
           .eq('id', user.id)
           .single()
 
-        if (!profile?.is_seller) {
-          alert('Only verified UG students can post listings. Please sign up with your @ug.edu.gh email.')
-          router.push('/')
-        }
+       if (!profile?.is_seller) {
+  alert('You need to become a seller first. Add your WhatsApp number to start selling!')
+  router.push('/become-seller')
+}
       } catch (err) {
         console.error('Seller check failed:', err)
         router.push('/login')
@@ -92,8 +92,9 @@ export default function NewListingPage() {
         .single()
 
       if (!profile?.is_seller) {
-        alert('Only verified UG students can post listings. Please sign up with your @ug.edu.gh email.')
+        alert('You need to become a seller first. Add your WhatsApp number to start selling!')
         setLoading(false)
+        router.push('/become-seller')
         return
       }
 

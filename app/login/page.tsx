@@ -43,21 +43,19 @@ export default function LoginPage() {
         if (error) {
           alert(error.message)
         } else {
-          // Grant selling rights to University of Ghana emails (ug.edu.gh and
-          // subdomains like st.ug.edu.gh). This is the only place in the app
-          // that marks a profile as a seller.
           const domain = trimmedEmail.toLowerCase().split('@').pop() || ''
           const isUgEmail = domain === 'ug.edu.gh' || domain.endsWith('.ug.edu.gh')
 
-          // Best-effort: grant selling rights to UG emails. Only write for UG
-          // accounts (never clobber an existing seller row with `false`), and
-          // check the returned error — Supabase resolves { error } instead of
-          // throwing. RLS may still block this write at signup time; a DB
-          // trigger on auth.users is the more reliable place for it.
-          if (data.user && isUgEmail) {
+          // Create a profile row for EVERY signup so the become-seller flow can
+          // later update it. (Only UG accounts are auto-granted selling rights;
+          // anyone else uses the WhatsApp-number flow on /become-seller.)
+          // Best-effort: check the returned error — Supabase resolves { error }
+          // instead of throwing. RLS may still block this write at signup time;
+          // a DB trigger on auth.users is the more reliable place for it.
+          if (data.user) {
             const { error: upsertError } = await supabase
               .from('profiles')
-              .upsert({ id: data.user.id, is_seller: true }, { onConflict: 'id' })
+              .upsert({ id: data.user.id, is_seller: isUgEmail }, { onConflict: 'id' })
             if (upsertError) {
               console.error('Could not set seller status:', upsertError)
             }
@@ -105,10 +103,10 @@ export default function LoginPage() {
 </p>
 
 {isSignUp && (
-  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
-    <p className="text-xs text-blue-800">
-      🎓 <strong>Sign up with your UG email</strong> (@ug.edu.gh) to sell items.
-      Any email works for buying.
+  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
+    <p className="text-xs text-green-800">
+      💡 <strong>New here?</strong> Sign up with any email to browse.
+      Want to sell? Add your WhatsApp number after signing up.
     </p>
   </div>
 )}

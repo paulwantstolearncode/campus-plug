@@ -92,12 +92,19 @@ export default function Home() {
       {user.email}
       {isSeller && <span className="ml-2 text-green-600">✓ Seller</span>}
     </span>
-    {isSeller && (
+    {isSeller ? (
       <Link
         href="/new"
         className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors"
       >
         + Post Item
+      </Link>
+    ) : (
+      <Link
+        href="/become-seller"
+        className="bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors"
+      >
+        💚 Sell
       </Link>
     )}
     <button
@@ -125,18 +132,21 @@ export default function Home() {
   <div className="border-2 border-dashed rounded-xl p-16 text-center">
     <p className="text-4xl mb-4">🛒</p>
     <p className="text-gray-500 text-lg">No listings yet</p>
-    {isSeller ? (
-      <Link
-        href="/new"
-        className="mt-4 inline-block bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
-      >
-        Post Your First Item
-      </Link>
-    ) : user ? (
-      <p className="text-gray-400 mt-2 text-sm">
-        🎓 Sign up with your UG email to start selling
-      </p>
-    ) : (
+   {isSeller ? (
+  <Link
+    href="/new"
+    className="mt-4 inline-block bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+  >
+    Post Your First Item
+  </Link>
+) : user ? (
+  <Link
+    href="/become-seller"
+    className="mt-4 inline-block bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition-colors"
+  >
+    💚 Become a Seller
+  </Link>
+) : (
       <p className="text-gray-400 mt-2 text-sm">
         Login to start buying or selling
       </p>
