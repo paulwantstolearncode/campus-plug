@@ -43,29 +43,32 @@ export default function LoginPage() {
         if (error) {
           alert(error.message)
         } else {
-          const domain = trimmedEmail.toLowerCase().split('@').pop() || ''
-          const isUgEmail = domain === 'ug.edu.gh' || domain.endsWith('.ug.edu.gh')
-
           // Create a profile row for EVERY signup so the become-seller flow can
-          // later update it. (Only UG accounts are auto-granted selling rights;
-          // anyone else uses the WhatsApp-number flow on /become-seller.)
+          // later update it. No one — not even @ug.edu.gh or @st.ug.edu.gh
+          // emails — is auto-granted selling rights; every seller must go
+          // through /become-seller and add a WhatsApp number first.
           // Best-effort: check the returned error — Supabase resolves { error }
           // instead of throwing. RLS may still block this write at signup time;
           // a DB trigger on auth.users is the more reliable place for it.
           if (data.user) {
+            // Insert-only: never overwrite an existing profile (e.g. a seller
+            // who already verified via /become-seller). Matches the DB trigger's
+            // `on conflict (id) do nothing` semantics.
             const { error: upsertError } = await supabase
               .from('profiles')
-              .upsert({ id: data.user.id, is_seller: isUgEmail }, { onConflict: 'id' })
+              .upsert(
+                { id: data.user.id, is_seller: false },
+                { onConflict: 'id', ignoreDuplicates: true }
+              )
             if (upsertError) {
-              console.error('Could not set seller status:', upsertError)
+              console.error('Could not create profile:', upsertError)
             }
           }
 
           alert(
             '📧 Check your email!\n\n' +
             'We sent a confirmation link to ' + trimmedEmail + '\n\n' +
-            'Click the link to activate your account, then come back and log in.' +
-            (isUgEmail ? ' You will be able to sell items.' : '')
+            'Click the link to activate your account, then come back and log in.'
           )
           setIsSignUp(false) // Switch to login mode
         }
