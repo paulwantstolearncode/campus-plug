@@ -19,30 +19,47 @@ export default function NewListingPage() {
 
   useEffect(() => {
     async function checkSellerStatus() {
-      const { data: { user } } = await supabase.auth.getUser()
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
 
-      if (!user) {
+        if (!user) {
+          router.push('/login')
+          return
+        }
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_seller')
+          .eq('id', user.id)
+          .single()
+
+        if (!profile?.is_seller) {
+          alert('You need to become a seller first. Add your WhatsApp number to start selling!')
+          router.push('/become-seller')
+          return
+        }
+      } catch (err) {
+        // A failed auth/network lookup must not strand the page on the
+        // 'Loading...' screen forever.
+        console.error('Could not check seller status:', err)
         router.push('/login')
         return
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_seller')
-        .eq('id', user.id)
-        .single()
-
-      if (!profile?.is_seller) {
-        alert('You need to become a seller first. Add your WhatsApp number to start selling!')
-        router.push('/become-seller')
-        return
-      }
-
+      // Only reached when the visitor is a verified seller staying here.
       setChecking(false)
     }
 
     checkSellerStatus()
   }, [router])
+
+  // Revoke the preview object URL when it's replaced, removed, or the
+  // component unmounts — otherwise every photo pick leaks a blob URL.
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview)
+    }
+  }, [imagePreview])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]

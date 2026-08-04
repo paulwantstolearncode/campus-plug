@@ -46,7 +46,7 @@ export default function Home() {
             .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
             .order('created_at', { ascending: false })
 
-          if (data) setListings(data as any)
+          if (data) setListings(data as Listing[])
         }
       } catch (err) {
         console.error('Failed to load:', err)

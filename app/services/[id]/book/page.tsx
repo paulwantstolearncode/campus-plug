@@ -49,14 +49,7 @@ export default function BookServicePage() {
 
         const { data } = await supabase
           .from('listings')
-          .select(`
-            *,
-            seller:profiles!seller_id (
-              id,
-              full_name,
-              whatsapp_number
-            )
-          `)
+          .select('*, seller:profiles!seller_id (id, full_name, whatsapp_number)')
           .eq('id', serviceId)
           .eq('listing_type', 'service')
           .single()
@@ -69,6 +62,8 @@ export default function BookServicePage() {
 
         setService(data as ServiceData)
       } catch (err) {
+        // A failed auth/network lookup must not strand the page on the
+        // loading screen forever.
         console.error('Failed to load service:', err)
         alert('Could not load the service. Please try again.')
         router.push('/services')
@@ -103,7 +98,9 @@ export default function BookServicePage() {
         return
       }
 
-      // Guard: seller must exist and have a WhatsApp number before we create the booking
+      // Guard: seller must exist and have a WhatsApp number before we create
+      // the booking — otherwise we'd save an orphaned booking, then send the
+      // buyer to wa.me/null.
       if (!service.seller?.id) {
         alert('The seller information is missing. Please try again later.')
         setLoading(false)
@@ -116,7 +113,6 @@ export default function BookServicePage() {
         return
       }
 
-      // Save booking to database
       const { error } = await supabase
         .from('bookings')
         .insert({
@@ -127,8 +123,6 @@ export default function BookServicePage() {
           booking_time: bookingTime,
           notes: notes || null,
         })
-        .select()
-        .single()
 
       if (error) {
         console.error(error)
@@ -137,147 +131,288 @@ export default function BookServicePage() {
         return
       }
 
-      // Build WhatsApp message
       const message = encodeURIComponent(
-        `Hi! I just booked your service on Campus Plug 🔌\n\n` +
-        `📋 Service: ${service.title}\n` +
-        `📅 Date: ${bookingDate}\n` +
-        `⏰ Time: ${bookingTime}\n` +
-        `💰 Price: GH₵ ${Number(service.price || 0).toLocaleString()}\n` +
-        (notes ? `📝 Notes: ${notes}\n\n` : '\n') +
-        `Please confirm the booking and let me know payment details.`
+        'Hi! I just booked your service on Campus Plug 🔌\n\n' +
+        '📋 Service: ' + service.title + '\n' +
+        '📅 Date: ' + bookingDate + '\n' +
+        '⏰ Time: ' + bookingTime + '\n' +
+        '💰 Price: GH₵ ' + Number(service.price || 0).toLocaleString() + '\n' +
+        (notes ? '📝 Notes: ' + notes + '\n\n' : '\n') +
+        'Please confirm the booking and let me know payment details.'
       )
 
-      const whatsappUrl = `https://wa.me/${service.seller.whatsapp_number}?text=${message}`
+      const whatsappUrl = 'https://wa.me/' + service.seller.whatsapp_number + '?text=' + message
 
-      alert(`✅ Booking created!\n\nYou will now be redirected to WhatsApp to confirm with ${service.seller.full_name || 'the seller'}.`)
+      alert('✅ Booking created!\n\nYou will be redirected to WhatsApp to confirm with ' + (service.seller.full_name || 'the seller') + '.')
 
-      // Redirect to WhatsApp
       window.location.href = whatsappUrl
     } catch (err) {
       console.error(err)
       alert('Something went wrong.')
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   if (pageLoading || !service) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-500">Loading...</p>
+      <div className="flex items-center justify-center min-h-screen animated-gradient">
+        <div className="text-center">
+          <div className="text-4xl mb-2 animate-pulse">🔌</div>
+          <p className="text-white/70">Loading service...</p>
+        </div>
       </div>
     )
   }
 
-  // Get today's date for min date
   const today = new Date().toISOString().split('T')[0]
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-lg mx-auto">
-
-        <div className="flex items-center gap-4 mb-6 mt-4">
-          <Link href="/services" className="text-blue-600 hover:underline text-sm">
-            ← Back
+    <main className="min-h-screen bg-charcoal">
+      {/* Nav */}
+      <nav className="fixed top-0 w-full z-50 bg-charcoal/80 backdrop-blur-xl border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-2 group">
+            <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
+            <span className="text-lg sm:text-xl font-bold text-white tracking-tight">Campus Plug</span>
           </Link>
-          <h1 className="text-2xl font-bold text-black">Book Service</h1>
-        </div>
 
-        {/* Service Summary */}
-        <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
-          <div className="flex gap-4">
-            {service?.image_url ? (
-              <img
-                src={service.image_url}
-                alt={service.title}
-                className="w-24 h-24 object-cover rounded-lg"
-              />
-            ) : (
-              <div className="w-24 h-24 bg-green-100 rounded-lg flex items-center justify-center text-3xl">
-                💼
-              </div>
-            )}
-
-            <div className="flex-1">
-              <h2 className="font-bold text-lg text-black">{service?.title}</h2>
-              <p className="text-gray-500 text-sm">{service?.seller?.full_name}</p>
-              <p className="text-green-600 font-bold text-xl mt-1">
-                GH₵ {Number(service?.price || 0).toLocaleString()}
-              </p>
-            </div>
-          </div>
-
-          {service?.service_duration && (
-            <p className="text-sm text-gray-600 mt-3">⏱ Duration: {service.service_duration}</p>
-          )}
-          {service?.service_location && (
-            <p className="text-sm text-gray-600">📍 Location: {service.service_location}</p>
-          )}
-        </div>
-
-        {/* Booking Form */}
-        <form
-          onSubmit={handleBooking}
-          className="bg-white rounded-xl shadow-sm p-6 flex flex-col gap-5"
-        >
-          <h3 className="font-semibold text-black">Booking Details</h3>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Preferred Date *
-            </label>
-            <input
-              type="date"
-              min={today}
-              className="w-full border p-3 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-green-500"
-              value={bookingDate}
-              onChange={(e) => setBookingDate(e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Preferred Time *
-            </label>
-            <input
-              type="time"
-              className="w-full border p-3 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-green-500"
-              value={bookingTime}
-              onChange={(e) => setBookingTime(e.target.value)}
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Notes (optional)
-            </label>
-            <textarea
-              placeholder="Any special requests or details..."
-              className="w-full border p-3 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-green-500 resize-none"
-              rows={3}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
-          </div>
-
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-            <p className="text-xs text-yellow-800">
-              💡 After booking, you will be sent to WhatsApp to confirm with the seller and arrange payment.
-            </p>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 transition-colors flex items-center justify-center gap-2"
+          <Link
+            href="/services"
+            className="text-sm text-white/60 hover:text-white transition-colors flex items-center gap-1 group"
           >
-            {loading ? 'Booking...' : '📅 Book & Message on WhatsApp'}
-          </button>
-        </form>
-      </div>
-    </div>
+            <span className="group-hover:-translate-x-1 transition-transform">←</span>
+            Back to services
+          </Link>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="blob absolute top-10 -left-20 w-96 h-96 bg-gold/30 rounded-full blur-3xl"></div>
+          <div className="blob absolute top-20 right-0 w-96 h-96 bg-green-500/20 rounded-full blur-3xl" style={{animationDelay: '5s'}}></div>
+        </div>
+
+        <div
+          className="absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+            backgroundSize: '60px 60px'
+          }}
+        ></div>
+
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
+          <div className="fade-up inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">
+            Book Now
+          </div>
+          <h1 className="fade-up fade-up-delay-1 text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-4">
+            Almost <span className="gradient-text">there</span>
+          </h1>
+          <p className="fade-up fade-up-delay-2 text-lg text-white/70">
+            Pick your preferred time and confirm via WhatsApp.
+          </p>
+        </div>
+      </section>
+
+      {/* Content */}
+      <section className="relative pb-24 md:pb-32 bg-off-white -mt-8">
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
+
+          <div className="grid lg:grid-cols-5 gap-6">
+
+            {/* LEFT — Service Card (2 cols) */}
+            <div className="lg:col-span-2">
+              <div className="lg:sticky lg:top-24">
+                <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+
+                  {/* Service Image */}
+                  <div className="relative aspect-square overflow-hidden bg-gray-100">
+                    {service.image_url ? (
+                      <img
+                        src={service.image_url}
+                        alt={service.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-charcoal via-gray-800 to-charcoal">
+                        <span className="text-7xl opacity-40">💼</span>
+                      </div>
+                    )}
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent"></div>
+
+                    <div className="absolute top-4 left-4 glass px-3 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
+                      <span className="w-2 h-2 bg-gold rounded-full"></span>
+                      Service
+                    </div>
+
+                    <div className="absolute top-4 right-4 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                      GH₵ {Number(service.price || 0).toLocaleString()}
+                    </div>
+                  </div>
+
+                  {/* Service Info */}
+                  <div className="p-6">
+                    <h2 className="text-xl font-bold text-charcoal mb-3">
+                      {service.title}
+                    </h2>
+
+                    {service.seller?.full_name && (
+                      <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center font-bold text-gold-dark">
+                          {service.seller.full_name.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-charcoal text-sm">{service.seller.full_name}</p>
+                          <p className="text-xs text-gray-500">Seller</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {service.description && (
+                      <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                        {service.description}
+                      </p>
+                    )}
+
+                    <div className="space-y-2">
+                      {service.service_duration && (
+                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                          <span className="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center">⏱</span>
+                          <span>{service.service_duration}</span>
+                        </div>
+                      )}
+                      {service.service_location && (
+                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                          <span className="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center">📍</span>
+                          <span>{service.service_location}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* RIGHT — Booking Form (3 cols) */}
+            <div className="lg:col-span-3">
+              <form
+                onSubmit={handleBooking}
+                className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 border border-gray-100 space-y-6"
+              >
+                {/* Header */}
+                <div>
+                  <h2 className="text-2xl font-bold text-charcoal mb-1">
+                    Booking Details
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    Pick when you&apos;d like the service.
+                  </p>
+                </div>
+
+                {/* Date */}
+                <div>
+                  <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
+                    Preferred Date *
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none">
+                      📅
+                    </span>
+                    <input
+                      type="date"
+                      min={today}
+                      className="w-full pl-14 pr-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
+                      value={bookingDate}
+                      onChange={(e) => setBookingDate(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Time */}
+                <div>
+                  <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
+                    Preferred Time *
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none">
+                      ⏰
+                    </span>
+                    <input
+                      type="time"
+                      className="w-full pl-14 pr-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
+                      value={bookingTime}
+                      onChange={(e) => setBookingTime(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Notes */}
+                <div>
+                  <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
+                    Notes <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                  </label>
+                  <textarea
+                    placeholder="Any special requests, location details, or questions..."
+                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors resize-none"
+                    rows={3}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                  />
+                </div>
+
+                {/* How it works */}
+                <div className="p-5 rounded-2xl bg-gradient-to-br from-green-50 to-transparent border border-green-100">
+                  <div className="flex gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-lg shrink-0 shadow-lg shadow-green-500/30">
+                      💬
+                    </div>
+                    <div>
+                      <p className="font-bold text-charcoal text-sm mb-1">What happens next</p>
+                      <p className="text-xs text-gray-600 leading-relaxed">
+                        Your booking is saved and you&apos;ll be sent to WhatsApp to confirm with the seller and arrange payment.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submit */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-charcoal text-white py-5 rounded-2xl font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-charcoal/25 flex items-center justify-center gap-2 group"
+                >
+                  {loading ? (
+                    <span>Booking...</span>
+                  ) : (
+                    <>
+                      <span>📅 Book & Message on WhatsApp</span>
+                      <span className="group-hover:translate-x-1 transition-transform">→</span>
+                    </>
+                  )}
+                </button>
+
+                {/* Trust indicators */}
+                <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-gray-500 pt-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gold">✓</span> Free to book
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gold">✓</span> No commitment
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-gold">✓</span> Direct contact
+                  </div>
+                </div>
+
+              </form>
+            </div>
+
+          </div>
+        </div>
+      </section>
+    </main>
   )
 }

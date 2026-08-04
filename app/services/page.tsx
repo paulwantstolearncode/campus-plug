@@ -27,27 +27,34 @@ export default function ServicesPage() {
 
   useEffect(() => {
     async function loadEverything() {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        setUser(user)
 
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_seller')
-          .eq('id', user.id)
-          .single()
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_seller')
+            .eq('id', user.id)
+            .single()
 
-        setIsSeller(profile?.is_seller || false)
+          setIsSeller(profile?.is_seller || false)
+        }
+
+        const { data } = await supabase
+          .from('listings')
+          .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
+          .eq('listing_type', 'service')
+          .order('created_at', { ascending: false })
+
+        if (data) setServices(data as Service[])
+      } catch (err) {
+        // A failed auth/network lookup must not strand the page on the
+        // loading screen forever.
+        console.error('Failed to load services:', err)
+      } finally {
+        setLoading(false)
       }
-
-      const { data } = await supabase
-        .from('listings')
-        .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
-        .eq('listing_type', 'service')
-        .order('created_at', { ascending: false })
-
-      if (data) setServices(data as any)
-      setLoading(false)
     }
 
     loadEverything()

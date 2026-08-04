@@ -20,17 +20,26 @@ export default function LandingPage() {
 
   useEffect(() => {
     async function loadFeatured() {
-      const { data } = await supabase
-        .from('listings')
-        .select(`
-          id, title, price, image_url, service_location,
-          seller:profiles!seller_id (full_name)
-        `)
-        .eq('listing_type', 'service')
-        .order('created_at', { ascending: false })
-        .limit(6)
+      try {
+        const { data } = await supabase
+          .from('listings')
+          .select(`
+            id, title, price, image_url, service_location,
+            seller:profiles!seller_id (full_name)
+          `)
+          .eq('listing_type', 'service')
+          .order('created_at', { ascending: false })
+          .limit(6)
 
-      if (data) setFeaturedServices(data as any)
+        // The explicit-column select makes supabase-js infer the embedded
+        // `seller` join as an array; at runtime it is a single object (to-one
+        // FK join), so cast through unknown.
+        if (data) setFeaturedServices(data as unknown as FeaturedService[])
+      } catch (err) {
+        // Featured section is decorative — a failed fetch should just leave
+        // it empty rather than throw an unhandled rejection.
+        console.error('Failed to load featured services:', err)
+      }
     }
     loadFeatured()
 
