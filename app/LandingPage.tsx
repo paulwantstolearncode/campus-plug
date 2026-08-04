@@ -121,7 +121,7 @@ export default function LandingPage() {
             {/* CTA Buttons */}
             <div className="fade-up fade-up-delay-3 flex flex-col sm:flex-row gap-3 justify-center items-center px-4 mb-16">
               <Link
-                href="/login"
+                href="/services"
                 className="w-full sm:w-auto group bg-charcoal text-white px-8 py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-105 shadow-xl shadow-charcoal/25 flex items-center justify-center gap-2"
               >
                 Explore Services
@@ -247,7 +247,7 @@ export default function LandingPage() {
                 </h2>
               </div>
               <Link
-                href="/login"
+                href="/services"
                 className="group flex items-center gap-2 text-charcoal font-semibold hover:text-gold transition-colors"
               >
                 View all services
@@ -259,7 +259,7 @@ export default function LandingPage() {
               {featuredServices.map((service, idx) => (
                 <Link
                   key={service.id}
-                  href="/login"
+                  href="/services"
                   className="group relative overflow-hidden rounded-3xl"
                   style={{ animationDelay: `${idx * 0.1}s` }}
                 >
