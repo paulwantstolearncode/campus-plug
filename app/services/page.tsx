@@ -20,27 +20,27 @@ interface Service {
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<any>(null)
-
   useEffect(() => {
     async function loadServices() {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
+      try {
+        const { data } = await supabase
+          .from('listings')
+          .select(`
+            *,
+            seller:profiles!seller_id (
+              full_name,
+              whatsapp_number
+            )
+          `)
+          .eq('listing_type', 'service')
+          .order('created_at', { ascending: false })
 
-      const { data } = await supabase
-        .from('listings')
-        .select(`
-          *,
-          seller:profiles!seller_id (
-            full_name,
-            whatsapp_number
-          )
-        `)
-        .eq('listing_type', 'service')
-        .order('created_at', { ascending: false })
-
-      if (data) setServices(data as any)
-      setLoading(false)
+        if (data) setServices(data as Service[])
+      } catch (err) {
+        console.error('Failed to load services:', err)
+      } finally {
+        setLoading(false)
+      }
     }
 
     loadServices()

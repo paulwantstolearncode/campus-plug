@@ -34,7 +34,7 @@ export default function Home() {
       )
     `)
     .order('created_at', { ascending: false })
-  if (data) setListings(data as any)
+  if (data) setListings(data as Listing[])
 }
 
    async function checkUser() {

@@ -4,8 +4,23 @@ import { supabase } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 
+interface ServiceData {
+  id: string
+  title: string
+  description: string | null
+  price: number
+  image_url: string | null
+  service_duration: string | null
+  service_location: string | null
+  seller: {
+    id: string
+    full_name: string | null
+    whatsapp_number: string | null
+  } | null
+}
+
 export default function BookServicePage() {
-  const [service, setService] = useState<any>(null)
+  const [service, setService] = useState<ServiceData | null>(null)
   const [bookingDate, setBookingDate] = useState('')
   const [bookingTime, setBookingTime] = useState('')
   const [notes, setNotes] = useState('')
@@ -13,39 +28,53 @@ export default function BookServicePage() {
   const [pageLoading, setPageLoading] = useState(true)
   const router = useRouter()
   const params = useParams()
-  const serviceId = params.id as string
+  const rawId = params.id
+  const serviceId = Array.isArray(rawId) ? rawId[0] : rawId
 
   useEffect(() => {
     async function loadService() {
-      const { data: { user } } = await supabase.auth.getUser()
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
 
-      if (!user) {
-        router.push('/login')
-        return
-      }
+        if (!user) {
+          router.push('/login')
+          return
+        }
 
-      const { data } = await supabase
-        .from('listings')
-        .select(`
-          *,
-          seller:profiles!seller_id (
-            id,
-            full_name,
-            whatsapp_number
-          )
-        `)
-        .eq('id', serviceId)
-        .eq('listing_type', 'service')
-        .single()
+        if (!serviceId) {
+          alert('Invalid service ID')
+          router.push('/services')
+          return
+        }
 
-      if (!data) {
-        alert('Service not found')
+        const { data } = await supabase
+          .from('listings')
+          .select(`
+            *,
+            seller:profiles!seller_id (
+              id,
+              full_name,
+              whatsapp_number
+            )
+          `)
+          .eq('id', serviceId)
+          .eq('listing_type', 'service')
+          .single()
+
+        if (!data) {
+          alert('Service not found')
+          router.push('/services')
+          return
+        }
+
+        setService(data as ServiceData)
+      } catch (err) {
+        console.error('Failed to load service:', err)
+        alert('Could not load the service. Please try again.')
         router.push('/services')
-        return
+      } finally {
+        setPageLoading(false)
       }
-
-      setService(data)
-      setPageLoading(false)
     }
 
     loadService()
@@ -53,6 +82,11 @@ export default function BookServicePage() {
 
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!service) {
+      alert('Service data is not ready. Please refresh and try again.')
+      return
+    }
 
     if (!bookingDate || !bookingTime) {
       alert('Please pick a date and time')
@@ -69,8 +103,21 @@ export default function BookServicePage() {
         return
       }
 
+      // Guard: seller must exist and have a WhatsApp number before we create the booking
+      if (!service.seller?.id) {
+        alert('The seller information is missing. Please try again later.')
+        setLoading(false)
+        return
+      }
+
+      if (!service.seller?.whatsapp_number) {
+        alert('The seller has not set up their WhatsApp number. Please try again later.')
+        setLoading(false)
+        return
+      }
+
       // Save booking to database
-      const { data: booking, error } = await supabase
+      const { error } = await supabase
         .from('bookings')
         .insert({
           listing_id: serviceId,
@@ -96,25 +143,26 @@ export default function BookServicePage() {
         `📋 Service: ${service.title}\n` +
         `📅 Date: ${bookingDate}\n` +
         `⏰ Time: ${bookingTime}\n` +
-        `💰 Price: GH₵ ${service.price}\n` +
+        `💰 Price: GH₵ ${Number(service.price || 0).toLocaleString()}\n` +
         (notes ? `📝 Notes: ${notes}\n\n` : '\n') +
         `Please confirm the booking and let me know payment details.`
       )
 
       const whatsappUrl = `https://wa.me/${service.seller.whatsapp_number}?text=${message}`
 
-      alert(`✅ Booking created!\n\nYou'll now be redirected to WhatsApp to confirm with ${service.seller.full_name}.`)
+      alert(`✅ Booking created!\n\nYou will now be redirected to WhatsApp to confirm with ${service.seller.full_name || 'the seller'}.`)
 
       // Redirect to WhatsApp
       window.location.href = whatsappUrl
     } catch (err) {
       console.error(err)
       alert('Something went wrong.')
-      setLoading(false)
     }
+
+    setLoading(false)
   }
 
-  if (pageLoading) {
+  if (pageLoading || !service) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <p className="text-gray-500">Loading...</p>
@@ -139,7 +187,7 @@ export default function BookServicePage() {
         {/* Service Summary */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-4">
           <div className="flex gap-4">
-            {service.image_url ? (
+            {service?.image_url ? (
               <img
                 src={service.image_url}
                 alt={service.title}
@@ -152,18 +200,18 @@ export default function BookServicePage() {
             )}
 
             <div className="flex-1">
-              <h2 className="font-bold text-lg text-black">{service.title}</h2>
-              <p className="text-gray-500 text-sm">{service.seller?.full_name}</p>
+              <h2 className="font-bold text-lg text-black">{service?.title}</h2>
+              <p className="text-gray-500 text-sm">{service?.seller?.full_name}</p>
               <p className="text-green-600 font-bold text-xl mt-1">
-                GH₵ {Number(service.price).toLocaleString()}
+                GH₵ {Number(service?.price || 0).toLocaleString()}
               </p>
             </div>
           </div>
 
-          {service.service_duration && (
+          {service?.service_duration && (
             <p className="text-sm text-gray-600 mt-3">⏱ Duration: {service.service_duration}</p>
           )}
-          {service.service_location && (
+          {service?.service_location && (
             <p className="text-sm text-gray-600">📍 Location: {service.service_location}</p>
           )}
         </div>
@@ -217,7 +265,7 @@ export default function BookServicePage() {
 
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
             <p className="text-xs text-yellow-800">
-              💡 After booking, you'll be sent to WhatsApp to confirm with the seller and arrange payment.
+              💡 After booking, you will be sent to WhatsApp to confirm with the seller and arrange payment.
             </p>
           </div>
 
