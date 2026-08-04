@@ -10,6 +10,10 @@ interface Listing {
   description: string | null
   price: number
   image_url: string | null
+  seller: {
+    full_name: string | null
+    whatsapp_number: string | null
+  } | null
 }
 
 export default function Home() {
@@ -19,13 +23,19 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    async function getListings() {
-      const { data } = await supabase
-        .from('listings')
-        .select('*')
-        .order('created_at', { ascending: false })
-      if (data) setListings(data)
-    }
+   async function getListings() {
+  const { data } = await supabase
+    .from('listings')
+    .select(`
+      *,
+      seller:profiles!seller_id (
+        full_name,
+        whatsapp_number
+      )
+    `)
+    .order('created_at', { ascending: false })
+  if (data) setListings(data as any)
+}
 
    async function checkUser() {
   const { data: { user } } = await supabase.auth.getUser()
@@ -185,6 +195,19 @@ export default function Home() {
                   <p className="text-green-600 font-bold text-xl mt-3">
                     GH₵ {Number(item.price || 0).toLocaleString()}
                   </p>
+                  {item.seller?.whatsapp_number && (
+  <a
+    href={`https://wa.me/${item.seller.whatsapp_number}?text=${encodeURIComponent(
+      `Hi! I'm interested in your "${item.title}" listing on Campus Plug 🔌`
+    )}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="mt-4 flex items-center justify-center gap-2 bg-green-500 text-white py-2 px-4 rounded-lg font-semibold hover:bg-green-600 transition-colors text-sm"
+    onClick={(e) => e.stopPropagation()}
+  >
+    <span>💬</span> Message on WhatsApp
+  </a>
+)}
                 </div>
               </div>
             ))}
