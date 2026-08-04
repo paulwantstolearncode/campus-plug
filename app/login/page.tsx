@@ -38,8 +38,9 @@ export default function LoginPage() {
         }
       })
       if (error) {
-        alert(error.message)
-      } else {
+  console.error('Full signup error:', JSON.stringify(error, null, 2))
+  alert('Error: ' + (error.message || error.code || JSON.stringify(error)))
+} else {
         alert(
           '📧 Check your email!\n\n' +
           'We sent a confirmation link to ' + trimmedEmail + '\n\n' +
