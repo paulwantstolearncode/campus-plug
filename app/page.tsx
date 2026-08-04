@@ -94,6 +94,14 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-black">Campus Plug 🔌</h1>
             <p className="text-sm text-gray-500">The student marketplace</p>
           </div>
+          <div className="hidden sm:flex gap-4 ml-8">
+  <Link href="/" className="text-sm font-semibold text-gray-700 hover:text-green-600">
+    All
+  </Link>
+  <Link href="/services" className="text-sm font-semibold text-gray-700 hover:text-green-600">
+    💼 Services
+  </Link>
+</div>
 
           <div className="flex items-center gap-4">
             {user ? (

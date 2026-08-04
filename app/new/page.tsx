@@ -11,6 +11,9 @@ export default function NewListingPage() {
   const [image, setImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [listingType, setListingType] = useState<'product' | 'service'>('product')
+  const [serviceDuration, setServiceDuration] = useState('')
+  const [serviceLocation, setServiceLocation] = useState('')
   const router = useRouter()
   useEffect(() => {
     async function checkSellerStatus() {
@@ -121,13 +124,16 @@ export default function NewListingPage() {
         imageUrl = urlData.publicUrl
       }
 
-      const { error } = await supabase.from('listings').insert({
-        seller_id: user.id,
-        title,
-        price: priceNumber,
-        description,
-        image_url: imageUrl,
-      })
+     const { error } = await supabase.from('listings').insert({
+  seller_id: user.id,
+  title,
+  price: Number(price),
+  description,
+  image_url: imageUrl,
+  listing_type: listingType,
+  service_duration: listingType === 'service' ? serviceDuration : null,
+  service_location: listingType === 'service' ? serviceLocation : null,
+  })
 
       if (error) {
         alert(error.message)
@@ -158,6 +164,36 @@ export default function NewListingPage() {
           onSubmit={handleSubmit}
           className="bg-white rounded-xl shadow-sm p-6 flex flex-col gap-5"
         >
+          {/* Product or Service Toggle */}
+<div>
+  <label className="block text-sm font-semibold text-gray-700 mb-2">
+    What are you listing?
+  </label>
+  <div className="grid grid-cols-2 gap-2">
+    <button
+      type="button"
+      onClick={() => setListingType('product')}
+      className={`p-3 rounded-lg font-semibold border-2 transition-colors ${
+        listingType === 'product'
+          ? 'border-green-600 bg-green-50 text-green-700'
+          : 'border-gray-200 text-gray-500 hover:border-gray-300'
+      }`}
+    >
+      📦 Product
+    </button>
+    <button
+      type="button"
+      onClick={() => setListingType('service')}
+      className={`p-3 rounded-lg font-semibold border-2 transition-colors ${
+        listingType === 'service'
+          ? 'border-green-600 bg-green-50 text-green-700'
+          : 'border-gray-200 text-gray-500 hover:border-gray-300'
+      }`}
+    >
+      💼 Service
+    </button>
+  </div>
+</div>
           {/* Image Upload */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-2">
@@ -218,9 +254,9 @@ export default function NewListingPage() {
 
           {/* Price */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Price *
-            </label>
+           <label className="block text-sm font-semibold text-gray-700 mb-2">
+  {listingType === 'service' ? 'Price per session *' : 'Price *'}
+</label>
            <div className="relative">
   <span className="absolute left-3 top-3 text-gray-500 font-semibold">
    GH₵
@@ -249,6 +285,36 @@ export default function NewListingPage() {
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
+          {/* Service-only fields */}
+{listingType === 'service' && (
+  <>
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        Service Duration
+      </label>
+      <input
+        type="text"
+        placeholder="e.g. 1 hour, 30 mins, Half day"
+        className="w-full border p-3 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-green-500"
+        value={serviceDuration}
+        onChange={(e) => setServiceDuration(e.target.value)}
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        Service Location
+      </label>
+      <input
+        type="text"
+        placeholder="e.g. Legon Campus, I come to you, My salon"
+        className="w-full border p-3 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-green-500"
+        value={serviceLocation}
+        onChange={(e) => setServiceLocation(e.target.value)}
+      />
+    </div>
+  </>
+)}
 
           <button
             type="submit"
