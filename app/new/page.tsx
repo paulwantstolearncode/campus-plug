@@ -14,43 +14,35 @@ export default function NewListingPage() {
   const [listingType, setListingType] = useState<'product' | 'service'>('product')
   const [serviceDuration, setServiceDuration] = useState('')
   const [serviceLocation, setServiceLocation] = useState('')
+  const [checking, setChecking] = useState(true)
   const router = useRouter()
+
   useEffect(() => {
     async function checkSellerStatus() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user } } = await supabase.auth.getUser()
 
-        if (!user) {
-          router.push('/login')
-          return
-        }
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_seller')
-          .eq('id', user.id)
-          .single()
-
-       if (!profile?.is_seller) {
-  alert('You need to become a seller first. Add your WhatsApp number to start selling!')
-  router.push('/become-seller')
-}
-      } catch (err) {
-        console.error('Seller check failed:', err)
+      if (!user) {
         router.push('/login')
+        return
       }
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_seller')
+        .eq('id', user.id)
+        .single()
+
+      if (!profile?.is_seller) {
+        alert('You need to become a seller first. Add your WhatsApp number to start selling!')
+        router.push('/become-seller')
+        return
+      }
+
+      setChecking(false)
     }
 
     checkSellerStatus()
   }, [router])
-
-  // Revoke the preview object URL when it is replaced or the page unmounts.
-  useEffect(() => {
-    const preview = imagePreview
-    return () => {
-      if (preview) URL.revokeObjectURL(preview)
-    }
-  }, [imagePreview])
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -68,10 +60,8 @@ export default function NewListingPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    const priceNumber = Number(price)
-
-    if (!title || !price || Number.isNaN(priceNumber) || priceNumber <= 0) {
-      alert('Please enter a title and a price greater than 0')
+    if (!title || !price) {
+      alert('Title and price are required')
       return
     }
 
@@ -86,26 +76,11 @@ export default function NewListingPage() {
         return
       }
 
-      // Re-verify seller status at submit time — the effect above is async and
-      // a non-seller could otherwise submit before its redirect lands.
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_seller')
-        .eq('id', user.id)
-        .single()
-
-      if (!profile?.is_seller) {
-        alert('You need to become a seller first. Add your WhatsApp number to start selling!')
-        setLoading(false)
-        router.push('/become-seller')
-        return
-      }
-
       let imageUrl = null
 
       if (image) {
         const fileExt = image.name.split('.').pop()
-        const fileName = `${user.id}-${Date.now()}.${fileExt}`
+        const fileName = user.id + '-' + Date.now() + '.' + fileExt
 
         const { error: uploadError } = await supabase.storage
           .from('listing-images')
@@ -124,16 +99,16 @@ export default function NewListingPage() {
         imageUrl = urlData.publicUrl
       }
 
-     const { error } = await supabase.from('listings').insert({
-  seller_id: user.id,
-  title,
-  price: Number(price),
-  description,
-  image_url: imageUrl,
-  listing_type: listingType,
-  service_duration: listingType === 'service' ? serviceDuration : null,
-  service_location: listingType === 'service' ? serviceLocation : null,
-  })
+      const { error } = await supabase.from('listings').insert({
+        seller_id: user.id,
+        title,
+        price: Number(price),
+        description,
+        image_url: imageUrl,
+        listing_type: listingType,
+        service_duration: listingType === 'service' ? serviceDuration : null,
+        service_location: listingType === 'service' ? serviceLocation : null,
+      })
 
       if (error) {
         alert(error.message)
@@ -149,182 +124,274 @@ export default function NewListingPage() {
     setLoading(false)
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-lg mx-auto">
+  if (checking) {
+    return (
+      <div className="flex items-center justify-center min-h-screen animated-gradient">
+        <div className="text-center">
+          <div className="text-4xl mb-2 animate-pulse">🔌</div>
+          <p className="text-white/70">Loading...</p>
+        </div>
+      </div>
+    )
+  }
 
-        <div className="flex items-center gap-4 mb-6 mt-4">
-          <Link href="/" className="text-blue-600 hover:underline text-sm">
-            ← Back
+  return (
+    <main className="min-h-screen bg-charcoal">
+      {/* Nav */}
+      <nav className="fixed top-0 w-full z-50 bg-charcoal/80 backdrop-blur-xl border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
+          <Link href="/" className="flex items-center gap-2 group">
+            <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
+            <span className="text-lg sm:text-xl font-bold text-white tracking-tight">
+              Campus Plug
+            </span>
           </Link>
-          <h1 className="text-2xl font-bold text-black">Post a Listing</h1>
+
+          <Link
+            href="/"
+            className="text-sm text-white/60 hover:text-white transition-colors flex items-center gap-1 group"
+          >
+            <span className="group-hover:-translate-x-1 transition-transform">←</span>
+            Back
+          </Link>
+        </div>
+      </nav>
+
+      {/* Hero */}
+      <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="blob absolute top-10 -left-20 w-96 h-96 bg-gold/30 rounded-full blur-3xl"></div>
+          <div className="blob absolute top-20 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" style={{animationDelay: '5s'}}></div>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white rounded-xl shadow-sm p-6 flex flex-col gap-5"
-        >
-          {/* Product or Service Toggle */}
-<div>
-  <label className="block text-sm font-semibold text-gray-700 mb-2">
-    What are you listing?
-  </label>
-  <div className="grid grid-cols-2 gap-2">
-    <button
-      type="button"
-      onClick={() => setListingType('product')}
-      className={`p-3 rounded-lg font-semibold border-2 transition-colors ${
-        listingType === 'product'
-          ? 'border-green-600 bg-green-50 text-green-700'
-          : 'border-gray-200 text-gray-500 hover:border-gray-300'
-      }`}
-    >
-      📦 Product
-    </button>
-    <button
-      type="button"
-      onClick={() => setListingType('service')}
-      className={`p-3 rounded-lg font-semibold border-2 transition-colors ${
-        listingType === 'service'
-          ? 'border-green-600 bg-green-50 text-green-700'
-          : 'border-gray-200 text-gray-500 hover:border-gray-300'
-      }`}
-    >
-      💼 Service
-    </button>
-  </div>
-</div>
-          {/* Image Upload */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Photo
-            </label>
+        <div
+          className="absolute inset-0 opacity-[0.05]"
+          style={{
+            backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)',
+            backgroundSize: '60px 60px'
+          }}
+        ></div>
 
-            {imagePreview ? (
-              <div className="relative">
-                <img
-                  src={imagePreview}
-                  alt="Preview"
-                  className="w-full h-56 object-cover rounded-lg"
-                />
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
+          <div className="fade-up inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">
+            New Listing
+          </div>
+          <h1 className="fade-up fade-up-delay-1 text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-4">
+            Share what<br />
+            <span className="gradient-text">you offer</span>
+          </h1>
+          <p className="fade-up fade-up-delay-2 text-lg text-white/70 max-w-xl mx-auto">
+            Reach fellow students on your campus. Set your price, own your terms.
+          </p>
+        </div>
+      </section>
+
+      {/* Form Section */}
+      <section className="relative pb-24 md:pb-32 bg-off-white -mt-8">
+        <div className="relative max-w-2xl mx-auto px-4 sm:px-6">
+
+          <form
+            onSubmit={handleSubmit}
+            className="relative bg-white rounded-3xl shadow-2xl p-6 md:p-10 border border-gray-100 space-y-8"
+          >
+
+            {/* Type Toggle */}
+            <div>
+              <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
+                Listing Type
+              </label>
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => {
-                    setImage(null)
-                    setImagePreview(null)
-                  }}
-                  className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm hover:bg-red-600"
+                  onClick={() => setListingType('product')}
+                  className={"relative p-5 rounded-2xl font-semibold border-2 transition-all overflow-hidden group " + (
+                    listingType === 'product'
+                      ? "border-gold bg-gradient-to-br from-gold/10 to-gold/5 text-charcoal shadow-lg"
+                      : "border-gray-200 text-gray-500 hover:border-gray-400"
+                  )}
                 >
-                  ✕
+                  {listingType === 'product' && (
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-gold rounded-full"></div>
+                  )}
+                  <div className="text-3xl mb-2">📦</div>
+                  <div className="font-bold">Product</div>
+                  <div className="text-xs mt-1 opacity-60">Physical items to sell</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setListingType('service')}
+                  className={"relative p-5 rounded-2xl font-semibold border-2 transition-all overflow-hidden group " + (
+                    listingType === 'service'
+                      ? "border-gold bg-gradient-to-br from-gold/10 to-gold/5 text-charcoal shadow-lg"
+                      : "border-gray-200 text-gray-500 hover:border-gray-400"
+                  )}
+                >
+                  {listingType === 'service' && (
+                    <div className="absolute top-2 right-2 w-2 h-2 bg-gold rounded-full"></div>
+                  )}
+                  <div className="text-3xl mb-2">💼</div>
+                  <div className="font-bold">Service</div>
+                  <div className="text-xs mt-1 opacity-60">Skills or work to offer</div>
                 </button>
               </div>
-            ) : (
-              <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
-                <span className="text-3xl mb-2">📷</span>
-                <span className="text-sm text-gray-500">
-                  Click to upload a photo
-                </span>
-                <span className="text-xs text-gray-400 mt-1">
-                  JPG, PNG, WEBP up to 5MB
+            </div>
+
+            {/* Image Upload */}
+            <div>
+              <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
+                Photo
+              </label>
+
+              {imagePreview ? (
+                <div className="relative group">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="w-full h-64 object-cover rounded-2xl"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImage(null)
+                        setImagePreview(null)
+                      }}
+                      className="bg-white text-charcoal px-5 py-2.5 rounded-full font-semibold hover:bg-red-500 hover:text-white transition-colors"
+                    >
+                      Remove Photo
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <label className="relative flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:border-gold hover:bg-gold/5 transition-all group">
+                  <div className="text-center">
+                    <div className="text-5xl mb-3 group-hover:scale-110 transition-transform">📸</div>
+                    <div className="font-semibold text-charcoal">Click to upload</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      JPG, PNG, WEBP • Max 5MB
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageChange}
+                  />
+                </label>
+              )}
+            </div>
+
+            {/* Title */}
+            <div>
+              <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
+                Title *
+              </label>
+              <input
+                type="text"
+                placeholder={listingType === 'product' ? "e.g. Calculus Textbook" : "e.g. Hair Braiding"}
+                className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors text-lg"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+              />
+            </div>
+
+            {/* Price */}
+            <div>
+              <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
+                {listingType === 'service' ? 'Price per session *' : 'Price *'}
+              </label>
+              <div className="relative">
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-lg">
+                  GH₵
                 </span>
                 <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleImageChange}
+                  type="number"
+                  placeholder="0.00"
+                  className="w-full pl-20 pr-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  required
                 />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
+                Description
               </label>
+              <textarea
+                placeholder="Tell buyers what makes your offering special..."
+                className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors resize-none"
+                rows={4}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+            </div>
+
+            {/* Service-only fields */}
+            {listingType === 'service' && (
+              <div className="space-y-8 p-6 bg-gradient-to-br from-gold/5 to-transparent rounded-2xl border border-gold/20">
+                <div className="flex items-center gap-2 text-gold-dark">
+                  <span className="text-xl">💼</span>
+                  <span className="text-sm font-bold uppercase tracking-widest">Service Details</span>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
+                    Duration
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 1 hour, 30 mins"
+                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 bg-white text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors"
+                    value={serviceDuration}
+                    onChange={(e) => setServiceDuration(e.target.value)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Legon Campus, I come to you"
+                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 bg-white text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors"
+                    value={serviceLocation}
+                    onChange={(e) => setServiceLocation(e.target.value)}
+                  />
+                </div>
+              </div>
             )}
+
+            {/* Submit */}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-charcoal text-white py-4 rounded-2xl font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-charcoal/25 flex items-center justify-center gap-2 group"
+            >
+              {loading ? (
+                <span>Publishing...</span>
+              ) : (
+                <>
+                  <span>Publish Listing</span>
+                  <span className="group-hover:translate-x-1 transition-transform">→</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Info card below */}
+          <div className="mt-6 p-6 rounded-2xl bg-gradient-to-br from-charcoal to-gray-900 text-white text-center">
+            <p className="text-sm text-white/70">
+              💡 <strong className="text-gold">Pro tip:</strong> Great photos and clear descriptions get 3x more inquiries.
+            </p>
           </div>
-
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Title *
-            </label>
-            <input
-              type="text"
-              placeholder="e.g. Calculus Textbook, iPhone 13"
-              className="w-full border p-3 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-            />
-          </div>
-
-          {/* Price */}
-          <div>
-           <label className="block text-sm font-semibold text-gray-700 mb-2">
-  {listingType === 'service' ? 'Price per session *' : 'Price *'}
-</label>
-           <div className="relative">
-  <span className="absolute left-3 top-3 text-gray-500 font-semibold">
-   GH₵
-  </span>
-  <input
-    type="number"
-    placeholder="0.00"
-    className="w-full border p-3 pl-14 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
-    value={price}
-    onChange={(e) => setPrice(e.target.value)}
-    required
-  />
-</div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              placeholder="Describe your item — condition, details, pickup location..."
-              className="w-full border p-3 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-              rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-          {/* Service-only fields */}
-{listingType === 'service' && (
-  <>
-    <div>
-      <label className="block text-sm font-semibold text-gray-700 mb-2">
-        Service Duration
-      </label>
-      <input
-        type="text"
-        placeholder="e.g. 1 hour, 30 mins, Half day"
-        className="w-full border p-3 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-green-500"
-        value={serviceDuration}
-        onChange={(e) => setServiceDuration(e.target.value)}
-      />
-    </div>
-
-    <div>
-      <label className="block text-sm font-semibold text-gray-700 mb-2">
-        Service Location
-      </label>
-      <input
-        type="text"
-        placeholder="e.g. Legon Campus, I come to you, My salon"
-        className="w-full border p-3 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-green-500"
-        value={serviceLocation}
-        onChange={(e) => setServiceLocation(e.target.value)}
-      />
-    </div>
-  </>
-)}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 transition-colors"
-          >
-            {loading ? 'Posting...' : 'Post Listing '}
-          </button>
-        </form>
-      </div>
-    </div>
+        </div>
+      </section>
+    </main>
   )
 }
