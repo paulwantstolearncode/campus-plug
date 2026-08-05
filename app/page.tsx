@@ -47,7 +47,7 @@ export default function Home() {
             .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
             .order('created_at', { ascending: false })
 
-          if (data) setListings(data as any)
+          if (data) setListings(data as unknown as Listing[])
         }
       } catch (err) {
         console.error('Failed to load:', err)
@@ -64,9 +64,16 @@ export default function Home() {
   }, [])
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    window.location.reload()
+    try {
+      await supabase.auth.signOut()
+    } catch (err) {
+      // Even if sign-out fails on the network, the local session is dropped
+      // by the reload below, so never leave the button appearing dead.
+      console.error('Logout failed:', err)
+    } finally {
+      setUser(null)
+      window.location.reload()
+    }
   }
 
   if (loading) {

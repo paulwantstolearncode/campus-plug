@@ -96,8 +96,14 @@ export default function NewListingPage() {
       let imageUrl = null
 
       if (image) {
-        const fileExt = image.name.split('.').pop()
-        const fileName = user.id + '-' + Date.now() + '.' + fileExt
+        // Whitelist the extension: split('.').pop() can return undefined (no
+        // extension) or a slash-containing value for names like "../x", which
+        // would otherwise build an odd storage path.
+        const rawExt = (image.name.split('.').pop() || '').toLowerCase()
+        const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic'].includes(rawExt)
+          ? rawExt
+          : 'jpg'
+        const fileName = user.id + '-' + Date.now() + '.' + safeExt
 
         const { error: uploadError } = await supabase.storage
           .from('listing-images')
