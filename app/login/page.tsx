@@ -56,7 +56,6 @@ export default function LoginPage() {
         router.push('/')
         router.refresh()
       }
-    }
     } else {
       const { error } = await supabase.auth.signInWithPassword({
         email: trimmedEmail,
