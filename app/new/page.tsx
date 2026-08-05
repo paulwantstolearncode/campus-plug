@@ -23,50 +23,59 @@ function NewListingContent() {
 
   useEffect(() => {
     async function initialize() {
-      const { data: { user } } = await supabase.auth.getUser()
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
 
-      if (!user) {
+        if (!user) {
+          router.push('/login')
+          return
+        }
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_seller')
+          .eq('id', user.id)
+          .single()
+
+        if (!profile?.is_seller) {
+          alert('You need to become a seller first. Add your WhatsApp number to start selling!')
+          router.push('/become-seller')
+          return
+        }
+
+        // If editing, load the existing listing
+        if (editId) {
+          setIsEditMode(true)
+          const { data: listing } = await supabase
+            .from('listings')
+            .select('*')
+            .eq('id', editId)
+            .eq('seller_id', user.id)
+            .single()
+
+          if (!listing) {
+            alert('Listing not found or you don\'t have permission to edit it.')
+            router.push('/')
+            return
+          }
+
+          setTitle(listing.title)
+          setPrice(String(listing.price))
+          setDescription(listing.description || '')
+          setListingType(listing.listing_type as 'product' | 'service')
+          setServiceDuration(listing.service_duration || '')
+          setServiceLocation(listing.service_location || '')
+          setExistingImageUrl(listing.image_url)
+        }
+      } catch (err) {
+        // A failed auth/profile/listing lookup must not strand the page on
+        // the loading screen forever.
+        console.error('Could not initialize listing form:', err)
         router.push('/login')
         return
       }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_seller')
-        .eq('id', user.id)
-        .single()
-
-      if (!profile?.is_seller) {
-        alert('You need to become a seller first. Add your WhatsApp number to start selling!')
-        router.push('/become-seller')
-        return
-      }
-
-      // If editing, load the existing listing
-      if (editId) {
-        setIsEditMode(true)
-        const { data: listing } = await supabase
-          .from('listings')
-          .select('*')
-          .eq('id', editId)
-          .eq('seller_id', user.id)
-          .single()
-
-        if (!listing) {
-          alert('Listing not found or you don\'t have permission to edit it.')
-          router.push('/')
-          return
-        }
-
-        setTitle(listing.title)
-        setPrice(String(listing.price))
-        setDescription(listing.description || '')
-        setListingType(listing.listing_type as 'product' | 'service')
-        setServiceDuration(listing.service_duration || '')
-        setServiceLocation(listing.service_location || '')
-        setExistingImageUrl(listing.image_url)
-      }
-
+      // Only reached when we're keeping the visitor here.
       setChecking(false)
     }
 
@@ -85,6 +94,14 @@ function NewListingContent() {
     setImage(file)
     setImagePreview(URL.createObjectURL(file))
   }
+
+  // Revoke the preview object URL when it's replaced, removed, or the
+  // component unmounts — otherwise every photo pick leaks a blob URL.
+  useEffect(() => {
+    return () => {
+      if (imagePreview) URL.revokeObjectURL(imagePreview)
+    }
+  }, [imagePreview])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -109,8 +126,14 @@ function NewListingContent() {
 
       // Upload new image if selected
       if (image) {
-        const fileExt = image.name.split('.').pop()
-        const fileName = user.id + '-' + Date.now() + '.' + fileExt
+        // Whitelist the extension: split('.').pop() can return undefined (no
+        // extension) or a slash-containing value for names like "../x", which
+        // would otherwise build an odd storage path.
+        const rawExt = (image.name.split('.').pop() || '').toLowerCase()
+        const safeExt = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic'].includes(rawExt)
+          ? rawExt
+          : 'jpg'
+        const fileName = user.id + '-' + Date.now() + '.' + safeExt
 
         const { error: uploadError } = await supabase.storage
           .from('listing-images')

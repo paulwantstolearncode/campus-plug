@@ -49,7 +49,7 @@ export default function Home() {
             .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
             .order('created_at', { ascending: false })
 
-          if (data) setListings(data as any)
+          if (data) setListings(data as unknown as Listing[])
         }
       } catch (err) {
         console.error('Failed to load:', err)
@@ -66,23 +66,60 @@ export default function Home() {
   }, [])
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    setUser(null)
-    window.location.reload()
+    try {
+      await supabase.auth.signOut()
+    } catch (err) {
+      // Even if sign-out fails on the network, the local session is dropped
+      // by the reload below, so never leave the button appearing dead.
+      console.error('Logout failed:', err)
+    } finally {
+      setUser(null)
+      window.location.reload()
+    }
   }
 
   const handleDelete = async (listingId: string, listingTitle: string) => {
     if (!confirm('Delete "' + listingTitle + '"?\n\nThis cannot be undone.')) return
 
-    const { error } = await supabase
-      .from('listings')
-      .delete()
-      .eq('id', listingId)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
 
-    if (error) {
-      alert('Failed to delete: ' + error.message)
-    } else {
-      setListings(prev => prev.filter(l => l.id !== listingId))
+      if (!user) {
+        alert('You must be logged in')
+        return
+      }
+
+      // Scope the delete to the current user's own listing — defense in depth
+      // in case the RLS delete policy is ever misconfigured.
+      const { error } = await supabase
+        .from('listings')
+        .delete()
+        .eq('id', listingId)
+        .eq('seller_id', user.id)
+
+      if (error) {
+        alert('Failed to delete: ' + error.message)
+      } else {
+        // Best-effort: remove the listing's image from storage so deleted
+        // listings don't leave orphaned blobs behind forever.
+        const imageUrl = listings.find(l => l.id === listingId)?.image_url
+        const marker = '/listing-images/'
+        const markerIndex = imageUrl ? imageUrl.indexOf(marker) : -1
+        if (markerIndex !== -1) {
+          const fileName = imageUrl!.slice(markerIndex + marker.length).split('?')[0]
+          if (fileName) {
+            try {
+              await supabase.storage.from('listing-images').remove([fileName])
+            } catch {
+              // Non-fatal: the listing row is already deleted.
+            }
+          }
+        }
+        setListings(prev => prev.filter(l => l.id !== listingId))
+      }
+    } catch (err) {
+      console.error('Delete failed:', err)
+      alert('Something went wrong. Please try again.')
     }
   }
 
