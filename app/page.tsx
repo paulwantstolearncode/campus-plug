@@ -12,6 +12,7 @@ interface Listing {
   price: number
   image_url: string | null
   listing_type: string
+  seller_id: string
   seller: {
     full_name: string | null
     whatsapp_number: string | null
@@ -26,6 +27,7 @@ export default function Home() {
   const [scrolled, setScrolled] = useState(false)
   const [filter, setFilter] = useState<'all' | 'product' | 'service'>('all')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
     async function loadEverything() {
@@ -47,7 +49,7 @@ export default function Home() {
             .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
             .order('created_at', { ascending: false })
 
-          if (data) setListings(data as unknown as Listing[])
+          if (data) setListings(data as any)
         }
       } catch (err) {
         console.error('Failed to load:', err)
@@ -64,15 +66,23 @@ export default function Home() {
   }, [])
 
   const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut()
-    } catch (err) {
-      // Even if sign-out fails on the network, the local session is dropped
-      // by the reload below, so never leave the button appearing dead.
-      console.error('Logout failed:', err)
-    } finally {
-      setUser(null)
-      window.location.reload()
+    await supabase.auth.signOut()
+    setUser(null)
+    window.location.reload()
+  }
+
+  const handleDelete = async (listingId: string, listingTitle: string) => {
+    if (!confirm('Delete "' + listingTitle + '"?\n\nThis cannot be undone.')) return
+
+    const { error } = await supabase
+      .from('listings')
+      .delete()
+      .eq('id', listingId)
+
+    if (error) {
+      alert('Failed to delete: ' + error.message)
+    } else {
+      setListings(prev => prev.filter(l => l.id !== listingId))
     }
   }
 
@@ -91,9 +101,16 @@ export default function Home() {
     return <LandingPage />
   }
 
-  const filteredListings = filter === 'all'
-    ? listings
-    : listings.filter(l => l.listing_type === filter)
+  const filteredListings = listings
+    .filter(l => filter === 'all' ? true : l.listing_type === filter)
+    .filter(l => {
+      if (!searchQuery.trim()) return true
+      const query = searchQuery.toLowerCase()
+      return (
+        l.title.toLowerCase().includes(query) ||
+        (l.description?.toLowerCase().includes(query) ?? false)
+      )
+    })
 
   return (
     <main className="min-h-screen bg-charcoal">
@@ -128,19 +145,11 @@ export default function Home() {
             ) : (
               <Link href="/become-seller" className="shine-button text-charcoal px-4 py-2 rounded-full text-sm font-semibold">Sell</Link>
             )}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-white p-2 -mr-2"
-              aria-label="Menu"
-            >
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white p-2 -mr-2" aria-label="Menu">
               {mobileMenuOpen ? (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6L6 18M6 6l12 12"/>
-                </svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
               ) : (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 12h18M3 6h18M3 18h18"/>
-                </svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
               )}
             </button>
           </div>
@@ -156,28 +165,11 @@ export default function Home() {
                   <span className="inline-block mt-2 bg-gold/20 text-gold px-2 py-0.5 rounded-full text-xs font-semibold border border-gold/30">✓ Seller</span>
                 )}
               </div>
-              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-                <span>✨</span> All Listings
-              </Link>
-              <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-                <span>💼</span> Services
-              </Link>
-              {isSeller && (
-                <Link href="/new" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-                  <span>➕</span> Post New Listing
-                </Link>
-              )}
-              {!isSeller && (
-                <Link href="/become-seller" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-                  <span>💚</span> Become a Seller
-                </Link>
-              )}
-              <button
-                onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
-                className="px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3 text-left"
-              >
-                <span>🚪</span> Logout
-              </button>
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>✨</span> All Listings</Link>
+              <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>💼</span> Services</Link>
+              {isSeller && (<Link href="/new" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>➕</span> Post New Listing</Link>)}
+              {!isSeller && (<Link href="/become-seller" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>💚</span> Become a Seller</Link>)}
+              <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3 text-left"><span>🚪</span> Logout</button>
             </div>
           </div>
         )}
@@ -204,9 +196,39 @@ export default function Home() {
               Discover<br />
               <span className="gradient-text">amazing things</span>
             </h1>
-            <p className="fade-up fade-up-delay-2 text-lg md:text-xl text-white/70 leading-relaxed max-w-2xl">
+            <p className="fade-up fade-up-delay-2 text-lg md:text-xl text-white/70 leading-relaxed max-w-2xl mb-8">
               Products and services from verified students on your campus.
             </p>
+
+            {/* SEARCH BAR */}
+            <div className="fade-up fade-up-delay-3 max-w-xl">
+              <div className="relative">
+                <div className="absolute left-5 top-1/2 -translate-y-1/2 text-white/40">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                  </svg>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search for anything..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-14 pr-14 py-4 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-gold focus:bg-white/15 transition-all"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-5 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                    aria-label="Clear search"
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-off-white to-transparent"></div>
@@ -239,7 +261,8 @@ export default function Home() {
                 <div>
                   <p className="text-sm font-semibold text-gold tracking-widest uppercase mb-1">Marketplace</p>
                   <p className="text-2xl md:text-3xl font-bold text-charcoal">
-                    {filteredListings.length} {filter === 'all' ? 'listing' : filter}{filteredListings.length !== 1 ? 's' : ''}
+                    {filteredListings.length} {searchQuery ? 'result' : (filter === 'all' ? 'listing' : filter)}{filteredListings.length !== 1 ? 's' : ''}
+                    {searchQuery && <span className="text-gray-500 text-lg font-normal ml-2">for &quot;{searchQuery}&quot;</span>}
                   </p>
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
@@ -260,55 +283,88 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredListings.map((item, idx) => (
-                  <div key={item.id} className="group relative fade-up" style={{ animationDelay: (idx * 0.05) + 's' }}>
-                    <div className="relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
-                      <div className="relative aspect-square overflow-hidden bg-gray-100">
-                        {item.image_url ? (
-                          <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-charcoal via-gray-800 to-charcoal">
-                            <span className="text-7xl opacity-40">{item.listing_type === 'service' ? '💼' : '📦'}</span>
+              {filteredListings.length === 0 ? (
+                <div className="text-center py-20">
+                  <div className="text-6xl mb-4 opacity-50">🔍</div>
+                  <p className="text-xl font-semibold text-charcoal mb-2">No results found</p>
+                  <p className="text-gray-500">Try different keywords or clear filters</p>
+                </div>
+              ) : (
+                <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {filteredListings.map((item, idx) => {
+                    const isOwner = user && item.seller_id === user.id
+                    return (
+                      <div key={item.id} className="group relative fade-up" style={{ animationDelay: (idx * 0.05) + 's' }}>
+                        <div className="relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
+                          <div className="relative aspect-square overflow-hidden bg-gray-100">
+                            {item.image_url ? (
+                              <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-charcoal via-gray-800 to-charcoal">
+                                <span className="text-7xl opacity-40">{item.listing_type === 'service' ? '💼' : '📦'}</span>
+                              </div>
+                            )}
+                            <div className="absolute top-3 left-3 glass px-3 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
+                              <span className="w-2 h-2 bg-gold rounded-full"></span>
+                              {item.listing_type === 'service' ? 'Service' : 'Product'}
+                            </div>
+                            <div className="absolute top-3 right-3 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                              GH₵ {Number(item.price || 0).toLocaleString()}
+                            </div>
+                            {isOwner && (
+                              <div className="absolute bottom-3 right-3 bg-blue-500/90 backdrop-blur text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-lg">
+                                Your listing
+                              </div>
+                            )}
                           </div>
-                        )}
-                        <div className="absolute top-3 left-3 glass px-3 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
-                          <span className="w-2 h-2 bg-gold rounded-full"></span>
-                          {item.listing_type === 'service' ? 'Service' : 'Product'}
-                        </div>
-                        <div className="absolute top-3 right-3 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
-                          GH₵ {Number(item.price || 0).toLocaleString()}
+                          <div className="p-5">
+                            <h3 className="font-bold text-charcoal text-lg line-clamp-1 mb-1">{item.title}</h3>
+                            {item.seller?.full_name && (
+                              <p className="text-sm text-gray-500 mb-4 flex items-center gap-1.5">
+                                <span className="w-5 h-5 rounded-full bg-gold/10 text-gold-dark flex items-center justify-center text-xs font-semibold">{item.seller.full_name.charAt(0)}</span>
+                                {item.seller.full_name}
+                              </p>
+                            )}
+                            <div className="flex gap-2">
+                              {isOwner ? (
+                                <>
+                                  <Link href={"/new?edit=" + item.id} className="flex-1 flex items-center justify-center gap-1.5 bg-charcoal text-white py-2.5 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm">
+                                    ✏️ Edit
+                                  </Link>
+                                  <button
+                                    onClick={() => handleDelete(item.id, item.title)}
+                                    className="w-10 h-10 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition-all hover:scale-110 shrink-0"
+                                    title="Delete listing"
+                                  >
+                                    🗑️
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  {item.listing_type === 'service' ? (
+                                    <Link href={"/services/" + item.id + "/book"} className="flex-1 flex items-center justify-center gap-1.5 bg-charcoal text-white py-2.5 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm">
+                                      📅 Book
+                                    </Link>
+                                  ) : (
+                                    item.seller?.whatsapp_number && (
+                                      <a href={"https://wa.me/" + item.seller.whatsapp_number + "?text=" + encodeURIComponent("Hi! I'm interested in your \"" + item.title + "\" listing on Campus Plug 🔌")} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1.5 bg-charcoal text-white py-2.5 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm">
+                                        💬 Message
+                                      </a>
+                                    )
+                                  )}
+                                  {item.listing_type === 'service' && item.seller?.whatsapp_number && (
+                                    <a href={"https://wa.me/" + item.seller.whatsapp_number + "?text=" + encodeURIComponent("Hi! I have a question about your \"" + item.title + "\" service on Campus Plug 🔌")} target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center bg-green-500 text-white rounded-full hover:bg-green-600 transition-all hover:scale-110 shrink-0" title="Message on WhatsApp">💬</a>
+                                  )}
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="p-5">
-                        <h3 className="font-bold text-charcoal text-lg line-clamp-1 mb-1">{item.title}</h3>
-                        {item.seller?.full_name && (
-                          <p className="text-sm text-gray-500 mb-4 flex items-center gap-1.5">
-                            <span className="w-5 h-5 rounded-full bg-gold/10 text-gold-dark flex items-center justify-center text-xs font-semibold">{item.seller.full_name.charAt(0)}</span>
-                            {item.seller.full_name}
-                          </p>
-                        )}
-                        <div className="flex gap-2">
-                          {item.listing_type === 'service' ? (
-                            <Link href={"/services/" + item.id + "/book"} className="flex-1 flex items-center justify-center gap-1.5 bg-charcoal text-white py-2.5 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm">
-                              📅 Book
-                            </Link>
-                          ) : (
-                            item.seller?.whatsapp_number && (
-                              <a href={"https://wa.me/" + item.seller.whatsapp_number + "?text=" + encodeURIComponent("Hi! I'm interested in your \"" + item.title + "\" listing on Campus Plug 🔌")} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1.5 bg-charcoal text-white py-2.5 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm">
-                                💬 Message
-                              </a>
-                            )
-                          )}
-                          {item.listing_type === 'service' && item.seller?.whatsapp_number && (
-                            <a href={"https://wa.me/" + item.seller.whatsapp_number + "?text=" + encodeURIComponent("Hi! I have a question about your \"" + item.title + "\" service on Campus Plug 🔌")} target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center bg-green-500 text-white rounded-full hover:bg-green-600 transition-all hover:scale-110 shrink-0" title="Message on WhatsApp">💬</a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                    )
+                  })}
+                </div>
+              )}
             </>
           )}
         </div>
