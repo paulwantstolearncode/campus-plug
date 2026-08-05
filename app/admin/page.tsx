@@ -35,111 +35,147 @@ export default function AdminPage() {
   const [listings, setListings] = useState<PendingListing[]>([])
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
   useEffect(() => {
+    async function loadData() {
+      // Load pending sellers
+      const { data: sellersData, error: sellersError } = await supabase
+        .from('profiles')
+        .select('id, full_name, whatsapp_number, seller_status, created_at')
+        .eq('seller_status', 'pending')
+        .not('whatsapp_number', 'is', null)
+        .order('created_at', { ascending: false })
+
+      if (sellersError) {
+        setError('Could not load pending sellers: ' + sellersError.message)
+      } else if (sellersData) {
+        setSellers(sellersData)
+      }
+
+      // Load pending listings
+      const { data: listingsData, error: listingsError } = await supabase
+        .from('listings')
+        .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
+        .eq('approval_status', 'pending')
+        .order('created_at', { ascending: false })
+
+      if (listingsError) {
+        setError('Could not load pending listings: ' + listingsError.message)
+      } else if (listingsData) {
+        setListings(listingsData as unknown as PendingListing[])
+      }
+    }
+
+    async function checkAdmin() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (!user) {
+          router.push('/login')
+          return
+        }
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', user.id)
+          .single()
+
+        if (!profile?.is_admin) {
+          alert('Admin access only')
+          router.push('/')
+          return
+        }
+
+        setIsAdmin(true)
+        await loadData()
+      } catch (err) {
+        // A failed lookup must not strand the admin on the spinner forever.
+        console.error('Could not load admin data:', err)
+        setError('Could not load the review queue. Check your connection and try again.')
+      } finally {
+        setLoading(false)
+      }
+    }
+
     checkAdmin()
   }, [])
 
-  async function checkAdmin() {
-    const { data: { user } } = await supabase.auth.getUser()
-
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('is_admin')
-      .eq('id', user.id)
-      .single()
-
-    if (!profile?.is_admin) {
-      alert('Admin access only')
-      router.push('/')
-      return
-    }
-
-    setIsAdmin(true)
-    await loadData()
-    setLoading(false)
-  }
-
-  async function loadData() {
-    // Load pending sellers
-    const { data: sellersData } = await supabase
-      .from('profiles')
-      .select('id, full_name, whatsapp_number, seller_status, created_at')
-      .eq('seller_status', 'pending')
-      .not('whatsapp_number', 'is', null)
-      .order('created_at', { ascending: false })
-
-    if (sellersData) setSellers(sellersData)
-
-    // Load pending listings
-    const { data: listingsData } = await supabase
-      .from('listings')
-      .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
-      .eq('approval_status', 'pending')
-      .order('created_at', { ascending: false })
-
-    if (listingsData) setListings(listingsData as any)
-  }
-
   async function approveSeller(id: string) {
-    const { error } = await supabase
-      .from('profiles')
-      .update({ seller_status: 'approved', is_seller: true })
-      .eq('id', id)
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ seller_status: 'approved', is_seller: true })
+        .eq('id', id)
 
-    if (error) {
-      alert('Failed: ' + error.message)
-    } else {
-      setSellers(prev => prev.filter(s => s.id !== id))
+      if (error) {
+        alert('Failed: ' + error.message)
+      } else {
+        setSellers(prev => prev.filter(s => s.id !== id))
+      }
+    } catch (err) {
+      console.error('Approve seller failed:', err)
+      alert('Something went wrong. Please try again.')
     }
   }
 
   async function rejectSeller(id: string) {
     if (!confirm('Reject this seller?')) return
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ seller_status: 'rejected', is_seller: false })
-      .eq('id', id)
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ seller_status: 'rejected', is_seller: false })
+        .eq('id', id)
 
-    if (error) {
-      alert('Failed: ' + error.message)
-    } else {
-      setSellers(prev => prev.filter(s => s.id !== id))
+      if (error) {
+        alert('Failed: ' + error.message)
+      } else {
+        setSellers(prev => prev.filter(s => s.id !== id))
+      }
+    } catch (err) {
+      console.error('Reject seller failed:', err)
+      alert('Something went wrong. Please try again.')
     }
   }
 
   async function approveListing(id: string) {
-    const { error } = await supabase
-      .from('listings')
-      .update({ approval_status: 'approved' })
-      .eq('id', id)
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .update({ approval_status: 'approved' })
+        .eq('id', id)
 
-    if (error) {
-      alert('Failed: ' + error.message)
-    } else {
-      setListings(prev => prev.filter(l => l.id !== id))
+      if (error) {
+        alert('Failed: ' + error.message)
+      } else {
+        setListings(prev => prev.filter(l => l.id !== id))
+      }
+    } catch (err) {
+      console.error('Approve listing failed:', err)
+      alert('Something went wrong. Please try again.')
     }
   }
 
   async function rejectListing(id: string, title: string) {
     if (!confirm('Reject "' + title + '"?')) return
 
-    const { error } = await supabase
-      .from('listings')
-      .update({ approval_status: 'rejected' })
-      .eq('id', id)
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .update({ approval_status: 'rejected' })
+        .eq('id', id)
 
-    if (error) {
-      alert('Failed: ' + error.message)
-    } else {
-      setListings(prev => prev.filter(l => l.id !== id))
+      if (error) {
+        alert('Failed: ' + error.message)
+      } else {
+        setListings(prev => prev.filter(l => l.id !== id))
+      }
+    } catch (err) {
+      console.error('Reject listing failed:', err)
+      alert('Something went wrong. Please try again.')
     }
   }
 
@@ -178,6 +214,12 @@ export default function AdminPage() {
 
       <section className="bg-off-white -mt-4 pb-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+
+          {error && (
+            <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+              ⚠️ {error}
+            </div>
+          )}
 
           <div className="flex gap-2 mb-8 overflow-x-auto">
             <button

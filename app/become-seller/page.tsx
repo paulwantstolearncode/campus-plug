@@ -13,31 +13,42 @@ export default function BecomeSellerPage() {
 
   useEffect(() => {
     async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser()
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
 
-      if (!user) {
-        router.push('/login')
-        return
-      }
+        if (!user) {
+          router.push('/login')
+          return
+        }
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('is_seller, seller_status, whatsapp_number')
-        .eq('id', user.id)
-        .single()
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_seller, seller_status, whatsapp_number')
+          .eq('id', user.id)
+          .single()
 
-      if (profile?.is_seller && profile?.seller_status === 'approved') {
-        alert('You are already a verified seller!')
-        router.push('/')
-        return
-      }
+        // Treat legacy rows (is_seller true, seller_status NULL — created before
+        // the manual-approval flow) as already verified, so revisiting this page
+        // doesn't silently downgrade them to 'pending' and put them back in the
+        // admin queue. Rejected sellers (is_seller false) fall through to reapply.
+        if (profile?.is_seller && profile?.seller_status !== 'pending') {
+          alert('You are already a verified seller!')
+          router.push('/')
+          return
+        }
 
-      if (profile?.seller_status === 'pending' && profile?.whatsapp_number) {
-        setStatus('pending')
-      }
+        if (profile?.seller_status === 'pending' && profile?.whatsapp_number) {
+          setStatus('pending')
+        }
 
-      if (profile?.whatsapp_number) {
-        setWhatsapp(profile.whatsapp_number)
+        if (profile?.whatsapp_number) {
+          setWhatsapp(profile.whatsapp_number)
+        }
+      } catch (err) {
+        // A failed auth/profile lookup must not strand the page on the
+        // 'Loading...' screen forever — show the form; the submit path
+        // re-checks the session anyway.
+        console.error('Could not check seller status:', err)
       }
 
       setChecking(false)
@@ -50,7 +61,10 @@ export default function BecomeSellerPage() {
     const digits = number.replace(/\D/g, '')
     if (digits.length === 10 && digits.startsWith('0')) return true
     if (digits.length === 12 && digits.startsWith('233')) return true
-    if (digits.length === 9) return true
+    // 9 digits without a leading 0 (e.g. 244123456 = 0244123456). A 9-digit
+    // number starting with 0 is a truncated 10-digit input — reject it, since
+    // formatWhatsApp would otherwise store the invalid "2330..." form.
+    if (digits.length === 9 && !digits.startsWith('0')) return true
     return false
   }
 
@@ -81,18 +95,47 @@ export default function BecomeSellerPage() {
 
       const formattedNumber = formatWhatsApp(whatsapp)
 
-      const { error } = await supabase
+      // .update() silently matches 0 rows when no profile row exists (e.g.
+      // accounts created before the handle_new_user trigger was deployed) and
+      // then "succeeds" — the user would see 'Application received' while
+      // nothing lands in the admin review queue. Detect the 0-row match and
+      // create the row in that case.
+      const { data: updated, error } = await supabase
         .from('profiles')
         .update({
           whatsapp_number: formattedNumber,
           seller_status: 'pending',
         })
         .eq('id', user.id)
+        .select('id')
 
       if (error) {
         alert('Something went wrong. Please try again.')
         console.error(error)
+      } else if (!updated || updated.length === 0) {
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .upsert(
+            {
+              id: user.id,
+              whatsapp_number: formattedNumber,
+              seller_status: 'pending',
+              is_seller: false,
+            },
+            { onConflict: 'id' }
+          )
+
+        if (insertError) {
+          alert('Something went wrong. Please try again.')
+          console.error(insertError)
+        } else {
+          setWhatsapp(formattedNumber)
+          setStatus('pending')
+        }
       } else {
+        // Show the formatted international number on the confirmation screen
+        // instead of the raw local-format input (e.g. "+0244 123 456").
+        setWhatsapp(formattedNumber)
         setStatus('pending')
       }
     } catch (err) {
