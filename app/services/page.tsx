@@ -24,37 +24,31 @@ export default function ServicesPage() {
   const [user, setUser] = useState<User | null>(null)
   const [isSeller, setIsSeller] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   useEffect(() => {
     async function loadEverything() {
-      try {
-        const { data: { user } } = await supabase.auth.getUser()
-        setUser(user)
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
 
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_seller')
-            .eq('id', user.id)
-            .single()
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_seller')
+          .eq('id', user.id)
+          .single()
 
-          setIsSeller(profile?.is_seller || false)
-        }
-
-        const { data } = await supabase
-          .from('listings')
-          .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
-          .eq('listing_type', 'service')
-          .order('created_at', { ascending: false })
-
-        if (data) setServices(data as Service[])
-      } catch (err) {
-        // A failed auth/network lookup must not strand the page on the
-        // loading screen forever.
-        console.error('Failed to load services:', err)
-      } finally {
-        setLoading(false)
+        setIsSeller(profile?.is_seller || false)
       }
+
+      const { data } = await supabase
+        .from('listings')
+        .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
+        .eq('listing_type', 'service')
+        .order('created_at', { ascending: false })
+
+      if (data) setServices(data as any)
+      setLoading(false)
     }
 
     loadEverything()
@@ -84,111 +78,6 @@ export default function ServicesPage() {
   return (
     <main className="min-h-screen bg-charcoal">
       <nav className={"fixed top-0 w-full z-50 transition-all duration-300 " + (scrolled ? "bg-charcoal/80 backdrop-blur-xl border-b border-white/10" : "bg-transparent")}>
-  <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-    <div className="flex items-center gap-4 sm:gap-8">
-      <Link href="/" className="flex items-center gap-2 group">
-        <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
-        <span className="text-lg sm:text-xl font-bold text-white tracking-tight">Campus Plug</span>
-      </Link>
-      <div className="hidden md:flex gap-6">
-        <Link href="/" className="text-sm font-medium text-white/60 hover:text-gold transition-colors">All</Link>
-        <Link href="/services" className="text-sm font-medium text-white border-b-2 border-gold pb-1">Services</Link>
-      </div>
-    </div>
-
-    {/* Desktop Menu */}
-    <div className="hidden md:flex items-center gap-4">
-      {user ? (
-        <>
-          {isSeller && (
-            <span className="bg-gold/20 text-gold px-3 py-1 rounded-full text-xs font-semibold border border-gold/30">✓ Seller</span>
-          )}
-          {isSeller ? (
-            <Link href="/new" className="bg-white text-charcoal px-5 py-2 rounded-full text-sm font-semibold hover:bg-gold transition-all hover:scale-105">+ Post</Link>
-          ) : (
-            <Link href="/become-seller" className="shine-button text-charcoal px-5 py-2 rounded-full text-sm font-semibold hover:scale-105 transition-transform">Sell</Link>
-          )}
-          <button onClick={handleLogout} className="text-sm text-white/50 hover:text-white transition-colors">Logout</button>
-        </>
-      ) : (
-        <Link href="/login" className="bg-gold text-charcoal px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-gold-dark transition-all hover:scale-105">Get Started</Link>
-      )}
-    </div>
-
-    {/* Mobile Menu Button */}
-    <div className="md:hidden flex items-center gap-3">
-      {user ? (
-        isSeller ? (
-          <Link href="/new" className="bg-white text-charcoal px-4 py-2 rounded-full text-sm font-semibold">+ Post</Link>
-        ) : (
-          <Link href="/become-seller" className="shine-button text-charcoal px-4 py-2 rounded-full text-sm font-semibold">Sell</Link>
-        )
-      ) : (
-        <Link href="/login" className="bg-gold text-charcoal px-4 py-2 rounded-full text-sm font-semibold">Login</Link>
-      )}
-      <button
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="text-white p-2 -mr-2"
-        aria-label="Menu"
-      >
-        {mobileMenuOpen ? (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M18 6L6 18M6 6l12 12"/>
-          </svg>
-        ) : (
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M3 12h18M3 6h18M3 18h18"/>
-          </svg>
-        )}
-      </button>
-    </div>
-  </div>
-
-  {/* Mobile Dropdown Menu */}
-  {mobileMenuOpen && (
-    <div className="md:hidden bg-charcoal/95 backdrop-blur-xl border-t border-white/10 px-4 py-4">
-      <div className="flex flex-col gap-1">
-        {user && (
-          <div className="px-4 py-3 border-b border-white/10 mb-2">
-            <p className="text-xs text-white/50 mb-1">Signed in as</p>
-            <p className="text-sm text-white truncate">{user.email}</p>
-            {isSeller && (
-              <span className="inline-block mt-2 bg-gold/20 text-gold px-2 py-0.5 rounded-full text-xs font-semibold border border-gold/30">✓ Seller</span>
-            )}
-          </div>
-        )}
-        <Link href="/" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-          <span>✨</span> All Listings
-        </Link>
-        <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-          <span>💼</span> Services
-        </Link>
-        {user && isSeller && (
-          <Link href="/new" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-            <span>➕</span> Post New Listing
-          </Link>
-        )}
-        {user && !isSeller && (
-          <Link href="/become-seller" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-            <span>💚</span> Become a Seller
-          </Link>
-        )}
-        {user ? (
-          <button
-            onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
-            className="px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3 text-left"
-          >
-            <span>🚪</span> Logout
-          </button>
-        ) : (
-          <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-gold hover:bg-gold/10 rounded-xl transition-colors flex items-center gap-3">
-            <span>🔑</span> Sign In
-          </Link>
-        )}
-      </div>
-    </div>
-  )}
-</nav>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4 sm:gap-8">
             <Link href="/" className="flex items-center gap-2 group">
@@ -200,24 +89,96 @@ export default function ServicesPage() {
               <Link href="/services" className="text-sm font-medium text-white border-b-2 border-gold pb-1">Services</Link>
             </div>
           </div>
-          <div className="flex items-center gap-2 sm:gap-4">
+
+          <div className="hidden md:flex items-center gap-4">
             {user ? (
               <>
                 {isSeller && (
-                  <span className="hidden md:inline-block bg-gold/20 text-gold px-3 py-1 rounded-full text-xs font-semibold border border-gold/30">✓ Seller</span>
+                  <span className="bg-gold/20 text-gold px-3 py-1 rounded-full text-xs font-semibold border border-gold/30">✓ Seller</span>
                 )}
                 {isSeller ? (
-                  <Link href="/new" className="bg-white text-charcoal px-4 sm:px-5 py-2 rounded-full text-sm font-semibold hover:bg-gold transition-all hover:scale-105">+ Post</Link>
+                  <Link href="/new" className="bg-white text-charcoal px-5 py-2 rounded-full text-sm font-semibold hover:bg-gold transition-all hover:scale-105">+ Post</Link>
                 ) : (
-                  <Link href="/become-seller" className="shine-button text-charcoal px-4 sm:px-5 py-2 rounded-full text-sm font-semibold hover:scale-105 transition-transform">Sell</Link>
+                  <Link href="/become-seller" className="shine-button text-charcoal px-5 py-2 rounded-full text-sm font-semibold hover:scale-105 transition-transform">Sell</Link>
                 )}
-                <button onClick={handleLogout} className="hidden sm:block text-sm text-white/50 hover:text-white transition-colors">Logout</button>
+                <button onClick={handleLogout} className="text-sm text-white/50 hover:text-white transition-colors">Logout</button>
               </>
             ) : (
-              <Link href="/login" className="bg-gold text-charcoal px-4 sm:px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-gold-dark transition-all hover:scale-105">Get Started</Link>
+              <Link href="/login" className="bg-gold text-charcoal px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-gold-dark transition-all hover:scale-105">Get Started</Link>
             )}
           </div>
+
+          <div className="md:hidden flex items-center gap-3">
+            {user ? (
+              isSeller ? (
+                <Link href="/new" className="bg-white text-charcoal px-4 py-2 rounded-full text-sm font-semibold">+ Post</Link>
+              ) : (
+                <Link href="/become-seller" className="shine-button text-charcoal px-4 py-2 rounded-full text-sm font-semibold">Sell</Link>
+              )
+            ) : (
+              <Link href="/login" className="bg-gold text-charcoal px-4 py-2 rounded-full text-sm font-semibold">Login</Link>
+            )}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="text-white p-2 -mr-2"
+              aria-label="Menu"
+            >
+              {mobileMenuOpen ? (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12"/>
+                </svg>
+              ) : (
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 12h18M3 6h18M3 18h18"/>
+                </svg>
+              )}
+            </button>
+          </div>
         </div>
+
+        {mobileMenuOpen && (
+          <div className="md:hidden bg-charcoal/95 backdrop-blur-xl border-t border-white/10 px-4 py-4">
+            <div className="flex flex-col gap-1">
+              {user && (
+                <div className="px-4 py-3 border-b border-white/10 mb-2">
+                  <p className="text-xs text-white/50 mb-1">Signed in as</p>
+                  <p className="text-sm text-white truncate">{user.email}</p>
+                  {isSeller && (
+                    <span className="inline-block mt-2 bg-gold/20 text-gold px-2 py-0.5 rounded-full text-xs font-semibold border border-gold/30">✓ Seller</span>
+                  )}
+                </div>
+              )}
+              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
+                <span>✨</span> All Listings
+              </Link>
+              <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
+                <span>💼</span> Services
+              </Link>
+              {user && isSeller && (
+                <Link href="/new" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
+                  <span>➕</span> Post New Listing
+                </Link>
+              )}
+              {user && !isSeller && (
+                <Link href="/become-seller" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
+                  <span>💚</span> Become a Seller
+                </Link>
+              )}
+              {user ? (
+                <button
+                  onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
+                  className="px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3 text-left"
+                >
+                  <span>🚪</span> Logout
+                </button>
+              ) : (
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-gold hover:bg-gold/10 rounded-xl transition-colors flex items-center gap-3">
+                  <span>🔑</span> Sign In
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </nav>
 
       <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden animated-gradient">
