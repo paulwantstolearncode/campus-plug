@@ -29,25 +29,34 @@ export default function LoginPage() {
 
     setLoading(true)
 
-    if (isSignUp) {
-      const { error } = await supabase.auth.signUp({
+        if (isSignUp) {
+      const { data, error } = await supabase.auth.signUp({
         email: trimmedEmail,
         password: trimmedPassword,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
         }
       })
+
       if (error) {
-  console.error('Full signup error:', JSON.stringify(error, null, 2))
-  alert('Error: ' + (error.message || error.code || JSON.stringify(error)))
-} else {
+        console.error('Signup error:', error)
+        alert('Error: ' + (error.message || 'Something went wrong. Please try again.'))
+      } else if (data.user && !data.session) {
+        // Email confirmation required
         alert(
           '📧 Check your email!\n\n' +
           'We sent a confirmation link to ' + trimmedEmail + '\n\n' +
-          'Click the link to activate your account, then come back and log in.'
+          'Click the link to activate your account, then come back to log in.\n\n' +
+          'Don\'t see it? Check your spam folder.'
         )
         setIsSignUp(false)
+      } else if (data.session) {
+        // Auto-signed in (email confirmation off)
+        alert('🎉 Welcome to Campus Plug!')
+        router.push('/')
+        router.refresh()
       }
+    }
     } else {
       const { error } = await supabase.auth.signInWithPassword({
         email: trimmedEmail,
