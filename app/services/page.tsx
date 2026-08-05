@@ -42,11 +42,12 @@ export default function ServicesPage() {
           setIsSeller(profile?.is_seller || false)
         }
 
-        const { data } = await supabase
-          .from('listings')
-          .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
-          .eq('listing_type', 'service')
-          .order('created_at', { ascending: false })
+       const { data } = await supabase
+  .from('listings')
+  .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
+  .eq('listing_type', 'service')
+  .eq('approval_status', 'approved')
+  .order('created_at', { ascending: false })
 
         if (data) setServices(data as unknown as Service[])
       } catch (err) {

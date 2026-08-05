@@ -22,14 +22,15 @@ export default function LandingPage() {
     async function loadFeatured() {
       try {
         const { data } = await supabase
-          .from('listings')
-          .select(`
-            id, title, price, image_url, service_location,
-            seller:profiles!seller_id (full_name)
-          `)
-          .eq('listing_type', 'service')
-          .order('created_at', { ascending: false })
-          .limit(6)
+  .from('listings')
+  .select(`
+    id, title, price, image_url, service_location,
+    seller:profiles!seller_id (full_name)
+  `)
+  .eq('listing_type', 'service')
+  .eq('approval_status', 'approved')
+  .order('created_at', { ascending: false })
+  .limit(6)
 
         // The explicit-column select makes supabase-js infer the embedded
         // `seller` join as an array; at runtime it is a single object (to-one

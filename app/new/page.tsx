@@ -163,27 +163,32 @@ function NewListingContent() {
       }
 
       let result
-      if (isEditMode && editId) {
-        // UPDATE existing listing
-        result = await supabase
-          .from('listings')
-          .update(payload)
-          .eq('id', editId)
-          .eq('seller_id', user.id)
-      } else {
-        // CREATE new listing
-        result = await supabase.from('listings').insert({
-          ...payload,
-          seller_id: user.id,
-        })
-      }
+     if (isEditMode && editId) {
+  // UPDATE existing listing — reset to pending review after edit
+  result = await supabase
+    .from('listings')
+    .update({ ...payload, approval_status: 'pending' })
+    .eq('id', editId)
+    .eq('seller_id', user.id)
+} else {
+  // CREATE new listing — starts as pending
+  result = await supabase.from('listings').insert({
+    ...payload,
+    seller_id: user.id,
+    approval_status: 'pending',
+  })
+}
 
       if (result.error) {
-        alert(result.error.message)
-      } else {
-        router.push('/')
-        router.refresh()
-      }
+  alert(result.error.message)
+} else {
+  alert(isEditMode
+    ? '✅ Listing updated!\n\nYour changes are pending review. We\'ll approve it within a few hours.'
+    : '🎉 Listing submitted!\n\nWe personally review every listing to ensure quality. You\'ll see it live within a few hours.'
+  )
+  router.push('/')
+  router.refresh()
+}
     } catch (err) {
       alert('Something went wrong. Please try again.')
       console.error(err)

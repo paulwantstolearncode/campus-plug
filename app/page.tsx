@@ -44,10 +44,11 @@ export default function Home() {
 
           setIsSeller(profile?.is_seller || false)
 
-          const { data } = await supabase
-            .from('listings')
-            .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
-            .order('created_at', { ascending: false })
+         const { data } = await supabase
+  .from('listings')
+  .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
+  .eq('approval_status', 'approved')
+  .order('created_at', { ascending: false })
 
           if (data) setListings(data as unknown as Listing[])
         }
