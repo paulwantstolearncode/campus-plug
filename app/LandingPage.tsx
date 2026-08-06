@@ -106,7 +106,10 @@ export default function LandingPage() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-gold"></span>
               </span>
-              Now live at University of Ghana
+              <span className="flex flex-col items-start leading-tight">
+                <span>Now live at University of Ghana</span>
+                <span className="text-xs font-medium text-charcoal/60">Built by an engineering student</span>
+              </span>
             </div>
 
             {/* Main headline */}

@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const SUPPORT_WHATSAPP = '233202388411' // ⚠️ REPLACE with YOUR WhatsApp number
 
@@ -49,6 +49,29 @@ const FAQS = [
 export default function HelpButton() {
   const [isOpen, setIsOpen] = useState(false)
   const [openFAQ, setOpenFAQ] = useState<number | null>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+
+  // Close on Escape and lock background scroll while the modal is open (it is
+  // a bottom sheet on mobile, so without this the page scrolls behind it).
+  useEffect(() => {
+    if (!isOpen) return
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    // Move focus into the dialog so aria-modal=true is honest (otherwise focus
+    // stays on the trigger behind the modal).
+    dialogRef.current?.focus()
+
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prevOverflow
+    }
+  }, [isOpen])
 
   const handleWhatsAppClick = () => {
     const message = encodeURIComponent(
@@ -64,8 +87,12 @@ export default function HelpButton() {
         onClick={() => setIsOpen(true)}
         className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-gradient-to-br from-gold to-gold-dark text-charcoal rounded-full shadow-2xl shadow-gold/50 hover:scale-110 transition-transform flex items-center justify-center text-2xl font-bold group"
         aria-label="Need help?"
+        aria-haspopup="dialog"
+        aria-expanded={isOpen}
       >
-        <span className="group-hover:rotate-12 transition-transform">?</span>
+        {/* The glyph needs a stacking context (relative z-10) or the
+            animate-ping ring below paints over it every cycle. */}
+        <span className="relative z-10 group-hover:rotate-12 transition-transform">?</span>
 
         {/* Pulse ring */}
         <span className="absolute inset-0 rounded-full bg-gold/40 animate-ping"></span>
@@ -79,6 +106,11 @@ export default function HelpButton() {
         >
           {/* Modal Content */}
           <div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Campus Plug help"
+            tabIndex={-1}
             className="bg-white w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl max-h-[85vh] flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
@@ -118,6 +150,7 @@ export default function HelpButton() {
                 >
                   <button
                     onClick={() => setOpenFAQ(openFAQ === idx ? null : idx)}
+                    aria-expanded={openFAQ === idx}
                     className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-gray-100 transition-colors"
                   >
                     <div className="flex items-center gap-3">

@@ -14,8 +14,11 @@ export const metadata: Metadata = {
     locale: "en_GH",
     type: "website",
   },
+  // No OG image asset exists yet, so advertise the plain summary card — a
+  // "summary_large_image" card with no images configured renders image-less.
+  // Add openGraph.images + twitter.images when a real 1200x630 asset is ready.
   twitter: {
-    card: "summary_large_image",
+    card: "summary",
     title: "Campus Plug 🔌",
     description: "Book trusted services from verified UG students.",
   },
