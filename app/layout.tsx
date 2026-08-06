@@ -1,20 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
+import HelpButton from "./HelpButton";
 
 export const metadata: Metadata = {
-  title: "Campus Plug",
-  description: "The student marketplace for campus deals",
+  title: "Campus Plug 🔌 — The Student Marketplace",
+  description: "Book trusted services from verified UG students. Hair braiding, tutoring, tech support, photography, and more — all in one place.",
+  keywords: ["campus plug", "UG marketplace", "student services Ghana", "University of Ghana", "book services"],
+  openGraph: {
+    title: "Campus Plug 🔌",
+    description: "The premium marketplace for UG students. Every student. Every skill. One plug.",
+    url: "https://campus-plug-oukb.vercel.app",
+    siteName: "Campus Plug",
+    locale: "en_GH",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Campus Plug 🔌",
+    description: "Book trusted services from verified UG students.",
+  },
 };
 
 export default function RootLayout({
@@ -23,11 +27,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col">{children}</body>
+    <html lang="en">
+      <body>
+        {children}
+        <HelpButton />
+      </body>
     </html>
   );
 }
