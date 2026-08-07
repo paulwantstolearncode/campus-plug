@@ -197,6 +197,9 @@ export default function Home() {
             {isSeller && (
               <span className="bg-gold/20 text-gold px-3 py-1 rounded-full text-xs font-semibold border border-gold/30">✓ Seller</span>
             )}
+            {isSeller && (
+              <Link href="/dashboard" className="bg-white/10 text-white px-3 py-1 rounded-full text-xs font-semibold border border-white/20 hover:bg-white/20 transition-colors">📊 Dashboard</Link>
+            )}
             {isSeller ? (
               <Link href="/new" className="bg-white text-charcoal px-5 py-2 rounded-full text-sm font-semibold hover:bg-gold transition-all hover:scale-105">+ Post</Link>
             ) : (
@@ -237,6 +240,7 @@ export default function Home() {
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>✨</span> All Listings</Link>
               <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>💼</span> Services</Link>
               {isAdmin && (<Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3"><span>🛡️</span> Admin Panel</Link>)}
+              {isSeller && (<Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>📊</span> Dashboard</Link>)}
               {isSeller && (<Link href="/new" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>➕</span> Post New Listing</Link>)}
               {!isSeller && (<Link href="/become-seller" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>💚</span> Become a Seller</Link>)}
               <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3 text-left"><span>🚪</span> Logout</button>
