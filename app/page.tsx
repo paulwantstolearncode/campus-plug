@@ -22,6 +22,7 @@ interface Listing {
 export default function Home() {
   const [listings, setListings] = useState<Listing[]>([])
   const [isSeller, setIsSeller] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [scrolled, setScrolled] = useState(false)
@@ -38,11 +39,12 @@ export default function Home() {
         if (user) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('is_seller')
+            .select('is_seller, is_admin')
             .eq('id', user.id)
             .single()
 
           setIsSeller(profile?.is_seller || false)
+          setIsAdmin(profile?.is_admin || false)
 
          const { data } = await supabase
   .from('listings')
@@ -166,6 +168,10 @@ export default function Home() {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
+            <span className="hidden lg:block text-sm text-white/60 max-w-[180px] truncate" title={user.email}>{user.email}</span>
+            {isAdmin && (
+              <Link href="/admin" className="bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-xs font-semibold hover:bg-red-500/30 hover:text-red-300 transition-colors">🛡️ Admin</Link>
+            )}
             {isSeller && (
               <span className="bg-gold/20 text-gold px-3 py-1 rounded-full text-xs font-semibold border border-gold/30">✓ Seller</span>
             )}
@@ -202,9 +208,13 @@ export default function Home() {
                 {isSeller && (
                   <span className="inline-block mt-2 bg-gold/20 text-gold px-2 py-0.5 rounded-full text-xs font-semibold border border-gold/30">✓ Seller</span>
                 )}
+                {isAdmin && (
+                  <span className="inline-block mt-2 ml-1.5 bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full text-xs font-semibold border border-red-500/30">🛡️ Admin</span>
+                )}
               </div>
               <Link href="/" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>✨</span> All Listings</Link>
               <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>💼</span> Services</Link>
+              {isAdmin && (<Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3"><span>🛡️</span> Admin Panel</Link>)}
               {isSeller && (<Link href="/new" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>➕</span> Post New Listing</Link>)}
               {!isSeller && (<Link href="/become-seller" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>💚</span> Become a Seller</Link>)}
               <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3 text-left"><span>🚪</span> Logout</button>
