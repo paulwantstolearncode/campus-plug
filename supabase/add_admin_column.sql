@@ -14,3 +14,8 @@ alter table public.profiles
 update public.profiles
 set is_admin = true
 where id = (select id from auth.users where email = 'YOU@EXAMPLE.COM');
+
+-- Verify (email is in auth.users, not profiles):
+--   select p.id, u.email, p.is_admin
+--   from public.profiles p
+--   join auth.users u on u.id = p.id;
