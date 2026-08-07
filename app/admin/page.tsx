@@ -327,59 +327,89 @@ export default function AdminPage() {
               </div>
             ) : (
               <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {listings.map(listing => (
-                  <div key={listing.id} className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100">
-                    {listing.image_url ? (
-                      <img src={listing.image_url} alt={listing.title} className="w-full h-48 object-cover" />
-                    ) : (
-                      <div className="w-full h-48 bg-gradient-to-br from-charcoal to-gray-800 flex items-center justify-center">
-                        <span className="text-5xl opacity-40">{listing.listing_type === 'service' ? '💼' : '📦'}</span>
-                      </div>
-                    )}
+                {listings.map(listing => {
+                  const sellerName = listing.seller?.full_name || 'Unknown'
+                  const namePrefix = (listing.seller?.full_name?.split('@')[0] || sellerName).trim()
+                  const created = new Date(listing.created_at)
+                  const postedDate = created.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                  const fullTimestamp = created.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                  const price = 'GH₵ ' + Number(listing.price).toLocaleString()
+                  const reason = listing.listing_type === 'service'
+                    ? (listing.service_duration
+                        ? `What's included in the ${listing.service_duration} session? Any special requirements from buyers?`
+                        : "What's included in the session? Any special requirements from buyers?")
+                    : 'Is this brand new or used? Any additional photos available?'
+                  const waMessage = `Hi ${namePrefix}! 👋\n\nThis is Paul from Campus Plug 🔌\n\nReviewing your new listing:\n📦 Title: ${listing.title}\n💰 Price: ${price}\n📅 Posted: ${postedDate}\n\nQuick question before I approve: ${reason}\n\nOnce we chat, I'll approve it right away. Thanks for being one of our first sellers! 🙏`
 
-                    <div className="p-5">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className={"text-xs font-bold px-2 py-1 rounded-full " + (listing.listing_type === 'service' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700')}>
-                          {listing.listing_type === 'service' ? '💼 Service' : '📦 Product'}
-                        </span>
-                        <span className="text-xs text-gray-500">{new Date(listing.created_at).toLocaleDateString()}</span>
-                      </div>
-
-                      <h3 className="font-bold text-charcoal text-lg mb-1">{listing.title}</h3>
-                      <p className="text-2xl font-bold text-gold-dark mb-2">GH₵ {Number(listing.price).toLocaleString()}</p>
-
-                      {listing.description && (
-                        <p className="text-sm text-gray-600 mb-3 line-clamp-3">{listing.description}</p>
+                  return (
+                    <div key={listing.id} className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100">
+                      {listing.image_url ? (
+                        <img src={listing.image_url} alt={listing.title} className="w-full h-48 object-cover" />
+                      ) : (
+                        <div className="w-full h-48 bg-gradient-to-br from-charcoal to-gray-800 flex items-center justify-center">
+                          <span className="text-5xl opacity-40">{listing.listing_type === 'service' ? '💼' : '📦'}</span>
+                        </div>
                       )}
 
-                      {listing.service_duration && (
-                        <p className="text-xs text-gray-500">⏱ {listing.service_duration}</p>
-                      )}
-                      {listing.service_location && (
-                        <p className="text-xs text-gray-500">📍 {listing.service_location}</p>
-                      )}
+                      <div className="p-5">
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={"text-xs font-bold px-2 py-1 rounded-full " + (listing.listing_type === 'service' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700')}>
+                            {listing.listing_type === 'service' ? '💼 Service' : '📦 Product'}
+                          </span>
+                          <span className="text-xs text-gray-500">{new Date(listing.created_at).toLocaleDateString()}</span>
+                        </div>
 
-                      <p className="text-xs text-gray-400 mt-3 mb-4">
-                        by {listing.seller?.full_name || 'Unknown'}
-                      </p>
+                        <h3 className="font-bold text-charcoal text-lg mb-1">{listing.title}</h3>
+                        <p className="text-2xl font-bold text-gold-dark mb-2">GH₵ {Number(listing.price).toLocaleString()}</p>
 
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => approveListing(listing.id)}
-                          className="flex-1 py-2.5 bg-charcoal text-white rounded-full font-semibold hover:bg-black transition-colors text-sm"
-                        >
-                          ✓ Approve
-                        </button>
-                        <button
-                          onClick={() => rejectListing(listing.id, listing.title)}
-                          className="py-2.5 px-4 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors text-sm"
-                        >
-                          ✕
-                        </button>
+                        {listing.description && (
+                          <p className="text-sm text-gray-600 mb-3 line-clamp-3">{listing.description}</p>
+                        )}
+
+                        {listing.service_duration && (
+                          <p className="text-xs text-gray-500">⏱ {listing.service_duration}</p>
+                        )}
+                        {listing.service_location && (
+                          <p className="text-xs text-gray-500">📍 {listing.service_location}</p>
+                        )}
+
+                        <div className="bg-gray-50 rounded-xl p-3 mt-3 mb-4 space-y-1.5">
+                          <p className="text-xs text-gray-600">👤 {sellerName}</p>
+                          <p className="text-xs text-gray-600">
+                            📱 <span className="font-mono">{listing.seller?.whatsapp_number ? '+' + listing.seller.whatsapp_number : '—'}</span>
+                          </p>
+                          <p className="text-xs text-gray-600">🕒 {fullTimestamp}</p>
+                        </div>
+
+                        {listing.seller?.whatsapp_number && (
+                          <a
+                            href={"https://wa.me/" + listing.seller.whatsapp_number + "?text=" + encodeURIComponent(waMessage)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block w-full text-center py-3 mb-2 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors text-sm"
+                          >
+                            💬 WhatsApp Seller
+                          </a>
+                        )}
+
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => approveListing(listing.id)}
+                            className="flex-1 py-2.5 bg-charcoal text-white rounded-full font-semibold hover:bg-black transition-colors text-sm"
+                          >
+                            ✓ Approve
+                          </button>
+                          <button
+                            onClick={() => rejectListing(listing.id, listing.title)}
+                            className="py-2.5 px-4 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors text-sm"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )
           )}
