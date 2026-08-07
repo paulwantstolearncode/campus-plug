@@ -470,6 +470,11 @@ function NewListingContent() {
             <div>
               <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
                 Photos <span className="text-gray-400 font-normal normal-case">(up to {MAX_PHOTOS}, first = cover)</span>
+                {images.length > 0 && (
+                  <span className="ml-2 text-xs font-semibold bg-gold/10 text-gold-dark px-2 py-0.5 rounded-full">
+                    {images.length}/{MAX_PHOTOS} photos
+                  </span>
+                )}
               </label>
 
               {images.length > 0 && (

@@ -27,6 +27,8 @@ interface PendingListing {
     full_name: string | null
     whatsapp_number: string | null
   } | null
+  listing_images: { id: string }[] | null
+  listing_items: { id: string }[] | null
 }
 
 export default function AdminPage() {
@@ -57,7 +59,7 @@ export default function AdminPage() {
       // Load pending listings
       const { data: listingsData, error: listingsError } = await supabase
         .from('listings')
-        .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
+        .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_images (id), listing_items (id)')
         .eq('approval_status', 'pending')
         .order('created_at', { ascending: false })
 
@@ -372,6 +374,11 @@ export default function AdminPage() {
                         {listing.service_location && (
                           <p className="text-xs text-gray-500">📍 {listing.service_location}</p>
                         )}
+                        {(listing.listing_images && listing.listing_images.length > 0) || (listing.listing_items && listing.listing_items.length > 0) ? (
+                          <p className="text-xs text-gray-500 mt-1">
+                            🖼 {listing.listing_images?.length || 0} photo{listing.listing_images?.length === 1 ? '' : 's'} · 📦 {listing.listing_items?.length || 0} bundle item{listing.listing_items?.length === 1 ? '' : 's'}
+                          </p>
+                        ) : null}
 
                         <div className="bg-gray-50 rounded-xl p-3 mt-3 mb-4 space-y-1.5">
                           <p className="text-xs text-gray-600">👤 {sellerName}</p>

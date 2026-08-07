@@ -2,7 +2,8 @@
 -- Bundled listings + multi-photo uploads
 -- ----------------------------------------------------------------------------
 -- Run in the Supabase SQL editor (Dashboard -> SQL Editor -> New query -> Run).
--- Idempotent: safe to re-run.
+-- Idempotent: safe to re-run (every CREATE POLICY is guarded with a
+-- preceding DROP POLICY IF EXISTS, so re-running never trips 42710).
 --
 -- DEPENDENCY: the admin policies below use public.is_admin(), which is created
 -- by supabase/profiles_rls_policies.sql. Run that file first if this is a
@@ -64,6 +65,8 @@ CREATE INDEX IF NOT EXISTS listing_items_listing_id_idx ON listing_items(listing
 -- ---------------------------------------------------------------------------
 ALTER TABLE listing_images ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can view images of approved listings" ON listing_images;
+
 CREATE POLICY "Anyone can view images of approved listings"
 ON listing_images FOR SELECT
 TO authenticated, anon
@@ -75,6 +78,8 @@ USING (
   )
 );
 
+DROP POLICY IF EXISTS "Sellers can view own listing images" ON listing_images;
+
 CREATE POLICY "Sellers can view own listing images"
 ON listing_images FOR SELECT
 TO authenticated
@@ -85,6 +90,8 @@ USING (
     AND listings.seller_id = auth.uid()
   )
 );
+
+DROP POLICY IF EXISTS "Sellers can insert own listing images" ON listing_images;
 
 CREATE POLICY "Sellers can insert own listing images"
 ON listing_images FOR INSERT
@@ -99,6 +106,8 @@ WITH CHECK (
 
 -- Needed for reordering photos (display_order changes) — the feature spec
 -- requires add/remove/reorder, so sellers get UPDATE on their own images.
+DROP POLICY IF EXISTS "Sellers can update own listing images" ON listing_images;
+
 CREATE POLICY "Sellers can update own listing images"
 ON listing_images FOR UPDATE
 TO authenticated
@@ -117,6 +126,8 @@ WITH CHECK (
   )
 );
 
+DROP POLICY IF EXISTS "Sellers can delete own listing images" ON listing_images;
+
 CREATE POLICY "Sellers can delete own listing images"
 ON listing_images FOR DELETE
 TO authenticated
@@ -128,6 +139,8 @@ USING (
   )
 );
 
+DROP POLICY IF EXISTS "Admins can manage all listing images" ON listing_images;
+
 CREATE POLICY "Admins can manage all listing images"
 ON listing_images FOR ALL
 TO authenticated
@@ -137,6 +150,8 @@ USING (public.is_admin());
 -- RLS policies for listing_items (same pattern as images)
 -- ---------------------------------------------------------------------------
 ALTER TABLE listing_items ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can view items of approved listings" ON listing_items;
 
 CREATE POLICY "Anyone can view items of approved listings"
 ON listing_items FOR SELECT
@@ -149,6 +164,8 @@ USING (
   )
 );
 
+DROP POLICY IF EXISTS "Sellers can view own listing items" ON listing_items;
+
 CREATE POLICY "Sellers can view own listing items"
 ON listing_items FOR SELECT
 TO authenticated
@@ -160,6 +177,8 @@ USING (
   )
 );
 
+DROP POLICY IF EXISTS "Sellers can manage own listing items" ON listing_items;
+
 CREATE POLICY "Sellers can manage own listing items"
 ON listing_items FOR ALL
 TO authenticated
@@ -170,6 +189,8 @@ USING (
     AND listings.seller_id = auth.uid()
   )
 );
+
+DROP POLICY IF EXISTS "Admins can manage all listing items" ON listing_items;
 
 CREATE POLICY "Admins can manage all listing items"
 ON listing_items FOR ALL

@@ -19,6 +19,7 @@ interface Listing {
     whatsapp_number: string | null
   } | null
   listing_items: { price: number }[] | null
+  listing_images: { id: string }[] | null
 }
 
 export default function Home() {
@@ -28,7 +29,7 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const [scrolled, setScrolled] = useState(false)
-  const [filter, setFilter] = useState<'all' | 'product' | 'service'>('all')
+  const [filter, setFilter] = useState<'all' | 'product' | 'service' | 'mine'>('all')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -42,7 +43,7 @@ export default function Home() {
         // user with no profile row) must never blank out the marketplace.
         const { data, error } = await supabase
           .from('listings')
-          .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price)')
+          .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)')
           .eq('approval_status', 'approved')
           .order('created_at', { ascending: false })
 
@@ -159,7 +160,11 @@ export default function Home() {
   }
 
   const filteredListings = listings
-    .filter(l => filter === 'all' ? true : l.listing_type === filter)
+    .filter(l => {
+      if (filter === 'mine') return user ? l.seller_id === user.id : false
+      if (filter === 'all') return true
+      return l.listing_type === filter
+    })
     .filter(l => {
       if (!searchQuery.trim()) return true
       const query = searchQuery.toLowerCase()
@@ -326,7 +331,7 @@ export default function Home() {
                 <div>
                   <p className="text-sm font-semibold text-gold tracking-widest uppercase mb-1">Marketplace</p>
                   <p className="text-2xl md:text-3xl font-bold text-charcoal">
-                    {filteredListings.length} {searchQuery ? 'result' : (filter === 'all' ? 'listing' : filter)}{filteredListings.length !== 1 ? 's' : ''}
+                    {filteredListings.length} {searchQuery ? 'result' : (filter === 'all' ? 'listing' : (filter === 'mine' ? 'my listing' : filter))}{filteredListings.length !== 1 ? 's' : ''}
                     {searchQuery && <span className="text-gray-500 text-lg font-normal ml-2">for &quot;{searchQuery}&quot;</span>}
                   </p>
                 </div>
@@ -335,6 +340,7 @@ export default function Home() {
                     { key: 'all' as const, label: 'All', icon: '✨' },
                     { key: 'product' as const, label: 'Products', icon: '📦' },
                     { key: 'service' as const, label: 'Services', icon: '💼' },
+                    ...(isSeller ? [{ key: 'mine' as const, label: 'My Listings', icon: '🏠' }] : []),
                   ].map((chip) => (
                     <button
                       key={chip.key}
@@ -349,11 +355,30 @@ export default function Home() {
               </div>
 
               {filteredListings.length === 0 ? (
-                <div className="text-center py-20">
-                  <div className="text-6xl mb-4 opacity-50">🔍</div>
-                  <p className="text-xl font-semibold text-charcoal mb-2">No results found</p>
-                  <p className="text-gray-500">Try different keywords or clear filters</p>
-                </div>
+                filter === 'mine' ? (
+                  <div className="text-center py-20">
+                    <div className="text-6xl mb-4 opacity-50">🏠</div>
+                    <p className="text-xl font-semibold text-charcoal mb-2">You haven&apos;t posted any listings yet</p>
+                    <p className="text-gray-500 mb-6">
+                      {searchQuery ? 'Try different keywords or clear filters.' : 'Once approved, your listings appear here.'}
+                    </p>
+                    {isSeller ? (
+                      <Link href="/new" className="inline-flex items-center gap-2 bg-charcoal text-white px-6 py-3 rounded-full font-semibold hover:bg-black transition-all hover:scale-105">
+                        + Post your first listing
+                      </Link>
+                    ) : (
+                      <Link href="/become-seller" className="inline-flex items-center gap-2 shine-button text-charcoal px-6 py-3 rounded-full font-semibold hover:scale-105 transition-transform">
+                        Start selling →
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-20">
+                    <div className="text-6xl mb-4 opacity-50">🔍</div>
+                    <p className="text-xl font-semibold text-charcoal mb-2">No results found</p>
+                    <p className="text-gray-500">Try different keywords or clear filters</p>
+                  </div>
+                )
               ) : (
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {filteredListings.map((item, idx) => {
@@ -377,6 +402,11 @@ export default function Home() {
                             <div className="absolute top-3 right-3 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
                               {priceLabel}
                             </div>
+                            {item.listing_images && item.listing_images.length > 1 && (
+                              <div className="absolute bottom-3 left-3 glass px-2.5 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
+                                🖼 {item.listing_images.length}
+                              </div>
+                            )}
                             {isOwner && (
                               <div className="absolute bottom-3 right-3 bg-blue-500/90 backdrop-blur text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-lg">
                                 Your listing

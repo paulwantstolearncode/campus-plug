@@ -18,6 +18,7 @@ interface Service {
     whatsapp_number: string | null
   } | null
   listing_items: { price: number }[] | null
+  listing_images: { id: string }[] | null
 }
 
 export default function ServicesPage() {
@@ -53,7 +54,7 @@ export default function ServicesPage() {
 
         const { data, error } = await supabase
           .from('listings')
-          .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price)')
+          .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)')
           .eq('listing_type', 'service')
           .eq('approval_status', 'approved')
           .order('created_at', { ascending: false })
@@ -308,6 +309,11 @@ export default function ServicesPage() {
                         <div className="absolute top-4 right-4 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
                           {formatPriceRange(service.listing_items) || 'GH₵ ' + Number(service.price).toLocaleString()}
                         </div>
+                        {service.listing_images && service.listing_images.length > 1 && (
+                          <div className="absolute top-16 right-4 glass px-2.5 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
+                            🖼 {service.listing_images.length}
+                          </div>
+                        )}
                         <div className="absolute inset-0 p-5 md:p-6 flex flex-col justify-end text-white">
                           <h3 className="text-xl md:text-2xl font-bold mb-2 group-hover:translate-x-1 hover:text-gold transition-all">{service.title}</h3>
                           {service.seller?.full_name && (
