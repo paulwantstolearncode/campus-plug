@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { formatPriceRange } from '@/lib/format'
 
 interface FeaturedService {
   id: string
@@ -12,6 +13,7 @@ interface FeaturedService {
   seller: {
     full_name: string | null
   } | null
+  listing_items: { price: number }[] | null
 }
 
 export default function LandingPage() {
@@ -25,7 +27,8 @@ export default function LandingPage() {
   .from('listings')
   .select(`
     id, title, price, image_url, service_location,
-    seller:profiles!seller_id (full_name)
+    seller:profiles!seller_id (full_name),
+    listing_items (price)
   `)
   .eq('listing_type', 'service')
   .eq('approval_status', 'approved')
@@ -300,7 +303,7 @@ export default function LandingPage() {
                       )}
                       <div className="flex items-center justify-between">
                         <span className="text-2xl font-bold">
-                          GH₵ {Number(service.price).toLocaleString()}
+                          {formatPriceRange(service.listing_items) || 'GH₵ ' + Number(service.price).toLocaleString()}
                         </span>
                         <span className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center group-hover:bg-gold group-hover:text-charcoal transition-all">
                           →

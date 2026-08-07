@@ -4,6 +4,7 @@ import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import LandingPage from './LandingPage'
+import { formatPriceRange } from '@/lib/format'
 
 interface Listing {
   id: string
@@ -17,6 +18,7 @@ interface Listing {
     full_name: string | null
     whatsapp_number: string | null
   } | null
+  listing_items: { price: number }[] | null
 }
 
 export default function Home() {
@@ -48,7 +50,7 @@ export default function Home() {
 
          const { data } = await supabase
   .from('listings')
-  .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
+  .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price)')
   .eq('approval_status', 'approved')
   .order('created_at', { ascending: false })
 
@@ -341,10 +343,11 @@ export default function Home() {
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {filteredListings.map((item, idx) => {
                     const isOwner = user && item.seller_id === user.id
+                    const priceLabel = formatPriceRange(item.listing_items) || 'GH₵ ' + Number(item.price || 0).toLocaleString()
                     return (
                       <div key={item.id} className="group relative fade-up" style={{ animationDelay: (idx * 0.05) + 's' }}>
                         <div className="relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
-                          <div className="relative aspect-square overflow-hidden bg-gray-100">
+                          <Link href={"/listing/" + item.id} className="relative block aspect-square overflow-hidden bg-gray-100">
                             {item.image_url ? (
                               <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                             ) : (
@@ -357,16 +360,18 @@ export default function Home() {
                               {item.listing_type === 'service' ? 'Service' : 'Product'}
                             </div>
                             <div className="absolute top-3 right-3 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
-                              GH₵ {Number(item.price || 0).toLocaleString()}
+                              {priceLabel}
                             </div>
                             {isOwner && (
                               <div className="absolute bottom-3 right-3 bg-blue-500/90 backdrop-blur text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-lg">
                                 Your listing
                               </div>
                             )}
-                          </div>
+                          </Link>
                           <div className="p-5">
-                            <h3 className="font-bold text-charcoal text-lg line-clamp-1 mb-1">{item.title}</h3>
+                            <Link href={"/listing/" + item.id} className="block">
+                              <h3 className="font-bold text-charcoal text-lg line-clamp-1 mb-1 hover:text-gold-dark transition-colors">{item.title}</h3>
+                            </Link>
                             {item.seller?.full_name && (
                               <p className="text-sm text-gray-500 mb-4 flex items-center gap-1.5">
                                 <span className="w-5 h-5 rounded-full bg-gold/10 text-gold-dark flex items-center justify-center text-xs font-semibold">{item.seller.full_name.charAt(0)}</span>

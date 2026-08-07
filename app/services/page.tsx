@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
+import { formatPriceRange } from '@/lib/format'
 
 interface Service {
   id: string
@@ -16,6 +17,7 @@ interface Service {
     full_name: string | null
     whatsapp_number: string | null
   } | null
+  listing_items: { price: number }[] | null
 }
 
 export default function ServicesPage() {
@@ -46,7 +48,7 @@ export default function ServicesPage() {
 
        const { data } = await supabase
   .from('listings')
-  .select('*, seller:profiles!seller_id (full_name, whatsapp_number)')
+  .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price)')
   .eq('listing_type', 'service')
   .eq('approval_status', 'approved')
   .order('created_at', { ascending: false })
@@ -279,7 +281,7 @@ export default function ServicesPage() {
                 {services.map((service, idx) => (
                   <div key={service.id} className="group relative fade-up" style={{ animationDelay: (idx * 0.05) + 's' }}>
                     <div className="relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
-                      <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
+                      <Link href={"/listing/" + service.id} className="relative block aspect-[4/5] overflow-hidden bg-gray-100">
                         {service.image_url ? (
                           <img src={service.image_url} alt={service.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                         ) : (
@@ -293,10 +295,10 @@ export default function ServicesPage() {
                           Service
                         </div>
                         <div className="absolute top-4 right-4 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
-                          GH₵ {Number(service.price).toLocaleString()}
+                          {formatPriceRange(service.listing_items) || 'GH₵ ' + Number(service.price).toLocaleString()}
                         </div>
                         <div className="absolute inset-0 p-5 md:p-6 flex flex-col justify-end text-white">
-                          <h3 className="text-xl md:text-2xl font-bold mb-2 group-hover:translate-x-1 transition-transform">{service.title}</h3>
+                          <h3 className="text-xl md:text-2xl font-bold mb-2 group-hover:translate-x-1 hover:text-gold transition-all">{service.title}</h3>
                           {service.seller?.full_name && (
                             <p className="text-sm text-white/90 mb-2 flex items-center gap-1.5">
                               <span className="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center text-xs">{service.seller.full_name.charAt(0)}</span>
@@ -308,7 +310,7 @@ export default function ServicesPage() {
                             {service.service_location && (<span className="flex items-center gap-1">📍 {service.service_location}</span>)}
                           </div>
                         </div>
-                      </div>
+                      </Link>
                       <div className="p-4 flex gap-2">
                         <Link href={"/services/" + service.id + "/book"} className="flex-1 flex items-center justify-center gap-2 bg-charcoal text-white py-3 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm group/btn">
                           📅 Book Now <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
