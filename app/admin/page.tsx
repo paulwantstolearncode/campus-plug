@@ -265,41 +265,57 @@ export default function AdminPage() {
               </div>
             ) : (
               <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {sellers.map(seller => (
-                  <div key={seller.id} className="bg-white rounded-3xl p-6 shadow-lg border border-gray-100">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center text-lg font-bold text-gold-dark mb-3">
-                      {seller.full_name?.charAt(0).toUpperCase() || '?'}
-                    </div>
-                    <p className="font-bold text-charcoal">{seller.full_name || 'No name'}</p>
-                    <p className="text-sm text-gray-500 mb-4">Applied {new Date(seller.created_at).toLocaleDateString()}</p>
+                {sellers.map(seller => {
+                  const account = seller.full_name || 'No name'
+                  const emailPrefix = (seller.full_name?.split('@')[0] || account).trim()
+                  const created = new Date(seller.created_at)
+                  const appliedDate = created.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                  const fullTimestamp = created.toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+                  const waMessage = `Hi ${emailPrefix}! 👋\n\nThis is Paul from Campus Plug 🔌\n\nI'm verifying your seller application:\n📧 Account: ${account}\n📅 Applied: ${appliedDate}\n\nQuick check: reply YES to confirm this is really you, and I'll approve your seller account right away.\n\nWhat are you planning to offer on Campus Plug? Would love to know 👀`
 
-                    {seller.whatsapp_number && (
-                      <a
-                        href={"https://wa.me/" + seller.whatsapp_number + "?text=" + encodeURIComponent("Hi! This is Campus Plug 🔌 verifying your seller application. Reply YES if this is really you.")}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block w-full text-center py-3 mb-2 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors text-sm"
-                      >
-                        💬 WhatsApp +{seller.whatsapp_number}
-                      </a>
-                    )}
+                  return (
+                    <div key={seller.id} className="bg-white rounded-3xl p-6 shadow-lg border border-gray-100">
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center text-lg font-bold text-gold-dark mb-3">
+                        {seller.full_name?.charAt(0).toUpperCase() || '?'}
+                      </div>
+                      <p className="font-bold text-charcoal truncate" title={seller.full_name || 'No name'}>{account}</p>
+                      <p className="text-xs text-gray-500 mb-3">Applied {appliedDate}</p>
 
-                    <div className="flex gap-2 mt-3">
-                      <button
-                        onClick={() => approveSeller(seller.id)}
-                        className="flex-1 py-2.5 bg-charcoal text-white rounded-full font-semibold hover:bg-black transition-colors text-sm"
-                      >
-                        ✓ Approve
-                      </button>
-                      <button
-                        onClick={() => rejectSeller(seller.id)}
-                        className="py-2.5 px-4 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors text-sm"
-                      >
-                        ✕
-                      </button>
+                      <div className="bg-gray-50 rounded-xl p-3 mb-4 space-y-1.5">
+                        <p className="text-xs text-gray-600">
+                          📱 <span className="font-mono">{seller.whatsapp_number ? '+' + seller.whatsapp_number : '—'}</span>
+                        </p>
+                        <p className="text-xs text-gray-600">🕒 {fullTimestamp}</p>
+                      </div>
+
+                      {seller.whatsapp_number && (
+                        <a
+                          href={"https://wa.me/" + seller.whatsapp_number + "?text=" + encodeURIComponent(waMessage)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="block w-full text-center py-3 mb-2 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors text-sm"
+                        >
+                          💬 WhatsApp +{seller.whatsapp_number}
+                        </a>
+                      )}
+
+                      <div className="flex gap-2 mt-3">
+                        <button
+                          onClick={() => approveSeller(seller.id)}
+                          className="flex-1 py-2.5 bg-charcoal text-white rounded-full font-semibold hover:bg-black transition-colors text-sm"
+                        >
+                          ✓ Approve
+                        </button>
+                        <button
+                          onClick={() => rejectSeller(seller.id)}
+                          className="py-2.5 px-4 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors text-sm"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )
           ) : (
