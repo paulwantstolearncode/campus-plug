@@ -9,6 +9,13 @@
 -- handle_new_user function/trigger that may have derived is_seller from the
 -- email domain.
 
+-- Schema prerequisite: the admin panel (app/admin/page.tsx) reads is_admin.
+-- Idempotent, so new databases get the column automatically. To promote an
+-- account to admin, run the grant in add_admin_column.sql (or:
+-- update public.profiles set is_admin = true where id = '<user-uuid>').
+alter table public.profiles
+  add column if not exists is_admin boolean not null default false;
+
 -- Update the function that runs on new-user insert.
 create or replace function public.handle_new_user()
 returns trigger
@@ -16,8 +23,8 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, is_seller, whatsapp_number)
-  values (new.id, false, null)
+  insert into public.profiles (id, is_seller, is_admin, whatsapp_number)
+  values (new.id, false, false, null)
   on conflict (id) do nothing;
   return new;
 end;

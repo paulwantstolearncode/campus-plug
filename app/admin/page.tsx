@@ -77,11 +77,19 @@ export default function AdminPage() {
           return
         }
 
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('is_admin')
           .eq('id', user.id)
           .single()
+
+        // A failed lookup (missing column, RLS, etc.) must not masquerade as
+        // "not an admin" — surface the real reason instead.
+        if (profileError) {
+          console.error('Admin profile lookup failed:', profileError)
+          setError('Could not verify admin access: ' + profileError.message)
+          return
+        }
 
         if (!profile?.is_admin) {
           alert('Admin access only')
@@ -185,6 +193,18 @@ export default function AdminPage() {
         <div className="text-center">
           <div className="text-4xl mb-2 animate-pulse">🔌</div>
           <p className="text-white/70">Loading admin...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error && !isAdmin) {
+    return (
+      <div className="flex items-center justify-center min-h-screen animated-gradient p-6">
+        <div className="bg-white rounded-3xl p-8 max-w-md text-center shadow-xl">
+          <div className="text-4xl mb-3">⚠️</div>
+          <p className="text-red-600 font-semibold">{error}</p>
+          <Link href="/" className="inline-block mt-5 text-sm text-white bg-charcoal rounded-full px-5 py-2.5 hover:bg-black transition-colors">← Back to app</Link>
         </div>
       </div>
     )
