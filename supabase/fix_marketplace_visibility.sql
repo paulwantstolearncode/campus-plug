@@ -75,17 +75,34 @@ using (
 );
 
 -- 4) VERIFY -------------------------------------------------------------------
---    Impersonate a non-admin user and count what a buyer can actually see.
---    Paste a non-admin UUID below (from: select id from auth.users limit 1;)
---    and run the whole block — it ends in rollback, so nothing is written.
+--    Impersonate a NON-ADMIN user and count what a buyer can actually see.
+--    No placeholder to edit: the subquery below automatically picks the most
+--    recently created non-admin profile. (To target a specific user instead,
+--    replace the whole subquery with their UUID quoted as text, e.g.
+--    'd41d8cd9-...'::text.)
+--    The whole block rolls back, so nothing is written.
 begin;
 
 set local role authenticated;
 select set_config(
   'request.jwt.claims',
-  json_build_object('sub', '<NON_ADMIN_UUID>', 'role', 'authenticated')::text,
+  json_build_object(
+    'sub',
+    (
+      select p.id::text
+      from public.profiles p
+      where coalesce(p.is_admin, false) = false
+      order by p.created_at desc
+      limit 1
+    ),
+    'role', 'authenticated'
+  )::text,
   true
 );
+
+-- Sanity: which user are we acting as? (NULL means there is no non-admin
+-- profile yet — supply an explicit UUID in the set_config above.)
+select auth.uid() as acting_as;
 
 -- Expect: the number of approved listings (8 in the reported bug).
 select count(*) as buyer_visible_listings
