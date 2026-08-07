@@ -38,23 +38,38 @@ export default function Home() {
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
 
+        // Fetch listings for EVERYONE — a profile lookup that fails (or a
+        // user with no profile row) must never blank out the marketplace.
+        const { data, error } = await supabase
+          .from('listings')
+          .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price)')
+          .eq('approval_status', 'approved')
+          .order('created_at', { ascending: false })
+
+        if (error) {
+          // First place to look when the feed is empty: this prints e.g. a
+          // missing-relation error if the listing_items migration hasn't been
+          // run, or an RLS denial for the current role.
+          console.error('Failed to load listings:', error)
+        } else if (data) {
+          setListings(data as unknown as Listing[])
+        }
+
+        // Seller/admin flags are best-effort UI only — independent of the
+        // listings fetch and failure-tolerant (worst case: no Sell/Admin
+        // buttons, the feed still renders).
         if (user) {
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('is_seller, is_admin')
             .eq('id', user.id)
             .single()
 
+          if (profileError) {
+            console.error('Failed to load profile flags:', profileError)
+          }
           setIsSeller(profile?.is_seller || false)
           setIsAdmin(profile?.is_admin || false)
-
-         const { data } = await supabase
-  .from('listings')
-  .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price)')
-  .eq('approval_status', 'approved')
-  .order('created_at', { ascending: false })
-
-          if (data) setListings(data as unknown as Listing[])
         }
       } catch (err) {
         console.error('Failed to load:', err)

@@ -35,25 +35,36 @@ export default function ServicesPage() {
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
 
+        // Seller/admin flags are best-effort UI — a failed profile lookup
+        // must not hide the services feed.
         if (user) {
-          const { data: profile } = await supabase
+          const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('is_seller, is_admin')
             .eq('id', user.id)
             .single()
 
+          if (profileError) {
+            console.error('Failed to load profile flags:', profileError)
+          }
           setIsSeller(profile?.is_seller || false)
           setIsAdmin(profile?.is_admin || false)
         }
 
-       const { data } = await supabase
-  .from('listings')
-  .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price)')
-  .eq('listing_type', 'service')
-  .eq('approval_status', 'approved')
-  .order('created_at', { ascending: false })
+        const { data, error } = await supabase
+          .from('listings')
+          .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price)')
+          .eq('listing_type', 'service')
+          .eq('approval_status', 'approved')
+          .order('created_at', { ascending: false })
 
-        if (data) setServices(data as unknown as Service[])
+        if (error) {
+          // See app/page.tsx — surfaces missing-table or RLS failures that
+          // previously emptied the feed silently.
+          console.error('Failed to load services:', error)
+        } else if (data) {
+          setServices(data as unknown as Service[])
+        }
       } catch (err) {
         // A failed auth/network lookup must not strand the page on the
         // loading screen forever.
