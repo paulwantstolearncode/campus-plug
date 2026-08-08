@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { formatPriceRange } from '@/lib/format'
+import { formatName } from '@/lib/formatName'
 
 interface FeaturedService {
   id: string
@@ -293,7 +294,7 @@ export default function LandingPage() {
                       </h3>
                       {service.seller?.full_name && (
                         <p className="text-sm text-white/80 mb-2">
-                          by {service.seller.full_name}
+                          by {formatName(service.seller.full_name)}
                         </p>
                       )}
                       {service.service_location && (

@@ -4,6 +4,7 @@ import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { formatPriceRange } from '@/lib/format'
+import { formatName } from '@/lib/formatName'
 
 interface Service {
   id: string
@@ -326,8 +327,8 @@ export default function ServicesPage() {
                           <h3 className="text-xl md:text-2xl font-bold mb-2 group-hover:translate-x-1 hover:text-gold transition-all">{service.title}</h3>
                           {service.seller?.full_name && (
                             <p className="text-sm text-white/90 mb-2 flex items-center gap-1.5">
-                              <span className="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center text-xs">{service.seller.full_name.charAt(0)}</span>
-                              {service.seller.full_name}
+                              <span className="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center text-xs">{formatName(service.seller.full_name).charAt(0)}</span>
+                              {formatName(service.seller.full_name)}
                             </p>
                           )}
                           <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/80">

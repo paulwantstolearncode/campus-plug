@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import LandingPage from './LandingPage'
 import { formatPriceRange } from '@/lib/format'
+import { formatName } from '@/lib/formatName'
 
 interface Listing {
   id: string
@@ -423,8 +424,8 @@ export default function Home() {
                             </Link>
                             {item.seller?.full_name && (
                               <p className="text-sm text-gray-500 mb-4 flex items-center gap-1.5">
-                                <span className="w-5 h-5 rounded-full bg-gold/10 text-gold-dark flex items-center justify-center text-xs font-semibold">{item.seller.full_name.charAt(0)}</span>
-                                {item.seller.full_name}
+                                <span className="w-5 h-5 rounded-full bg-gold/10 text-gold-dark flex items-center justify-center text-xs font-semibold">{formatName(item.seller.full_name).charAt(0)}</span>
+                                {formatName(item.seller.full_name)}
                               </p>
                             )}
                             <div className="flex gap-2">

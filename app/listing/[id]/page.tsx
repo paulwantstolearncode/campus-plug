@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { formatPrice, formatPriceRange, getPriceRange } from '@/lib/format'
+import { formatName } from '@/lib/formatName'
 
 interface ListingItem {
   id: string
@@ -159,7 +160,7 @@ export default function ListingDetailPage() {
   const priceLabel = formatPriceRange(listing.listing_items) || formatPrice(listing.price)
   const itemCount = listing.listing_items?.length || 0
   const priceRange = getPriceRange(listing.listing_items)
-  const sellerName = listing.seller?.full_name || 'Unknown seller'
+  const sellerName = listing.seller?.full_name ? formatName(listing.seller.full_name) : 'Unknown seller'
   const sellerInitial = sellerName.charAt(0).toUpperCase()
 
   const contactMessage = encodeURIComponent(

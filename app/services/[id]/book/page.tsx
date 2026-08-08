@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
+import { formatName } from '@/lib/formatName'
 
 interface ServiceData {
   id: string
@@ -143,7 +144,7 @@ export default function BookServicePage() {
 
       const whatsappUrl = 'https://wa.me/' + service.seller.whatsapp_number + '?text=' + message
 
-      alert('✅ Booking created!\n\nYou will be redirected to WhatsApp to confirm with ' + (service.seller.full_name || 'the seller') + '.')
+      alert('✅ Booking created!\n\nYou will be redirected to WhatsApp to confirm with ' + (service.seller.full_name ? formatName(service.seller.full_name) : 'the seller') + '.')
 
       window.location.href = whatsappUrl
     } catch (err) {
@@ -260,10 +261,10 @@ export default function BookServicePage() {
                     {service.seller?.full_name && (
                       <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center font-bold text-gold-dark">
-                          {service.seller.full_name.charAt(0)}
+                          {formatName(service.seller.full_name).charAt(0)}
                         </div>
                         <div>
-                          <p className="font-semibold text-charcoal text-sm">{service.seller.full_name}</p>
+                          <p className="font-semibold text-charcoal text-sm">{formatName(service.seller.full_name)}</p>
                           <p className="text-xs text-gray-500">Seller</p>
                         </div>
                       </div>
