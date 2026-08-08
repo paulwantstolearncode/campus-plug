@@ -1,5 +1,5 @@
 'use client'
-import { useState, Suspense } from 'react'
+import { useState, useRef, Suspense } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -9,17 +9,84 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [isSignUp, setIsSignUp] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [emailTouched, setEmailTouched] = useState(false)
+  const [passwordTouched, setPasswordTouched] = useState(false)
+  const emailRef = useRef<HTMLInputElement>(null)
+  const passwordRef = useRef<HTMLInputElement>(null)
+  // Set when a submit attempt fails validation, so the auto-focus that follows
+  // doesn't immediately clear the error we just showed (focus normally clears
+  // errors; after a failed submit we keep them until the user starts typing).
+  const submitAttempted = useRef(false)
   const router = useRouter()
 
   // The OAuth callback redirects here with ?error=signin_failed when the code
   // exchange failed.
   const authError = useSearchParams().get('error')
 
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+  const validateEmail = (value: string): string | null => {
+    const v = value.trim()
+    if (!v) return 'Email is required'
+    if (!EMAIL_REGEX.test(v)) return 'Please enter a valid email'
+    return null
+  }
+
+  const validatePassword = (value: string): string | null => {
+    if (!value) return 'Password is required'
+    if (value.length < 6) return 'Password must be at least 6 characters'
+    return null
+  }
+
+  const handleEmailBlur = () => {
+    setEmailTouched(true)
+    setEmailError(validateEmail(email))
+  }
+
+  const handleEmailFocus = () => {
+    if (!submitAttempted.current) setEmailError(null)
+  }
+
+  const handlePasswordBlur = () => {
+    setPasswordTouched(true)
+    setPasswordError(validatePassword(password))
+  }
+
+  const handlePasswordFocus = () => {
+    if (!submitAttempted.current) setPasswordError(null)
+  }
+
+  const showEmailError = emailTouched && emailError !== null
+  const showPasswordError = passwordTouched && passwordError !== null
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const trimmedEmail = email.trim()
     const trimmedPassword = password.trim()
+
+    // Final inline validation pass — prevent submit and focus the first
+    // invalid field.
+    const emailValidation = validateEmail(email)
+    const passwordValidation = validatePassword(password)
+    setEmailTouched(true)
+    setPasswordTouched(true)
+    setEmailError(emailValidation)
+    setPasswordError(passwordValidation)
+
+    if (emailValidation || passwordValidation) {
+      submitAttempted.current = true
+      if (emailValidation) {
+        emailRef.current?.focus()
+      } else {
+        passwordRef.current?.focus()
+      }
+      return
+    }
+
+    submitAttempted.current = false
 
     if (!trimmedEmail || !trimmedPassword) {
       alert('Please enter both email and password')
@@ -51,6 +118,16 @@ function LoginForm() {
       }
     })
     if (error) alert('Google sign in failed: ' + error.message)
+  }
+
+  const toggleMode = () => {
+    setIsSignUp(!isSignUp)
+    // Reset all inline validation when switching modes.
+    setEmailError(null)
+    setPasswordError(null)
+    setEmailTouched(false)
+    setPasswordTouched(false)
+    submitAttempted.current = false
   }
 
   return (
@@ -183,19 +260,31 @@ function LoginForm() {
                   </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                {/* noValidate: custom inline validation below owns the error
+                    messages — the browser's native bubbles would otherwise
+                    intercept empty-field submits. */}
+                <form onSubmit={handleSubmit} noValidate className="space-y-4">
                   <div>
                     <label className="block text-sm font-semibold text-charcoal mb-2">
                       Email
                     </label>
                     <input
+                      ref={emailRef}
                       type="email"
                       placeholder="you@example.com"
-                      className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors"
+                      className={"w-full px-4 py-3.5 rounded-2xl border-2 text-charcoal placeholder:text-gray-400 focus:outline-none transition-colors " + (showEmailError ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-gold")}
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => { submitAttempted.current = false; setEmail(e.target.value) }}
+                      onBlur={handleEmailBlur}
+                      onFocus={handleEmailFocus}
                       required
                     />
+                    {showEmailError && emailError && (
+                      <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                        <span>⚠️</span>
+                        {emailError}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -203,13 +292,22 @@ function LoginForm() {
                       Password
                     </label>
                     <input
+                      ref={passwordRef}
                       type="password"
                       placeholder="Your password"
-                      className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors"
+                      className={"w-full px-4 py-3.5 rounded-2xl border-2 text-charcoal placeholder:text-gray-400 focus:outline-none transition-colors " + (showPasswordError ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-gold")}
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => { submitAttempted.current = false; setPassword(e.target.value) }}
+                      onBlur={handlePasswordBlur}
+                      onFocus={handlePasswordFocus}
                       required
                     />
+                    {showPasswordError && passwordError && (
+                      <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                        <span>⚠️</span>
+                        {passwordError}
+                      </p>
+                    )}
                   </div>
 
                   <button
@@ -249,7 +347,7 @@ function LoginForm() {
             <div className="mt-6 text-center">
               <button
                 type="button"
-                onClick={() => setIsSignUp(!isSignUp)}
+                onClick={toggleMode}
                 className="text-sm text-gray-600 hover:text-charcoal transition-colors"
               >
                 {isSignUp
