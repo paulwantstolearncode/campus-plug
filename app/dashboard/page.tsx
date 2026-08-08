@@ -142,6 +142,19 @@ export default function DashboardPage() {
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
   }
 
+  // Privacy: buyers never consented to sellers seeing their emails. For Google
+  // sign-ins profiles.full_name stores the account email, so we only ever show
+  // a first-name-like token ("Kwame" from "kwame.mensah@gmail.com", or "Mark"
+  // from "Mark Juni Ander"). Falls back to "Guest User" when there's no name.
+  const buyerFirstName = (fullName: string | null | undefined): string => {
+    if (!fullName) return 'Guest User'
+    const base = fullName.trim().split('@')[0] // drop any email domain
+    const tokens = base.split(/[\s._-]+/).filter(Boolean)
+    if (tokens.length === 0) return 'Guest User'
+    const first = tokens[0]
+    return first.charAt(0).toUpperCase() + first.slice(1)
+  }
+
   return (
     <main className="min-h-screen bg-charcoal">
       <nav className="fixed top-0 w-full z-50 bg-charcoal/80 backdrop-blur-xl border-b border-white/10">
@@ -245,7 +258,10 @@ export default function DashboardPage() {
           )}
 
           {/* RECENT BOOKINGS */}
-          <h2 className="text-2xl font-bold text-charcoal mb-4">Recent Bookings</h2>
+          <h2 className="text-2xl font-bold text-charcoal mb-1">Recent Bookings</h2>
+          <p className="text-xs text-gray-500 mb-4">
+            Buyer privacy protected 🔒 Share your WhatsApp on your listings — buyers will reach out to you.
+          </p>
 
           {bookingsError && (
             <div className="mb-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
@@ -270,7 +286,7 @@ export default function DashboardPage() {
                     )}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    📅 {formatDate(booking.booking_date)} · 🕒 {booking.booking_time || '—'} · 👤 {booking.buyer?.full_name || '—'}
+                    📅 {formatDate(booking.booking_date)} · 🕒 {booking.booking_time || '—'} · 👤 Booking from: {buyerFirstName(booking.buyer?.full_name)}
                   </p>
                   {booking.notes && <p className="text-xs text-gray-600 mt-1 italic">&quot;{booking.notes}&quot;</p>}
                 </div>
