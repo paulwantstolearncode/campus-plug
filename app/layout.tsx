@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import HelpButton from "./HelpButton";
+import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
   title: "Campus Plug 🔌 — The Student Marketplace",
@@ -34,6 +35,7 @@ export default function RootLayout({
       <body>
         {children}
         <HelpButton />
+        <Analytics />
       </body>
     </html>
   );
