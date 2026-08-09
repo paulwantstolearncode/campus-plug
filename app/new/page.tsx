@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { formatPrice } from '@/lib/format'
+import { getCategoriesByType } from '@/lib/categories'
 
 const MAX_PHOTOS = 5
 const MAX_FILE_MB = 5
@@ -28,6 +29,8 @@ function NewListingContent() {
   const [items, setItems] = useState<ItemInput[]>([])
   const [loading, setLoading] = useState(false)
   const [listingType, setListingType] = useState<'product' | 'service'>('product')
+  const [category, setCategory] = useState('')
+  const [categoryError, setCategoryError] = useState<string | null>(null)
   const [serviceDuration, setServiceDuration] = useState('')
   const [serviceLocation, setServiceLocation] = useState('')
   const [checking, setChecking] = useState(true)
@@ -96,6 +99,7 @@ function NewListingContent() {
             price: number
             description: string | null
             listing_type: string
+            category: string | null
             service_duration: string | null
             service_location: string | null
             listing_images: { id: string; image_url: string; display_order: number }[] | null
@@ -106,6 +110,7 @@ function NewListingContent() {
           setPrice(String(typed.price))
           setDescription(typed.description || '')
           setListingType(typed.listing_type as 'product' | 'service')
+          setCategory(typed.category || '')
           setServiceDuration(typed.service_duration || '')
           setServiceLocation(typed.service_location || '')
 
@@ -211,6 +216,14 @@ function NewListingContent() {
       return
     }
 
+    if (!category) {
+      // Defensive guard — the native `required` on the select normally blocks
+      // empty submits before this runs. Inline message (not alert), matching
+      // the login form's validation pattern.
+      setCategoryError('Please choose a category')
+      return
+    }
+
     if (items.length === 0 && !price) {
       alert('Title and price are required')
       return
@@ -275,6 +288,7 @@ function NewListingContent() {
         description,
         image_url: finalImages.length > 0 ? finalImages[0].url : null,
         listing_type: listingType,
+        category,
         service_duration: listingType === 'service' ? serviceDuration : null,
         service_location: listingType === 'service' ? serviceLocation : null,
       }
@@ -446,7 +460,7 @@ function NewListingContent() {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={() => setListingType('product')}
+                  onClick={() => { setListingType('product'); setCategory(''); setCategoryError(null) }}
                   className={"relative p-5 rounded-2xl font-semibold border-2 transition-all overflow-hidden group " + (listingType === 'product' ? "border-gold bg-gradient-to-br from-gold/10 to-gold/5 text-charcoal shadow-lg" : "border-gray-200 text-gray-500 hover:border-gray-400")}
                 >
                   {listingType === 'product' && (<div className="absolute top-2 right-2 w-2 h-2 bg-gold rounded-full"></div>)}
@@ -456,7 +470,7 @@ function NewListingContent() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setListingType('service')}
+                  onClick={() => { setListingType('service'); setCategory(''); setCategoryError(null) }}
                   className={"relative p-5 rounded-2xl font-semibold border-2 transition-all overflow-hidden group " + (listingType === 'service' ? "border-gold bg-gradient-to-br from-gold/10 to-gold/5 text-charcoal shadow-lg" : "border-gray-200 text-gray-500 hover:border-gray-400")}
                 >
                   {listingType === 'service' && (<div className="absolute top-2 right-2 w-2 h-2 bg-gold rounded-full"></div>)}
@@ -465,6 +479,27 @@ function NewListingContent() {
                   <div className="text-xs mt-1 opacity-60">Skills or work to offer</div>
                 </button>
               </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">Category *</label>
+              <select
+                value={category}
+                onChange={(e) => { setCategory(e.target.value); setCategoryError(null) }}
+                required
+                className={"w-full px-5 py-4 rounded-2xl border-2 text-charcoal bg-white focus:outline-none transition-colors text-lg " + (categoryError ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-gold")}
+              >
+                <option value="" disabled>Select a category…</option>
+                {getCategoriesByType(listingType).map((c) => (
+                  <option key={c.slug} value={c.slug}>{c.emoji} {c.label}</option>
+                ))}
+              </select>
+              {categoryError && (
+                <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                  <span>⚠️</span>
+                  {categoryError}
+                </p>
+              )}
             </div>
 
             <div>

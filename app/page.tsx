@@ -6,6 +6,7 @@ import Link from 'next/link'
 import LandingPage from './LandingPage'
 import { formatPriceRange } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
+import { getCategoriesByType, getCategoryDisplay } from '@/lib/categories'
 
 interface Listing {
   id: string
@@ -14,6 +15,7 @@ interface Listing {
   price: number
   image_url: string | null
   listing_type: string
+  category: string | null
   seller_id: string
   seller: {
     full_name: string | null
@@ -33,6 +35,7 @@ export default function Home() {
   const [filter, setFilter] = useState<'all' | 'product' | 'service' | 'mine'>('all')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('')
 
   useEffect(() => {
     async function loadEverything() {
@@ -165,6 +168,10 @@ export default function Home() {
       if (filter === 'mine') return user ? l.seller_id === user.id : false
       if (filter === 'all') return true
       return l.listing_type === filter
+    })
+    .filter(l => {
+      if (!categoryFilter) return true
+      return l.category === categoryFilter
     })
     .filter(l => {
       if (!searchQuery.trim()) return true
@@ -349,7 +356,7 @@ export default function Home() {
                   ].map((chip) => (
                     <button
                       key={chip.key}
-                      onClick={() => setFilter(chip.key)}
+                      onClick={() => { setFilter(chip.key); setCategoryFilter('') }}
                       className={"px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all " + (filter === chip.key ? "bg-charcoal text-white shadow-lg scale-105" : "bg-white text-charcoal hover:bg-charcoal hover:text-white border border-gray-200")}
                     >
                       <span className="mr-1.5">{chip.icon}</span>
@@ -357,6 +364,49 @@ export default function Home() {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* CATEGORY FILTER — combines with the type chips, search, and
+                  My Listings; the option list follows the active type tab. */}
+              <div className="flex flex-wrap items-center gap-3 mb-8">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Filter by category</span>
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="px-4 py-2.5 rounded-full bg-white border-2 border-gray-200 text-sm font-semibold text-charcoal focus:outline-none focus:border-gold transition-colors"
+                >
+                  <option value="">📋 All Categories</option>
+                  {filter === 'product' ? (
+                    getCategoriesByType('product').map((c) => (
+                      <option key={c.slug} value={c.slug}>{c.emoji} {c.label}</option>
+                    ))
+                  ) : filter === 'service' ? (
+                    getCategoriesByType('service').map((c) => (
+                      <option key={c.slug} value={c.slug}>{c.emoji} {c.label}</option>
+                    ))
+                  ) : (
+                    <>
+                      <optgroup label="💼 Services">
+                        {getCategoriesByType('service').map((c) => (
+                          <option key={c.slug} value={c.slug}>{c.emoji} {c.label}</option>
+                        ))}
+                      </optgroup>
+                      <optgroup label="📦 Products">
+                        {getCategoriesByType('product').map((c) => (
+                          <option key={c.slug} value={c.slug}>{c.emoji} {c.label}</option>
+                        ))}
+                      </optgroup>
+                    </>
+                  )}
+                </select>
+                {categoryFilter && (
+                  <button
+                    onClick={() => setCategoryFilter('')}
+                    className="text-xs font-semibold text-gray-500 hover:text-charcoal underline underline-offset-2 transition-colors"
+                  >
+                    ✕ Clear category
+                  </button>
+                )}
               </div>
 
               {filteredListings.length === 0 ? (
@@ -388,6 +438,7 @@ export default function Home() {
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {filteredListings.map((item, idx) => {
                     const isOwner = user && item.seller_id === user.id
+                    const cat = getCategoryDisplay(item.category)
                     const priceLabel = formatPriceRange(item.listing_items) || 'GH₵ ' + Number(item.price || 0).toLocaleString()
                     return (
                       <div key={item.id} className="group relative fade-up" style={{ animationDelay: (idx * 0.05) + 's' }}>
@@ -422,6 +473,9 @@ export default function Home() {
                             <Link href={"/listing/" + item.id} className="block">
                               <h3 className="font-bold text-charcoal text-lg line-clamp-1 mb-1 hover:text-gold-dark transition-colors">{item.title}</h3>
                             </Link>
+                            <span className={"inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full mb-3 " + (item.category ? "bg-gold/10 text-gold-dark" : "bg-gray-100 text-gray-500")}>
+                              {cat.emoji} {cat.label}
+                            </span>
                             {item.seller?.full_name && (
                               <p className="text-sm text-gray-500 mb-4 flex items-center gap-1.5">
                                 <span className="w-5 h-5 rounded-full bg-gold/10 text-gold-dark flex items-center justify-center text-xs font-semibold">{formatName(item.seller.full_name).charAt(0)}</span>

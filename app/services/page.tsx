@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { formatPriceRange } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
+import { getCategoriesByType, getCategoryDisplay } from '@/lib/categories'
 
 interface Service {
   id: string
@@ -14,6 +15,7 @@ interface Service {
   image_url: string | null
   service_duration: string | null
   service_location: string | null
+  category: string | null
   seller: {
     full_name: string | null
     whatsapp_number: string | null
@@ -30,6 +32,7 @@ export default function ServicesPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [categoryFilter, setCategoryFilter] = useState('')
 
   useEffect(() => {
     async function loadEverything() {
@@ -95,6 +98,10 @@ export default function ServicesPage() {
       window.location.reload()
     }
   }
+
+  const filteredServices = services.filter(
+    (s) => !categoryFilter || s.category === categoryFilter
+  )
 
   if (loading) {
     return (
@@ -294,12 +301,38 @@ export default function ServicesPage() {
               <div className="mb-10">
                 <p className="text-sm font-semibold text-gold tracking-widest uppercase mb-1">Available Now</p>
                 <p className="text-2xl md:text-3xl font-bold text-charcoal">
-                  {services.length} service{services.length !== 1 ? 's' : ''}
+                  {filteredServices.length} service{filteredServices.length !== 1 ? 's' : ''}
                 </p>
+
+                {/* CATEGORY FILTER — service categories only, combines with the
+                    grid below. */}
+                <div className="mt-4 flex flex-wrap items-center gap-3">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Filter by category</span>
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="px-4 py-2.5 rounded-full bg-white border-2 border-gray-200 text-sm font-semibold text-charcoal focus:outline-none focus:border-gold transition-colors"
+                  >
+                    <option value="">📋 All Service Categories</option>
+                    {getCategoriesByType('service').map((c) => (
+                      <option key={c.slug} value={c.slug}>{c.emoji} {c.label}</option>
+                    ))}
+                  </select>
+                  {categoryFilter && (
+                    <button
+                      onClick={() => setCategoryFilter('')}
+                      className="text-xs font-semibold text-gray-500 hover:text-charcoal underline underline-offset-2 transition-colors"
+                    >
+                      ✕ Clear category
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                {services.map((service, idx) => (
+                {filteredServices.map((service, idx) => {
+                  const cat = getCategoryDisplay(service.category)
+                  return (
                   <div key={service.id} className="group relative fade-up" style={{ animationDelay: (idx * 0.05) + 's' }}>
                     <div className="relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
                       <Link href={"/listing/" + service.id} className="relative block aspect-[4/5] overflow-hidden bg-gray-100">
@@ -325,6 +358,9 @@ export default function ServicesPage() {
                         )}
                         <div className="absolute inset-0 p-5 md:p-6 flex flex-col justify-end text-white">
                           <h3 className="text-xl md:text-2xl font-bold mb-2 group-hover:translate-x-1 hover:text-gold transition-all">{service.title}</h3>
+                          <span className={"inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full mb-2 w-fit " + (service.category ? "bg-gold/20 text-gold" : "bg-white/10 text-white/70")}>
+                            {cat.emoji} {cat.label}
+                          </span>
                           {service.seller?.full_name && (
                             <p className="text-sm text-white/90 mb-2 flex items-center gap-1.5">
                               <span className="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center text-xs">{formatName(service.seller.full_name).charAt(0)}</span>
@@ -347,7 +383,8 @@ export default function ServicesPage() {
                       </div>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             </>
           )}

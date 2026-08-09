@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { formatPrice, formatPriceRange, getPriceRange } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
+import { getCategoryDisplay } from '@/lib/categories'
 
 interface ListingItem {
   id: string
@@ -28,6 +29,7 @@ interface ListingData {
   price: number
   image_url: string | null
   listing_type: string
+  category: string | null
   service_duration: string | null
   service_location: string | null
   approval_status: string
@@ -156,6 +158,7 @@ export default function ListingDetailPage() {
   }
 
   const isService = listing.listing_type === 'service'
+  const categoryDisplay = getCategoryDisplay(listing.category)
   const backHref = isService ? '/services' : '/'
   const priceLabel = formatPriceRange(listing.listing_items) || formatPrice(listing.price)
   const itemCount = listing.listing_items?.length || 0
@@ -222,6 +225,9 @@ export default function ListingDetailPage() {
           <div className="flex flex-wrap items-center gap-2 mb-4">
             <span className={"inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full " + (isService ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700')}>
               {isService ? '💼 Service' : '📦 Product'}
+            </span>
+            <span className={"inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full " + (listing.category ? 'bg-gold text-charcoal' : 'bg-white/10 text-white/70 border border-white/20')}>
+              {categoryDisplay.emoji} {categoryDisplay.label}
             </span>
             {listing.approval_status !== 'approved' && (
               <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-gold/20 text-gold border border-gold/30">
