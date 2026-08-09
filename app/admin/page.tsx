@@ -227,10 +227,18 @@ export default function AdminPage() {
       </nav>
 
       <section className="pt-32 pb-12 animated-gradient">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">Admin Dashboard</div>
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Review Queue</h1>
-          <p className="text-white/70">Approve sellers and listings to keep Campus Plug premium.</p>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">Admin Dashboard</div>
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Review Queue</h1>
+            <p className="text-white/70">Approve sellers and listings to keep Campus Plug premium.</p>
+          </div>
+          <Link
+            href="/admin/sales"
+            className="inline-flex items-center gap-2 bg-gold text-charcoal px-6 py-3 rounded-full font-bold hover:bg-gold/90 transition-colors shadow-lg shadow-gold/25"
+          >
+            💰 View Sales Dashboard
+          </Link>
         </div>
       </section>
 

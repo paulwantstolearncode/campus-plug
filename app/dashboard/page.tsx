@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatPrice } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
+import { isWithinEditWindow, formatDateTime } from '@/lib/sales'
 
 interface MyListing {
   id: string
@@ -21,18 +22,50 @@ interface MyBooking {
   booking_date: string | null
   booking_time: string | null
   notes: string | null
+  status: string | null
+  completed_at: string | null
+  actual_amount: number | null
+  seller_notes: string | null
   created_at: string
-  listing: { id: string; title: string } | null
+  listing: { id: string; title: string; price: number } | null
   buyer: { full_name: string | null } | null
+}
+
+interface MySale {
+  id: string
+  total_amount: number
+  status: string
+  created_at: string
+  buyer_name: string | null
+  listing: { id: string; title: string } | null
 }
 
 export default function DashboardPage() {
   const [listings, setListings] = useState<MyListing[]>([])
   const [bookings, setBookings] = useState<MyBooking[]>([])
+  const [sales, setSales] = useState<MySale[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [bookingsError, setBookingsError] = useState<string | null>(null)
+  const [salesError, setSalesError] = useState<string | null>(null)
+  // "?recorded=1" is set by the record-sale page after a successful insert.
+  const [recorded] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return new URLSearchParams(window.location.search).get('recorded') === '1'
+  })
+  const [completing, setCompleting] = useState<MyBooking | null>(null)
+  const [completeAmount, setCompleteAmount] = useState('')
+  const [completeNotes, setCompleteNotes] = useState('')
   const router = useRouter()
+
+  useEffect(() => {
+    // Drop the query param so a refresh doesn't re-show the banner.
+    if (recorded && typeof window !== 'undefined') {
+      const url = new URL(window.location.href)
+      url.searchParams.delete('recorded')
+      window.history.replaceState({}, '', url)
+    }
+  }, [recorded])
 
   useEffect(() => {
     async function loadDashboard() {
@@ -80,7 +113,7 @@ export default function DashboardPage() {
         // names show as — (listings still render).
         const { data: bookingData, error: bookingError } = await supabase
           .from('bookings')
-          .select('*, listing:listings!listing_id (id, title), buyer:profiles!buyer_id (full_name)')
+          .select('*, listing:listings!listing_id (id, title, price), buyer:profiles!buyer_id (full_name)')
           .eq('seller_id', user.id)
           .order('created_at', { ascending: false })
           .limit(50)
@@ -90,6 +123,22 @@ export default function DashboardPage() {
           setBookingsError('Could not load bookings: ' + bookingError.message)
         } else if (bookingData) {
           setBookings(bookingData as unknown as MyBooking[])
+        }
+
+        // Product sales. Requires add_sales_tracking.sql; if it hasn't been
+        // run, this logs an error and the section shows a hint.
+        const { data: saleData, error: saleError } = await supabase
+          .from('sales')
+          .select('*, listing:listings!listing_id (id, title)')
+          .eq('seller_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(50)
+
+        if (saleError) {
+          console.error('Dashboard sales fetch failed:', saleError)
+          setSalesError('Could not load your sales: ' + saleError.message)
+        } else if (saleData) {
+          setSales(saleData as unknown as MySale[])
         }
       } catch (err) {
         console.error('Dashboard load failed:', err)
@@ -136,11 +185,113 @@ export default function DashboardPage() {
     return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold">❌ Rejected</span>
   }
 
+  const bookingStatusChip = (status: string | null) => {
+    if (status === 'completed') {
+      return <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold">✅ Completed</span>
+    }
+    if (status === 'cancelled') {
+      return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold">❌ Cancelled</span>
+    }
+    // Legacy bookings (status NULL before add_sales_tracking.sql) default to pending.
+    return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold">⏳ Pending</span>
+  }
+
+  const saleStatusChip = (status: string) => {
+    if (status === 'completed') {
+      return <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold">✅ Completed</span>
+    }
+    if (status === 'refunded') {
+      return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold">↩️ Refunded</span>
+    }
+    return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold">❌ Cancelled</span>
+  }
+
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return '—'
     const d = new Date(dateStr)
     if (Number.isNaN(d.getTime())) return dateStr
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+  }
+
+  // Revenue = completed bookings' actual_amount + completed sales' total_amount.
+  // Refunded/cancelled records stay visible in their lists but don't count
+  // toward the headline numbers (proper accounting practice).
+  const completedBookings = bookings.filter(b => b.status === 'completed')
+  const completedSales = sales.filter(s => s.status === 'completed')
+  const totalRevenue =
+    completedBookings.reduce((sum, b) => sum + Number(b.actual_amount || 0), 0) +
+    completedSales.reduce((sum, s) => sum + Number(s.total_amount || 0), 0)
+
+  const openCompleteModal = (booking: MyBooking) => {
+    setCompleting(booking)
+    setCompleteAmount(booking.listing?.price != null ? String(booking.listing.price) : '')
+    setCompleteNotes('')
+  }
+
+  const confirmComplete = async () => {
+    if (!completing) return
+    const amount = Number(completeAmount)
+    if (completeAmount.trim() === '' || Number.isNaN(amount) || amount < 0) {
+      alert('Please enter a valid amount received')
+      return
+    }
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({
+        status: 'completed',
+        completed_at: new Date().toISOString(),
+        actual_amount: amount,
+        seller_notes: completeNotes.trim() || null,
+      })
+      .eq('id', completing.id)
+
+    if (error) {
+      alert('Could not update booking: ' + error.message)
+      return
+    }
+
+    setBookings(prev => prev.map(b =>
+      b.id === completing.id
+        ? { ...b, status: 'completed', completed_at: new Date().toISOString(), actual_amount: amount, seller_notes: completeNotes.trim() || null }
+        : b
+    ))
+    setCompleting(null)
+    setCompleteAmount('')
+    setCompleteNotes('')
+  }
+
+  const cancelBooking = async (id: string) => {
+    if (!confirm('Cancel this booking?')) return
+
+    const { error } = await supabase
+      .from('bookings')
+      .update({ status: 'cancelled' })
+      .eq('id', id)
+
+    if (error) {
+      alert('Could not cancel booking: ' + error.message)
+      return
+    }
+
+    setBookings(prev => prev.map(b => b.id === id ? { ...b, status: 'cancelled' } : b))
+  }
+
+  const changeSaleStatus = async (id: string, status: string) => {
+    const label = status === 'refunded' ? 'refunded' : 'cancelled'
+    if (!confirm('Mark this sale as ' + label + '?')) return
+
+    const { error } = await supabase
+      .from('sales')
+      .update({ status })
+      .eq('id', id)
+
+    if (error) {
+      alert('Could not update sale: ' + error.message)
+      return
+    }
+
+    setSales(prev => prev.map(s => s.id === id ? { ...s, status } : s))
   }
 
   // Privacy: buyers never consented to sellers seeing their emails, so the
@@ -178,7 +329,7 @@ export default function DashboardPage() {
             <span className="gradient-text">at a glance</span>
           </h1>
           <p className="fade-up fade-up-delay-2 text-lg text-white/70 max-w-xl">
-            Track your listings and bookings in one place.
+            Track your listings, bookings and sales in one place.
           </p>
         </div>
       </section>
@@ -191,8 +342,14 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {recorded && (
+            <div className="mb-8 p-4 rounded-2xl bg-green-50 border border-green-200 text-green-700 text-sm font-medium">
+              ✅ Sale recorded! It&apos;s in your Product Sales list below. You can edit it within 24 hours.
+            </div>
+          )}
+
           {/* STATS */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {[
               { label: 'Total listings', value: listings.length, icon: '📦' },
               { label: 'Approved', value: approved, icon: '✅' },
@@ -205,6 +362,29 @@ export default function DashboardPage() {
                 <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">{stat.label}</div>
               </div>
             ))}
+          </div>
+
+          {/* SALES STATS */}
+          <div className="bg-white rounded-3xl p-6 shadow-lg border border-gold/40 mb-12">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-xl">💰</span>
+              <h2 className="font-bold text-charcoal">Your Sales Stats</h2>
+              <span className="text-xs text-gray-400 font-normal">(private to you)</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="rounded-2xl bg-gray-50 p-4">
+                <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Total Bookings Completed</div>
+                <div className="text-2xl font-bold text-charcoal mt-1">{completedBookings.length}</div>
+              </div>
+              <div className="rounded-2xl bg-gray-50 p-4">
+                <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Total Product Sales</div>
+                <div className="text-2xl font-bold text-charcoal mt-1">{completedSales.length}</div>
+              </div>
+              <div className="rounded-2xl bg-gradient-to-br from-gold/15 to-gold/5 p-4 border border-gold/20">
+                <div className="text-xs text-gray-600 font-semibold uppercase tracking-wider">Total Revenue</div>
+                <div className="text-2xl font-bold text-gold-dark mt-1">{formatPrice(totalRevenue)}</div>
+              </div>
+            </div>
           </div>
 
           {/* MY LISTINGS */}
@@ -275,17 +455,158 @@ export default function DashboardPage() {
                     {booking.listing && (
                       <Link href={"/listing/" + booking.listing.id} className="text-xs text-gold-dark hover:underline">view →</Link>
                     )}
+                    {bookingStatusChip(booking.status)}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
                     📅 {formatDate(booking.booking_date)} · 🕒 {booking.booking_time || '—'} · 👤 Booking from: {formatName(booking.buyer?.full_name)}
                   </p>
                   {booking.notes && <p className="text-xs text-gray-600 mt-1 italic">&quot;{booking.notes}&quot;</p>}
+                  {booking.status === 'completed' && booking.actual_amount != null && (
+                    <p className="text-xs text-gray-600 mt-1 font-semibold">💰 Received: {formatPrice(booking.actual_amount)}</p>
+                  )}
+
+                  {booking.status !== 'completed' && booking.status !== 'cancelled' && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <button
+                        onClick={() => openCompleteModal(booking)}
+                        className="inline-flex items-center gap-1.5 bg-green-500 text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-green-600 transition-colors"
+                      >
+                        ✅ Mark Completed
+                      </button>
+                      <button
+                        onClick={() => cancelBooking(booking.id)}
+                        className="inline-flex items-center gap-1.5 bg-white text-red-600 px-4 py-2 rounded-full font-semibold text-xs border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors"
+                      >
+                        ❌ Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* PRODUCT SALES */}
+          <div className="flex items-center justify-between mb-4 mt-14">
+            <div>
+              <h2 className="text-2xl font-bold text-charcoal">Product Sales</h2>
+              <p className="text-xs text-gray-500 mt-1">Record your product transactions — you can edit them within 24 hours.</p>
+            </div>
+            <Link href="/dashboard/record-sale" className="bg-charcoal text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-colors whitespace-nowrap">➕ Record New Sale</Link>
+          </div>
+
+          {salesError && (
+            <div className="mb-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
+              ⚠️ {salesError} — run add_sales_tracking.sql in Supabase and refresh.
+            </div>
+          )}
+
+          {sales.length === 0 ? (
+            <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
+              <div className="text-5xl mb-4">🛍️</div>
+              <p className="text-xl font-bold text-charcoal">No product sales recorded yet</p>
+              <p className="text-gray-500 mt-2">Sold something? Record it here to build your stats.</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl shadow-lg border border-gray-100 divide-y divide-gray-100">
+              {sales.map((sale) => (
+                <div key={sale.id} className="p-5">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <p className="font-semibold text-charcoal">{sale.listing?.title || 'Unknown listing'}</p>
+                    <span className="font-bold text-gold-dark text-sm ml-auto">{formatPrice(sale.total_amount)}</span>
+                    {saleStatusChip(sale.status)}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    📅 {formatDateTime(sale.created_at)}
+                    {sale.buyer_name ? ' · 👤 ' + formatName(sale.buyer_name) : ''}
+                  </p>
+
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <Link
+                      href={"/dashboard/sales/" + sale.id}
+                      className="inline-flex items-center gap-1.5 bg-charcoal text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors"
+                    >
+                      👁 View Details
+                    </Link>
+                    {isWithinEditWindow(sale.created_at) ? (
+                      <Link
+                        href={"/dashboard/sales/" + sale.id}
+                        className="inline-flex items-center gap-1.5 bg-white text-charcoal px-4 py-2 rounded-full font-semibold text-xs border border-gray-200 hover:border-charcoal transition-colors"
+                      >
+                        ✏️ Edit
+                      </Link>
+                    ) : sale.status === 'completed' ? (
+                      <>
+                        <button
+                          onClick={() => changeSaleStatus(sale.id, 'refunded')}
+                          className="inline-flex items-center gap-1.5 bg-amber-500 text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-amber-600 transition-colors"
+                        >
+                          ↩️ Mark Refunded
+                        </button>
+                        <button
+                          onClick={() => changeSaleStatus(sale.id, 'cancelled')}
+                          className="inline-flex items-center gap-1.5 bg-white text-red-600 px-4 py-2 rounded-full font-semibold text-xs border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors"
+                        >
+                          ❌ Mark Cancelled
+                        </button>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
               ))}
             </div>
           )}
         </div>
       </section>
+
+      {/* MARK COMPLETED MODAL */}
+      {completing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label="Complete booking">
+          <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full">
+            <h3 className="text-xl font-bold text-charcoal mb-1">Complete this booking?</h3>
+            <p className="text-sm text-gray-500 mb-5">{completing.listing?.title || 'Unknown listing'}</p>
+
+            <label className="block text-sm font-bold text-charcoal mb-2 uppercase tracking-widest">
+              Actual amount received (GH₵) *
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              className="w-full px-5 py-3 rounded-2xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
+              value={completeAmount}
+              onChange={(e) => setCompleteAmount(e.target.value)}
+              autoFocus
+            />
+
+            <label className="block text-sm font-bold text-charcoal mb-2 mt-4 uppercase tracking-widest">
+              Notes <span className="text-gray-400 font-normal normal-case">(optional)</span>
+            </label>
+            <textarea
+              rows={3}
+              placeholder="Anything worth remembering about the session..."
+              className="w-full px-5 py-3 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors resize-none"
+              value={completeNotes}
+              onChange={(e) => setCompleteNotes(e.target.value)}
+            />
+
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={confirmComplete}
+                className="flex-1 bg-green-500 text-white py-3 rounded-full font-semibold hover:bg-green-600 transition-colors"
+              >
+                ✓ Confirm
+              </button>
+              <button
+                onClick={() => setCompleting(null)}
+                className="flex-1 bg-white text-charcoal py-3 rounded-full font-semibold border border-gray-200 hover:border-charcoal transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }
