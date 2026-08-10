@@ -146,3 +146,19 @@ html {
   background-size: 200% auto;
   animation: shine 3s linear infinite;
 }
+
+/* Pause continuous decorative animations on touch devices.
+   iOS Safari keeps GPU-composited layers for infinitely-animating
+   ancestors (animated-gradient shift, floating blobs, shine sweep),
+   and that layer churn can swallow taps on child inputs — the
+   homepage search bar is the victim here. Stopping the churn lets
+   taps reach the input again. Desktop (hover-capable) keeps the
+   full animated hero; touch devices get the static-but-identical
+   gradient, blob positions, and button finish. */
+@media (hover: none) and (pointer: coarse) {
+  .animated-gradient,
+  .blob,
+  .shine-button {
+    animation: none;
+  }
+}
