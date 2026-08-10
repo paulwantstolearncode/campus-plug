@@ -1,7 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import HelpButton from "./HelpButton";
 import { Analytics } from "@vercel/analytics/react";
+
+// Explicit viewport export (Next.js App Router convention) — keeps the mobile
+// layout viewport pinned to device width and guards against any environment
+// (stale cache / injected meta) serving a desktop-width viewport.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   title: "Campus Plug 🔌 — The Student Marketplace",

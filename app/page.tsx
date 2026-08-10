@@ -263,7 +263,7 @@ export default function Home() {
           <div className="blob absolute top-40 right-0 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-3xl" style={{animationDelay: '5s'}}></div>
           <div className="blob absolute bottom-0 left-1/3 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl" style={{animationDelay: '10s'}}></div>
         </div>
-        <div className="absolute inset-0 opacity-[0.05]" style={{backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px'}}></div>
+        <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px'}}></div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
           <div className="max-w-3xl">
@@ -296,7 +296,7 @@ export default function Home() {
                   placeholder="Search for anything..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-14 pr-14 py-4 rounded-full bg-white/10 backdrop-blur-xl border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-gold focus:bg-white/15 transition-all"
+                  className="w-full pl-14 pr-14 py-4 rounded-full bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-gold focus:bg-white/15 transition-all"
                 />
                 {searchQuery && (
                   <button

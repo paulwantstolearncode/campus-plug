@@ -38,6 +38,7 @@ body {
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden;
 }
 
 /* Animated gradient background */
