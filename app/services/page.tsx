@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { formatPriceRange } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
 import { getCategoriesByType, getCategoryDisplay } from '@/lib/categories'
+import StarRating from '@/app/StarRating'
+import { getSellerRatings, type SellerRating } from '@/lib/reviews'
 
 interface Service {
   id: string
@@ -16,6 +18,7 @@ interface Service {
   service_duration: string | null
   service_location: string | null
   category: string | null
+  seller_id: string
   seller: {
     full_name: string | null
     whatsapp_number: string | null
@@ -33,6 +36,7 @@ export default function ServicesPage() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [categoryFilter, setCategoryFilter] = useState('')
+  const [sellerRatings, setSellerRatings] = useState<Record<string, SellerRating>>({})
 
   useEffect(() => {
     async function loadEverything() {
@@ -68,7 +72,11 @@ export default function ServicesPage() {
           // previously emptied the feed silently.
           console.error('Failed to load services:', error)
         } else if (data) {
-          setServices(data as unknown as Service[])
+          const typed = data as unknown as Service[]
+          setServices(typed)
+          // Seller star ratings + Top Rated badges (best-effort, additive).
+          const ratings = await getSellerRatings(typed.map((s) => s.seller_id))
+          setSellerRatings(ratings)
         }
       } catch (err) {
         // A failed auth/network lookup must not strand the page on the
@@ -351,6 +359,11 @@ export default function ServicesPage() {
                         <div className="absolute top-4 right-4 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
                           {formatPriceRange(service.listing_items) || 'GH₵ ' + Number(service.price).toLocaleString()}
                         </div>
+                        {sellerRatings[service.seller_id]?.is_top_rated && (
+                          <div className="absolute top-16 left-4 bg-gold text-charcoal px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1">
+                            ⭐ Top Rated
+                          </div>
+                        )}
                         {service.listing_images && service.listing_images.length > 1 && (
                           <div className="absolute top-16 right-4 glass px-2.5 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
                             🖼 {service.listing_images.length}
@@ -365,6 +378,12 @@ export default function ServicesPage() {
                             <p className="text-sm text-white/90 mb-2 flex items-center gap-1.5">
                               <span className="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center text-xs">{formatName(service.seller.full_name).charAt(0)}</span>
                               {formatName(service.seller.full_name)}
+                              {sellerRatings[service.seller_id]?.review_count ? (
+                                <span className="inline-flex items-center gap-1 text-xs font-semibold" title={'Average ' + Number(sellerRatings[service.seller_id].average_rating).toFixed(1) + ' across ' + sellerRatings[service.seller_id].review_count + ' reviews'}>
+                                  <StarRating rating={Number(sellerRatings[service.seller_id].average_rating) || 0} size="sm" />
+                                  {Number(sellerRatings[service.seller_id].average_rating).toFixed(1)} ({sellerRatings[service.seller_id].review_count})
+                                </span>
+                              ) : null}
                             </p>
                           )}
                           <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/80">

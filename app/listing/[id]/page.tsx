@@ -6,6 +6,15 @@ import Link from 'next/link'
 import { formatPrice, formatPriceRange, getPriceRange } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
 import { getCategoryDisplay } from '@/lib/categories'
+import StarRating from '@/app/StarRating'
+import {
+  getSellerRating,
+  getSellerReviews,
+  getMyReviewForSeller,
+  deleteReview,
+  type SellerRating,
+  type ReviewWithResponse,
+} from '@/lib/reviews'
 
 interface ListingItem {
   id: string
@@ -48,6 +57,12 @@ export default function ListingDetailPage() {
   const [loading, setLoading] = useState(true)
   const [active, setActive] = useState(0)
   const touchStartX = useRef<number | null>(null)
+  const [ratingInfo, setRatingInfo] = useState<SellerRating | null>(null)
+  const [reviews, setReviews] = useState<ReviewWithResponse[]>([])
+  // Buyer review entry: myReview = already reviewed; reviewAnchor = a
+  // qualifying completed transaction I haven't reviewed yet.
+  const [myReview, setMyReview] = useState<ReviewWithResponse | null>(null)
+  const [reviewAnchor, setReviewAnchor] = useState<{ kind: 'booking' | 'sale'; id: string } | null>(null)
   const router = useRouter()
   const params = useParams()
   const rawId = params.id
@@ -60,6 +75,69 @@ export default function ListingDetailPage() {
     }
     return listing?.image_url ? [listing.image_url] : []
   })()
+
+  // Reviews for this seller (public) + the current user's review entry point.
+  // Declared before the load effect that calls it. Failures here must never
+  // block the listing itself — they only mean no reviews render.
+  const loadReviews = async (sellerId: string) => {
+    try {
+      const rating = await getSellerRating(sellerId)
+      if (rating) setRatingInfo(rating)
+      const reviews = await getSellerReviews(sellerId, 5)
+      setReviews(reviews)
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const myReview = await getMyReviewForSeller(sellerId, user.id)
+      if (myReview) {
+        setMyReview(myReview)
+        return
+      }
+
+      // Which completed transaction qualifies the buyer to review?
+      const { data: booking } = await supabase
+        .from('bookings')
+        .select('id')
+        .eq('seller_id', sellerId)
+        .eq('buyer_id', user.id)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(1)
+      if (booking && booking[0]) {
+        setReviewAnchor({ kind: 'booking', id: booking[0].id })
+        return
+      }
+
+      const { data: sale } = await supabase
+        .from('sales')
+        .select('id')
+        .eq('seller_id', sellerId)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(1)
+      if (sale && sale[0]) {
+        setReviewAnchor({ kind: 'sale', id: sale[0].id })
+      }
+    } catch (err) {
+      console.error('Failed to load reviews:', err)
+    }
+  }
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm('Delete your review? This cannot be undone.')) return
+    const { error } = await deleteReview(reviewId)
+    if (error) {
+      alert('Could not delete the review: ' + error.message)
+      return
+    }
+    setMyReview(null)
+    setReviews((prev) => prev.filter((r) => r.id !== reviewId))
+    setRatingInfo(await getSellerRating(listing?.seller_id || ''))
+  }
+
+  const reviewDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
   useEffect(() => {
     async function loadListing() {
@@ -120,6 +198,9 @@ export default function ListingDetailPage() {
 
         setActive(0)
         setListing(typed)
+        // Reviews + the buyer's review entry point load separately — a
+        // failure here must never block the listing itself.
+        loadReviews(typed.seller_id)
       } catch (err) {
         // A failed lookup must not strand the visitor on the spinner forever.
         console.error('Failed to load listing:', err)
@@ -454,6 +535,106 @@ export default function ListingDetailPage() {
                     </p>
                   </div>
                 </div>
+              </div>
+
+              {/* Reviews */}
+              <div className="bg-white rounded-3xl p-6 md:p-7 shadow-xl border border-gray-100">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                  <p className="text-xs font-bold text-charcoal uppercase tracking-widest">Reviews</p>
+                  {ratingInfo && ratingInfo.review_count > 0 && (
+                    <span className="inline-flex items-center gap-2">
+                      <StarRating rating={Number(ratingInfo.average_rating) || 0} size="sm" />
+                      <span className="text-sm font-bold text-charcoal">
+                        {Number(ratingInfo.average_rating).toFixed(1)} ({ratingInfo.review_count})
+                      </span>
+                    </span>
+                  )}
+                </div>
+                {ratingInfo?.is_top_rated && (
+                  <span className="inline-flex items-center gap-1.5 mt-2 bg-gold text-charcoal px-3 py-1.5 rounded-full text-xs font-bold shadow-md">
+                    ⭐ Top Rated
+                  </span>
+                )}
+
+                {/* Buyer review entry point */}
+                {myReview ? (
+                  <div className="mt-5 rounded-2xl border border-gold/30 bg-gold/5 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
+                      <p className="text-xs font-bold text-charcoal uppercase tracking-widest">Your review</p>
+                      <span className="text-[10px] text-gray-400">{reviewDate(myReview.created_at)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <StarRating rating={myReview.rating} size="sm" />
+                      <span className="text-[10px] text-green-600 font-semibold">✅ Verified buyer</span>
+                    </div>
+                    {myReview.review_text && (
+                      <p className="text-sm text-gray-700 mt-2 leading-relaxed">{myReview.review_text}</p>
+                    )}
+                    <div className="flex gap-2 mt-3">
+                      <Link
+                        href={'/reviews/new?reviewId=' + myReview.id}
+                        className="inline-flex items-center gap-1.5 bg-charcoal text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors"
+                      >
+                        ✏️ Edit Review
+                      </Link>
+                      <button
+                        onClick={() => handleDeleteReview(myReview.id)}
+                        className="inline-flex items-center gap-1.5 bg-white text-red-600 px-4 py-2 rounded-full font-semibold text-xs border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors"
+                      >
+                        🗑 Delete
+                      </button>
+                    </div>
+                  </div>
+                ) : reviewAnchor ? (
+                  <div className="mt-5 rounded-2xl border border-gold/30 bg-gold/5 p-4">
+                    <p className="font-bold text-charcoal text-sm mb-1">You bought from this seller</p>
+                    <p className="text-xs text-gray-600 mb-3">
+                      Share your experience — it helps other buyers on campus trust real sellers. ✅ Your review is verified against your completed transaction.
+                    </p>
+                    <Link
+                      href={'/reviews/new?' + (reviewAnchor.kind === 'booking' ? 'bookingId=' : 'saleId=') + reviewAnchor.id + '&sellerId=' + listing.seller_id}
+                      className="inline-flex items-center gap-1.5 bg-gold text-charcoal px-5 py-2.5 rounded-full font-bold text-sm hover:bg-gold-dark transition-all hover:scale-[1.02] shadow-md"
+                    >
+                      ⭐ Leave a Review
+                    </Link>
+                  </div>
+                ) : null}
+
+                {/* Review list */}
+                {reviews.length === 0 ? (
+                  <p className="text-sm text-gray-400 mt-4">
+                    No reviews yet. Be the first to review this seller after a completed booking! ⭐
+                  </p>
+                ) : (
+                  <div className="mt-4 space-y-3">
+                    {reviews.map((r) => {
+                      const reviewerName = r.reviewer?.full_name
+                        ? formatName(r.reviewer.full_name)
+                        : 'Verified Buyer'
+                      return (
+                        <div key={r.id} className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <p className="text-xs font-bold text-charcoal">{reviewerName}</p>
+                            <span className="inline-flex items-center gap-2">
+                              <StarRating rating={r.rating} size="sm" />
+                              <span className="text-[10px] text-gray-400">{reviewDate(r.created_at)}</span>
+                            </span>
+                          </div>
+                          <p className="text-[10px] text-green-600 font-semibold mt-1">✅ Verified buyer</p>
+                          {r.review_text && (
+                            <p className="text-sm text-gray-700 mt-2 leading-relaxed">{r.review_text}</p>
+                          )}
+                          {r.response && (
+                            <div className="mt-3 pl-3 border-l-2 border-gold/40">
+                              <p className="text-[10px] font-bold text-gold-dark uppercase tracking-widest">Seller response</p>
+                              <p className="text-xs text-gray-600 mt-1 leading-relaxed">{r.response.response_text}</p>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           </div>

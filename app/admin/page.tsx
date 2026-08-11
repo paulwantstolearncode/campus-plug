@@ -3,6 +3,14 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { formatName } from '@/lib/formatName'
+import StarRating from '@/app/StarRating'
+import {
+  dismissFlag,
+  hideReview,
+  deleteReview,
+  type ReviewWithResponse,
+} from '@/lib/reviews'
 
 interface PendingSeller {
   id: string
@@ -32,9 +40,11 @@ interface PendingListing {
 }
 
 export default function AdminPage() {
-  const [tab, setTab] = useState<'sellers' | 'listings'>('sellers')
+  const [tab, setTab] = useState<'sellers' | 'listings' | 'reviews'>('sellers')
   const [sellers, setSellers] = useState<PendingSeller[]>([])
   const [listings, setListings] = useState<PendingListing[]>([])
+  const [flaggedReviews, setFlaggedReviews] = useState<ReviewWithResponse[]>([])
+  const [reviewsError, setReviewsError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -67,6 +77,21 @@ export default function AdminPage() {
         setError('Could not load pending listings: ' + listingsError.message)
       } else if (listingsData) {
         setListings(listingsData as unknown as PendingListing[])
+      }
+
+      // Flagged reviews queue (additive — if add_reviews_system.sql hasn't
+      // been run, this only shows a hint inside the Reviews tab).
+      const { data: reviewsData, error: reviewsErrorData } = await supabase
+        .from('reviews')
+        .select('*, reviewer:profiles!reviewer_id (full_name), seller:profiles!seller_id (full_name), response:review_responses (id, response_text)')
+        .eq('is_flagged', true)
+        .order('created_at', { ascending: false })
+
+      if (reviewsErrorData) {
+        console.error('Flagged reviews fetch failed:', reviewsErrorData)
+        setReviewsError('Could not load flagged reviews: ' + reviewsErrorData.message)
+      } else if (reviewsData) {
+        setFlaggedReviews(reviewsData as ReviewWithResponse[])
       }
     }
 
@@ -189,6 +214,52 @@ export default function AdminPage() {
     }
   }
 
+  // ── Flagged reviews moderation ──────────────────────────────────────────
+  async function reloadFlaggedReviews() {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*, reviewer:profiles!reviewer_id (full_name), seller:profiles!seller_id (full_name), response:review_responses (id, response_text)')
+      .eq('is_flagged', true)
+      .order('created_at', { ascending: false })
+    if (error) {
+      setReviewsError('Could not load flagged reviews: ' + error.message)
+    } else {
+      setFlaggedReviews((data as ReviewWithResponse[]) || [])
+    }
+  }
+
+  async function dismissReviewFlag(id: string) {
+    const { error } = await dismissFlag(id)
+    if (error) {
+      alert('Could not dismiss the flag: ' + error.message)
+    } else {
+      await reloadFlaggedReviews()
+    }
+  }
+
+  async function hideFlaggedReview(id: string) {
+    if (!confirm('Hide this review from the public? It stays in the database.')) return
+    const { error } = await hideReview(id)
+    if (error) {
+      alert('Could not hide the review: ' + error.message)
+    } else {
+      await reloadFlaggedReviews()
+    }
+  }
+
+  async function deleteFlaggedReview(id: string) {
+    if (!confirm('Delete this review permanently? This cannot be undone.')) return
+    const { error } = await deleteReview(id)
+    if (error) {
+      alert('Could not delete the review: ' + error.message)
+    } else {
+      await reloadFlaggedReviews()
+    }
+  }
+
+  const reviewDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen animated-gradient">
@@ -264,6 +335,12 @@ export default function AdminPage() {
             >
               📦 Pending Listings ({listings.length})
             </button>
+            <button
+              onClick={() => setTab('reviews')}
+              className={"px-6 py-3 rounded-full font-semibold whitespace-nowrap transition-all " + (tab === 'reviews' ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200')}
+            >
+              🚩 Flagged Reviews ({flaggedReviews.length})
+            </button>
           </div>
 
           {tab === 'sellers' ? (
@@ -328,7 +405,7 @@ export default function AdminPage() {
                 })}
               </div>
             )
-          ) : (
+          ) : tab === 'listings' ? (
             listings.length === 0 ? (
               <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
                 <div className="text-5xl mb-4">✨</div>
@@ -421,6 +498,71 @@ export default function AdminPage() {
                             ✕
                           </button>
                         </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          ) : (
+            reviewsError ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
+                <div className="text-5xl mb-4">🚩</div>
+                <p className="text-xl font-bold text-charcoal">Reviews not available yet</p>
+                <p className="text-gray-500 mt-2">Run supabase/add_reviews_system.sql, then refresh. ({reviewsError})</p>
+              </div>
+            ) : flaggedReviews.length === 0 ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
+                <div className="text-5xl mb-4">✨</div>
+                <p className="text-xl font-bold text-charcoal">No flagged reviews</p>
+                <p className="text-gray-500 mt-2">Reviews sellers have flagged for moderation will appear here.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {flaggedReviews.map((review) => {
+                  const reviewerName = review.reviewer?.full_name ? formatName(review.reviewer.full_name) : 'Verified Buyer'
+                  const sellerName = review.seller?.full_name ? formatName(review.seller.full_name) : 'Unknown seller'
+                  return (
+                    <div key={review.id} className="bg-white rounded-3xl p-6 shadow-lg border border-amber-200">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                          🚩 Flagged
+                        </span>
+                        <span className="text-[10px] text-gray-400">{reviewDate(review.created_at)}</span>
+                      </div>
+                      <p className="text-xs text-gray-500">Reviewing: <span className="font-bold text-charcoal">{sellerName}</span></p>
+                      <p className="text-xs text-gray-500 mb-2">By: <span className="font-bold text-charcoal">{reviewerName}</span></p>
+                      <div className="flex items-center gap-2 mb-2">
+                        <StarRating rating={review.rating} size="sm" />
+                        <span className="text-[10px] text-green-600 font-semibold">✅ Verified buyer</span>
+                      </div>
+                      {review.review_text && (
+                        <p className="text-sm text-gray-700 leading-relaxed mb-3">{review.review_text}</p>
+                      )}
+                      {review.flagged_reason && (
+                        <p className="text-xs text-amber-700 bg-amber-50 rounded-xl p-2.5 mb-3">
+                          <span className="font-bold">Reason:</span> {review.flagged_reason}
+                        </p>
+                      )}
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        <button
+                          onClick={() => dismissReviewFlag(review.id)}
+                          className="flex-1 py-2.5 bg-charcoal text-white rounded-full font-semibold hover:bg-black transition-colors text-sm"
+                        >
+                          ✓ Dismiss Flag
+                        </button>
+                        <button
+                          onClick={() => hideFlaggedReview(review.id)}
+                          className="py-2.5 px-4 bg-amber-500 text-white rounded-full font-semibold hover:bg-amber-600 transition-colors text-sm"
+                        >
+                          🙈 Hide
+                        </button>
+                        <button
+                          onClick={() => deleteFlaggedReview(review.id)}
+                          className="py-2.5 px-4 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors text-sm"
+                        >
+                          🗑
+                        </button>
                       </div>
                     </div>
                   )

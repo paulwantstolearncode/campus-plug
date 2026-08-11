@@ -6,6 +6,16 @@ import Link from 'next/link'
 import { formatPrice } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
 import { isWithinEditWindow, formatDateTime } from '@/lib/sales'
+import StarRating from '@/app/StarRating'
+import {
+  getSellerRating,
+  createResponse,
+  updateResponse,
+  flagReview,
+  deleteReview,
+  type SellerRating,
+  type ReviewWithResponse,
+} from '@/lib/reviews'
 
 interface MyListing {
   id: string
@@ -40,6 +50,13 @@ interface MySale {
   listing: { id: string; title: string } | null
 }
 
+// A completed booking where the current user was the BUYER (review entry).
+interface BuyerBooking {
+  id: string
+  seller_id: string
+  listing: { id: string; title: string } | null
+}
+
 export default function DashboardPage() {
   const [listings, setListings] = useState<MyListing[]>([])
   const [bookings, setBookings] = useState<MyBooking[]>([])
@@ -56,7 +73,134 @@ export default function DashboardPage() {
   const [completing, setCompleting] = useState<MyBooking | null>(null)
   const [completeAmount, setCompleteAmount] = useState('')
   const [completeNotes, setCompleteNotes] = useState('')
+  // Reviews system state (best-effort — additive, never blocks the dashboard).
+  const [reviews, setReviews] = useState<ReviewWithResponse[]>([]) // reviews about me
+  const [myRating, setMyRating] = useState<SellerRating | null>(null)
+  const [writtenReviews, setWrittenReviews] = useState<ReviewWithResponse[]>([]) // reviews I wrote
+  const [reviewableBookings, setReviewableBookings] = useState<BuyerBooking[]>([])
+  const [reviewsError, setReviewsError] = useState<string | null>(null)
+  const [replyingTo, setReplyingTo] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [editingResponse, setEditingResponse] = useState<string | null>(null)
+  const [editingResponseText, setEditingResponseText] = useState('')
+  const [flaggingId, setFlaggingId] = useState<string | null>(null)
+  const [flagReason, setFlagReason] = useState('')
+  const [submittingReply, setSubmittingReply] = useState(false)
+  const [submittingFlag, setSubmittingFlag] = useState(false)
   const router = useRouter()
+
+  // ── Reviews system ──────────────────────────────────────────────────────
+  // Reviews about me + the buyer-side review records. Declared before the
+  // load effect that calls it. Best-effort and failure-tolerant: if
+  // add_reviews_system.sql hasn't been run yet, the sections below show a
+  // hint instead of breaking the dashboard.
+  const loadReviewData = async (userId: string) => {
+    try {
+      const { data: reviewData, error: reviewError } = await supabase
+        .from('reviews')
+        .select('*, reviewer:profiles!reviewer_id (full_name), response:review_responses (id, response_text, created_at, updated_at)')
+        .eq('seller_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(50)
+
+      if (reviewError) {
+        console.error('Dashboard reviews fetch failed:', reviewError)
+        setReviewsError('Could not load reviews: ' + reviewError.message)
+        return
+      }
+      setReviews((reviewData as ReviewWithResponse[]) || [])
+      setReviewsError(null)
+
+      const { data: ratingData } = await supabase
+        .from('seller_ratings')
+        .select('*')
+        .eq('seller_id', userId)
+        .maybeSingle()
+      setMyRating((ratingData as SellerRating) || null)
+
+      // Buyer side: completed bookings I made as a buyer + reviews I wrote.
+      const { data: asBuyer, error: asBuyerError } = await supabase
+        .from('bookings')
+        .select('id, seller_id, listing:listings!listing_id (id, title)')
+        .eq('buyer_id', userId)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+      if (asBuyerError) {
+        console.error('Dashboard buyer-bookings fetch failed:', asBuyerError)
+      } else {
+        setReviewableBookings((asBuyer as unknown as BuyerBooking[]) || [])
+      }
+
+      const { data: written } = await supabase
+        .from('reviews')
+        .select('*, seller:profiles!seller_id (full_name)')
+        .eq('reviewer_id', userId)
+        .order('created_at', { ascending: false })
+      setWrittenReviews((written as ReviewWithResponse[]) || [])
+    } catch (err) {
+      console.error('Dashboard review data load failed:', err)
+    }
+  }
+
+  const submitReply = async (reviewId: string) => {
+    if (!replyText.trim()) return
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    setSubmittingReply(true)
+    const { error } = await createResponse(reviewId, user.id, replyText)
+    if (error) {
+      alert('Could not post your reply: ' + error.message)
+    } else {
+      setReplyingTo(null)
+      setReplyText('')
+      await loadReviewData(user.id)
+    }
+    setSubmittingReply(false)
+  }
+
+  const submitResponseEdit = async (reviewId: string) => {
+    const review = reviews.find((r) => r.id === reviewId)
+    if (!review?.response || !editingResponseText.trim()) return
+    setSubmittingReply(true)
+    const { error } = await updateResponse(review.response.id, editingResponseText)
+    if (error) {
+      alert('Could not save your reply: ' + error.message)
+    } else {
+      setEditingResponse(null)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) await loadReviewData(user.id)
+    }
+    setSubmittingReply(false)
+  }
+
+  const submitFlag = async (reviewId: string) => {
+    if (!flagReason.trim()) {
+      alert('Please add a short reason for flagging')
+      return
+    }
+    setSubmittingFlag(true)
+    const { error } = await flagReview(reviewId, flagReason)
+    if (error) {
+      alert('Could not flag the review: ' + error.message)
+    } else {
+      setFlaggingId(null)
+      setFlagReason('')
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) await loadReviewData(user.id)
+    }
+    setSubmittingFlag(false)
+  }
+
+  const deleteWrittenReview = async (reviewId: string) => {
+    if (!confirm('Delete your review? This cannot be undone.')) return
+    const { error } = await deleteReview(reviewId)
+    if (error) {
+      alert('Could not delete the review: ' + error.message)
+      return
+    }
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) await loadReviewData(user.id)
+  }
 
   useEffect(() => {
     // Drop the query param so a refresh doesn't re-show the banner.
@@ -140,6 +284,9 @@ export default function DashboardPage() {
         } else if (saleData) {
           setSales(saleData as unknown as MySale[])
         }
+
+        // Reviews about me + my review records (additive, failure-tolerant).
+        await loadReviewData(user.id)
       } catch (err) {
         console.error('Dashboard load failed:', err)
         setError('Something went wrong. Please try again.')
@@ -556,6 +703,248 @@ export default function DashboardPage() {
               ))}
             </div>
           )}
+          {/* YOUR REVIEWS (buyer side) — completed bookings I made + reviews
+              I wrote. Only renders when there is something to show. */}
+          {(() => {
+            const reviewable = reviewableBookings.filter(
+              (b) => !writtenReviews.some((w) => w.booking_id === b.id)
+            )
+            if (reviewable.length === 0 && writtenReviews.length === 0) return null
+
+            return (
+              <div className="mt-14">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h2 className="text-2xl font-bold text-charcoal">Your Reviews</h2>
+                    <p className="text-xs text-gray-500 mt-1">Reviews you&apos;ve left and transactions you can review.</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  {reviewable.map((b) => (
+                    <div key={b.id} className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100">
+                      <p className="font-semibold text-charcoal truncate">{b.listing?.title || 'Unknown listing'}</p>
+                      <p className="text-xs text-gray-500 mt-1 mb-4">
+                        ✅ You completed a booking for this — share your experience with the seller.
+                      </p>
+                      <Link
+                        href={'/reviews/new?bookingId=' + b.id + '&sellerId=' + b.seller_id}
+                        className="inline-flex items-center gap-1.5 bg-gold text-charcoal px-5 py-2.5 rounded-full font-bold text-sm hover:bg-gold-dark transition-all hover:scale-[1.02] shadow-md"
+                      >
+                        ⭐ Leave a Review
+                      </Link>
+                    </div>
+                  ))}
+
+                  {writtenReviews.map((w) => (
+                    <div key={w.id} className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <p className="text-xs font-bold text-charcoal truncate">
+                          {w.seller?.full_name ? formatName(w.seller.full_name) : 'Seller'}
+                        </p>
+                        <span className="text-[10px] text-gray-400">{formatDate(w.created_at)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <StarRating rating={w.rating} size="sm" />
+                        <span className="text-[10px] text-green-600 font-semibold">✅ Verified buyer</span>
+                      </div>
+                      {w.review_text && (
+                        <p className="text-sm text-gray-700 mt-2 leading-relaxed line-clamp-3">{w.review_text}</p>
+                      )}
+                      <div className="flex gap-2 mt-3">
+                        <Link
+                          href={'/reviews/new?reviewId=' + w.id}
+                          className="inline-flex items-center gap-1.5 bg-charcoal text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors"
+                        >
+                          ✏️ Edit
+                        </Link>
+                        <button
+                          onClick={() => deleteWrittenReview(w.id)}
+                          className="inline-flex items-center gap-1.5 bg-white text-red-600 px-4 py-2 rounded-full font-semibold text-xs border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors"
+                        >
+                          🗑 Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
+          {/* REVIEWS ABOUT YOU (seller side) — with reply + flag */}
+          <div className="mt-14">
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <h2 className="text-2xl font-bold text-charcoal">Reviews About You</h2>
+              {myRating && myRating.review_count > 0 && (
+                <span className="inline-flex items-center gap-2 bg-white border border-gray-200 px-3 py-1.5 rounded-full text-sm font-bold text-charcoal shadow-sm">
+                  <StarRating rating={Number(myRating.average_rating) || 0} size="sm" />
+                  {Number(myRating.average_rating).toFixed(1)} ({myRating.review_count})
+                </span>
+              )}
+              {myRating?.is_top_rated && (
+                <span className="inline-flex items-center gap-1.5 bg-gold text-charcoal px-3 py-1.5 rounded-full text-xs font-bold shadow-md">
+                  ⭐ Top Rated
+                </span>
+              )}
+            </div>
+
+            {reviewsError && (
+              <div className="mb-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
+                ⚠️ {reviewsError} — run add_reviews_system.sql in Supabase and refresh.
+              </div>
+            )}
+
+            {reviews.length === 0 ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
+                <div className="text-5xl mb-4">⭐</div>
+                <p className="text-xl font-bold text-charcoal">No reviews yet</p>
+                <p className="text-gray-500 mt-2">When buyers complete transactions, their verified reviews show up here.</p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-3xl shadow-lg border border-gray-100 divide-y divide-gray-100">
+                {reviews.map((r) => {
+                  const reviewerName = r.reviewer?.full_name
+                    ? formatName(r.reviewer.full_name)
+                    : 'Verified Buyer'
+                  return (
+                    <div key={r.id} className="p-5">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="font-semibold text-charcoal text-sm">{reviewerName}</p>
+                        <span className="inline-flex items-center gap-2">
+                          <StarRating rating={r.rating} size="sm" />
+                          <span className="text-[10px] text-gray-400">{formatDate(r.created_at)}</span>
+                        </span>
+                      </div>
+                      <p className="text-[10px] text-green-600 font-semibold mt-1">✅ Verified buyer</p>
+                      {r.review_text && (
+                        <p className="text-sm text-gray-700 mt-2 leading-relaxed">{r.review_text}</p>
+                      )}
+                      {r.is_flagged && (
+                        <p className="inline-flex items-center gap-1 mt-2 text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                          🚩 Flagged for review
+                        </p>
+                      )}
+
+                      {/* Response */}
+                      {r.response ? (
+                        <div className="mt-3 pl-3 border-l-2 border-gold/40">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-[10px] font-bold text-gold-dark uppercase tracking-widest">Your response</p>
+                            {isWithinEditWindow(r.response.created_at) && (
+                              <button
+                                onClick={() => {
+                                  setEditingResponse(editingResponse === r.id ? null : r.id)
+                                  setEditingResponseText(r.response?.response_text || '')
+                                }}
+                                className="text-[10px] text-gray-500 hover:text-charcoal underline underline-offset-2"
+                              >
+                                {editingResponse === r.id ? 'Cancel' : '✏️ Edit'}
+                              </button>
+                            )}
+                          </div>
+                          {editingResponse === r.id ? (
+                            <div className="mt-2">
+                              <textarea
+                                rows={2}
+                                maxLength={500}
+                                value={editingResponseText}
+                                onChange={(e) => setEditingResponseText(e.target.value)}
+                                className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-sm resize-none"
+                              />
+                              <button
+                                onClick={() => submitResponseEdit(r.id)}
+                                disabled={submittingReply}
+                                className="mt-2 inline-flex items-center gap-1.5 bg-charcoal text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors disabled:opacity-50"
+                              >
+                                💾 Save
+                              </button>
+                            </div>
+                          ) : (
+                            <p className="text-xs text-gray-600 mt-1 leading-relaxed">{r.response.response_text}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="mt-3">
+                          {replyingTo === r.id ? (
+                            <div>
+                              <textarea
+                                rows={2}
+                                maxLength={500}
+                                value={replyText}
+                                onChange={(e) => setReplyText(e.target.value)}
+                                placeholder="Thank the buyer and share anything useful..."
+                                className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-sm resize-none"
+                              />
+                              <div className="flex gap-2 mt-2">
+                                <button
+                                  onClick={() => submitReply(r.id)}
+                                  disabled={submittingReply}
+                                  className="inline-flex items-center gap-1.5 bg-charcoal text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors disabled:opacity-50"
+                                >
+                                  💬 Post Reply
+                                </button>
+                                <button
+                                  onClick={() => { setReplyingTo(null); setReplyText('') }}
+                                  className="inline-flex items-center px-4 py-2 rounded-full font-semibold text-xs text-gray-500 hover:bg-gray-100 transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => { setReplyingTo(r.id); setReplyText('') }}
+                              className="inline-flex items-center gap-1.5 bg-white text-charcoal px-4 py-2 rounded-full font-semibold text-xs border border-gray-200 hover:border-charcoal transition-colors"
+                            >
+                              💬 Reply
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Flag */}
+                      {!r.is_flagged && (
+                        <div className="mt-2">
+                          {flaggingId === r.id ? (
+                            <div className="flex flex-wrap items-center gap-2">
+                              <input
+                                type="text"
+                                value={flagReason}
+                                onChange={(e) => setFlagReason(e.target.value)}
+                                placeholder="Why is this review suspicious?"
+                                className="px-3 py-2 rounded-xl border-2 border-amber-300 text-charcoal focus:outline-none focus:border-amber-500 transition-colors text-xs w-56"
+                              />
+                              <button
+                                onClick={() => submitFlag(r.id)}
+                                disabled={submittingFlag}
+                                className="inline-flex items-center gap-1 bg-amber-500 text-white px-3 py-2 rounded-full font-semibold text-xs hover:bg-amber-600 transition-colors disabled:opacity-50"
+                              >
+                                🚩 Flag
+                              </button>
+                              <button
+                                onClick={() => { setFlaggingId(null); setFlagReason('') }}
+                                className="text-xs text-gray-500 hover:text-charcoal px-2 py-2"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => { setFlaggingId(r.id); setFlagReason('') }}
+                              className="text-[11px] text-gray-400 hover:text-amber-600 transition-colors underline underline-offset-2"
+                            >
+                              🚩 Flag this review
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </section>
 

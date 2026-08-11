@@ -7,6 +7,8 @@ import LandingPage from './LandingPage'
 import { formatPriceRange } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
 import { getCategoriesByType, getCategoryDisplay } from '@/lib/categories'
+import StarRating from '@/app/StarRating'
+import { getSellerRatings, type SellerRating } from '@/lib/reviews'
 
 interface Listing {
   id: string
@@ -36,6 +38,7 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
+  const [sellerRatings, setSellerRatings] = useState<Record<string, SellerRating>>({})
 
   useEffect(() => {
     async function loadEverything() {
@@ -57,7 +60,12 @@ export default function Home() {
           // run, or an RLS denial for the current role.
           console.error('Failed to load listings:', error)
         } else if (data) {
-          setListings(data as unknown as Listing[])
+          const typed = data as unknown as Listing[]
+          setListings(typed)
+          // Seller star ratings + Top Rated badges (best-effort; the reviews
+          // system is additive — a failed fetch only means no badges).
+          const ratings = await getSellerRatings(typed.map((l) => l.seller_id))
+          setSellerRatings(ratings)
         }
 
         // Seller/admin flags are best-effort UI only — independent of the
@@ -458,6 +466,11 @@ export default function Home() {
                             <div className="absolute top-3 right-3 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
                               {priceLabel}
                             </div>
+                            {sellerRatings[item.seller_id]?.is_top_rated && (
+                              <div className="absolute top-14 left-3 bg-gold text-charcoal px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1">
+                                ⭐ Top Rated
+                              </div>
+                            )}
                             {item.listing_images && item.listing_images.length > 1 && (
                               <div className="absolute bottom-3 left-3 glass px-2.5 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
                                 🖼 {item.listing_images.length}
@@ -480,6 +493,12 @@ export default function Home() {
                               <p className="text-sm text-gray-500 mb-4 flex items-center gap-1.5">
                                 <span className="w-5 h-5 rounded-full bg-gold/10 text-gold-dark flex items-center justify-center text-xs font-semibold">{formatName(item.seller.full_name).charAt(0)}</span>
                                 {formatName(item.seller.full_name)}
+                                {sellerRatings[item.seller_id]?.review_count ? (
+                                  <span className="ml-1 inline-flex items-center gap-1 text-xs font-semibold text-gold-dark" title={'Average ' + Number(sellerRatings[item.seller_id].average_rating).toFixed(1) + ' across ' + sellerRatings[item.seller_id].review_count + ' reviews'}>
+                                    <StarRating rating={Number(sellerRatings[item.seller_id].average_rating) || 0} size="sm" />
+                                    {Number(sellerRatings[item.seller_id].average_rating).toFixed(1)} ({sellerRatings[item.seller_id].review_count})
+                                  </span>
+                                ) : null}
                               </p>
                             )}
                             <div className="flex gap-2">

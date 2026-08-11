@@ -31,7 +31,12 @@
 -- or an EXISTS subquery on a table whose own policies never query reviews.
 --
 -- No existing policy, table, or trigger is modified or dropped except the
--- ones this file itself creates (DROP IF EXISTS before each CREATE).
+-- ones this file itself creates (DROP IF EXISTS before each CREATE). The only
+-- touches to pre-existing tables are ADDITIVE: a nullable sales.buyer_id
+-- column + index (section 1), and two SELECT policies — "Buyers can view own
+-- bookings" on bookings and "Buyers can view sales recorded against their
+-- whatsapp" on sales (section 10) — which the review flow needs so a buyer
+-- can find their own completed transactions.
 -- ============================================================================
 
 -- Rollback (commented, in case things go wrong)
@@ -414,7 +419,34 @@ ON public.review_responses FOR DELETE
 TO authenticated
 USING (auth.uid() = seller_id);
 
--- ── 10. View: aggregated seller ratings (badges + public display) ───────────
+-- ── 10. RLS: buyer visibility needed by the review flow (additive) ──────────
+--    The review flow must let a buyer FIND their own qualifying transactions:
+--    * their completed bookings (booking_id anchor) and
+--    * completed sales recorded against their WhatsApp number (sale_id anchor).
+--    Neither leaks other people's data: the bookings policy is own-row, and
+--    the sales policy only matches the caller's own whatsapp_number. Both are
+--    plain predicates / own-row subqueries (no recursion: profiles policies
+--    never query bookings or sales).
+
+DROP POLICY IF EXISTS "Buyers can view own bookings" ON public.bookings;
+CREATE POLICY "Buyers can view own bookings"
+ON public.bookings FOR SELECT
+TO authenticated
+USING (buyer_id = auth.uid());
+
+DROP POLICY IF EXISTS "Buyers can view sales recorded against their whatsapp" ON public.sales;
+CREATE POLICY "Buyers can view sales recorded against their whatsapp"
+ON public.sales FOR SELECT
+TO authenticated
+USING (
+  status = 'completed'
+  AND buyer_whatsapp IS NOT NULL
+  AND buyer_whatsapp = (
+    SELECT whatsapp_number FROM public.profiles WHERE id = auth.uid()
+  )
+);
+
+-- ── 11. View: aggregated seller ratings (badges + public display) ───────────
 CREATE OR REPLACE VIEW public.seller_ratings AS
 SELECT
   seller_id,
@@ -432,8 +464,9 @@ GROUP BY seller_id;
 
 GRANT SELECT ON public.seller_ratings TO anon, authenticated;
 
--- ── 11. Verify ──────────────────────────────────────────────────────────────
--- Policies (expect 6 on reviews, 4 on review_responses):
+-- ── 12. Verify ──────────────────────────────────────────────────────────────
+-- Policies (expect 6 on reviews, 4 on review_responses, +1 on bookings,
+-- +1 on sales from the additive buyer-visibility section above):
 SELECT tablename, policyname, cmd
 FROM pg_policies
 WHERE schemaname = 'public'
@@ -446,6 +479,12 @@ FROM pg_trigger
 WHERE tgrelid IN ('public.reviews'::regclass, 'public.review_responses'::regclass)
   AND NOT tgisinternal
 ORDER BY tgrelid::regclass::text, tgname;
+
+-- Sanity: the two new buyer-visibility policies exist:
+SELECT tablename, policyname
+FROM pg_policies
+WHERE (tablename = 'bookings' AND policyname = 'Buyers can view own bookings')
+   OR (tablename = 'sales' AND policyname = 'Buyers can view sales recorded against their whatsapp');
 
 -- Sanity: sales.buyer_id column present (expect buyer_id in the list):
 SELECT column_name
