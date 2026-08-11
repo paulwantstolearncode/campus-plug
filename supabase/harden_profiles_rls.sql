@@ -11,52 +11,57 @@
 -- check, so a user could run `update profiles set is_admin = true` (or
 -- `seller_status = 'approved'`) on their own row and it would pass.
 --
--- This file replaces it with a column-scoped WITH CHECK that enforces:
---   * is_admin      : cannot change (must equal the pre-update value)
---   * is_seller     : cannot change (must equal the pre-update value)
---   * seller_status : may only be set to 'pending' (or left unchanged)
+-- This file replaces it with:
+--   * a plain own-row UPDATE policy (`auth.uid() = id`), and
+--   * a BEFORE UPDATE trigger that enforces the no-escalation rules by
+--     comparing OLD vs NEW directly:
+--       - is_admin      : cannot change (admins excepted)
+--       - is_seller     : cannot change (admins excepted)
+--       - seller_status : may only be set to 'pending' (admins excepted)
 -- Admins keep full update access (approve/reject sellers, grant admin) via the
--- unchanged admin policy, which is OR'd with the user policy per Postgres RLS
--- semantics.
+-- unchanged admin policies, which are OR'd with the user policy per Postgres
+-- RLS semantics.
+--
+-- WHY a trigger and not a WITH CHECK subquery
+-- -------------------------------------------
+-- An earlier version of this file enforced the rules in the UPDATE policy's
+-- WITH CHECK using subqueries that re-read profiles (`is_admin is not distinct
+-- from (select p.is_admin from profiles p ...)`). Policy expressions are
+-- subject to RLS on the tables they read, so those subqueries re-enter
+-- profiles -- and once the SELECT-policy graph closes a cycle (as it does in
+-- production), Postgres raises
+--   ERROR: 42P17: infinite recursion detected in policy for relation "profiles"
+-- and EVERY profiles UPDATE 500s. That broke the become-seller submit
+-- ("Something went wrong. Please try again."). The trigger compares OLD vs NEW
+-- without reading any table, so it cannot recurse.
 --
 -- It also hardens INSERT: a user may only create their OWN row as a plain
 -- pending application (is_admin = false, is_seller = false, seller_status
 -- null/'pending') -- no admin-by-insert.
 --
--- Why the subqueries cannot cause infinite recursion
--- --------------------------------------------------
--- Each subquery reads profiles through the table's SELECT policies, which are
--- plain `auth.uid() = id` predicates that never query profiles, and the admin
--- check runs through the security-definer is_admin() function (runs as
--- postgres, RLS bypassed inside). So evaluating these expressions never
--- re-triggers another policy that reads profiles.
---
--- Why "is not distinct from" means "unchanged"
--- --------------------------------------------
--- A subquery inside WITH CHECK reads the PRE-update committed row (the new
--- candidate row is not committed yet), so comparing the new column value to
--- the subquery result tests whether the user left it alone.
---
 -- Why the become-seller flow still works (app/become-seller/page.tsx)
 -- -------------------------------------------------------------------
 --   * update { whatsapp_number, seller_status: 'pending' } on own row
---     -> seller_status = 'pending' is allowed; is_admin/is_seller unchanged.
+--     -> trigger: own row, is_admin/is_seller unchanged, seller_status
+--        'pending' is allowed. OK.
 --   * fallback upsert { id, whatsapp_number, seller_status: 'pending',
 --     is_seller: false } when no row exists
 --     -> INSERT path: own id, is_admin false, is_seller false, 'pending' OK.
---     -> ON CONFLICT UPDATE branch (rare race): is_seller false is unchanged,
---        seller_status 'pending' is allowed. OK.
+--     -> ON CONFLICT UPDATE branch (rare race): the BEFORE UPDATE trigger sees
+--        is_seller false -> false (unchanged) and seller_status 'pending' ->
+--        allowed. OK.
 --
 -- Note on full_name: nothing in the app writes it today (the auth callback
--- only exchanges the OAuth code), so no policy restricts it -- owners may
--- freely set their own full_name. Deliberate; do not "harden" it.
+-- only exchanges the OAuth code), so the trigger does not restrict it --
+-- owners may freely set their own full_name. Deliberate; do not "harden" it.
 --
 -- The INSERT policy relies on is_admin defaulting to false (added by
 -- add_admin_column.sql: `not null default false`), so payloads that omit it
 -- still produce is_admin = false.
 
 -- 0) Admin-check helper (idempotent; already exists if you ran
---    profiles_rls_policies.sql).
+--    profiles_rls_policies.sql). Security definer = runs as the function
+--    owner (postgres), so the inner profiles query ignores RLS entirely.
 create or replace function public.is_admin()
 returns boolean
 language sql
@@ -70,30 +75,57 @@ as $$
   );
 $$;
 
--- 1) Replace the permissive self-update policy with the hardened one.
+-- 1) Own-row update policy -- plain predicate only, no table reads, so it
+--    cannot participate in an RLS recursion cycle. The escalation rules live
+--    in the trigger below.
 drop policy if exists "Users can update own profile" on public.profiles;
 
 create policy "Users can update own profile"
 on public.profiles for update
 to authenticated
 using (auth.uid() = id)
-with check (
-  auth.uid() = id
-  and is_admin is not distinct from (
-    select p.is_admin from public.profiles p where p.id = auth.uid()
-  )
-  and is_seller is not distinct from (
-    select p.is_seller from public.profiles p where p.id = auth.uid()
-  )
-  and (
-    seller_status is not distinct from (
-      select p.seller_status from public.profiles p where p.id = auth.uid()
-    )
-    or seller_status = 'pending'
-  )
-);
+with check (auth.uid() = id);
 
--- 2) Harden the insert path (become-seller fallback creates a row when none
+-- 2) Escalation rules, enforced in a BEFORE UPDATE trigger (recursion-free:
+--    compares OLD vs NEW directly, never reads the table it guards).
+create or replace function public.prevent_profile_escalation()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- Trusted contexts: admins, and non-JWT sessions (the SQL editor runs as
+  -- postgres and has no JWT, so the founder's manual admin grants like
+  -- `update profiles set is_admin = true where id = '...'` keep working).
+  if auth.uid() is null or public.is_admin() then
+    return new;
+  end if;
+
+  if new.is_admin is distinct from old.is_admin then
+    raise exception 'Changing is_admin is not allowed';
+  end if;
+
+  if new.is_seller is distinct from old.is_seller then
+    raise exception 'Changing is_seller is not allowed';
+  end if;
+
+  if new.seller_status is distinct from old.seller_status
+     and new.seller_status <> 'pending' then
+    raise exception 'Only admins can set seller_status to approved or rejected';
+  end if;
+
+  return new;
+end;
+$$;
+
+drop trigger if exists prevent_profile_escalation on public.profiles;
+
+create trigger prevent_profile_escalation
+before update on public.profiles
+for each row execute procedure public.prevent_profile_escalation();
+
+-- 3) Harden the insert path (become-seller fallback creates a row when none
 --    exists; the auth trigger inserts via security definer, which bypasses
 --    this policy).
 drop policy if exists "Users can insert own profile" on public.profiles;
@@ -108,7 +140,7 @@ with check (
   and (seller_status is null or seller_status = 'pending')
 );
 
--- 3) Own-row select -- unchanged, recreated for idempotency.
+-- 4) Own-row select -- unchanged, recreated for idempotency.
 drop policy if exists "Users can view own profile" on public.profiles;
 
 create policy "Users can view own profile"
@@ -116,7 +148,7 @@ on public.profiles for select
 to authenticated
 using (auth.uid() = id);
 
--- 4) Admin policies -- unchanged, recreated for idempotency.
+-- 5) Admin policies -- unchanged, recreated for idempotency.
 drop policy if exists "Admins can view all profiles" on public.profiles;
 
 create policy "Admins can view all profiles"
@@ -132,11 +164,16 @@ to authenticated
 using (public.is_admin())
 with check (public.is_admin());
 
--- 5) Sanity check: list the policies that now exist (expect 5 rows).
+-- 6) Sanity check: list the policies that now exist (expect 5 rows) and the
+--    escalation trigger.
 select policyname, cmd, qual, with_check
 from pg_policies
 where schemaname = 'public' and tablename = 'profiles'
 order by cmd, policyname;
+
+select tgname as trigger_name
+from pg_trigger
+where tgrelid = 'public.profiles'::regclass and not tgisinternal;
 
 -- ============================================================================
 -- VERIFICATION (optional -- everything below runs inside a transaction that is
@@ -156,11 +193,6 @@ order by cmd, policyname;
 -- and run the whole block. Read the result table of each step: expected values
 -- are noted inline; the two "MUST FAIL" steps print an ERROR, which is the pass
 -- condition (the savepoints let the transaction continue).
---
--- If a step errors for an unexpected reason, check whether profiles has its own
--- CHECK constraints (e.g. a whatsapp_number format regex) that the harness's
--- placeholder values might trip -- that would be a column constraint error, not
--- an RLS denial.
 
 begin;
 
@@ -175,14 +207,7 @@ select set_config(
 -- Sanity: auth.uid() must resolve to the non-admin UUID.
 select auth.uid() as acting_as;
 
--- a) Self-promotion attempt -> MUST FAIL with
---    "new row violates row-level security policy for table profiles"
---    (the error + rollback to savepoint is the pass condition).
-savepoint t_a;
-update public.profiles set is_admin = true where id = '<NON_ADMIN_UUID>';
-rollback to savepoint t_a;
-
--- b) Normal become-seller apply (mirrors app/become-seller/page.tsx) ->
+-- a) Normal become-seller apply (mirrors app/become-seller/page.tsx) ->
 --    MUST SUCCEED; seller_status becomes 'pending', is_admin/is_seller false.
 savepoint t_b;
 update public.profiles
@@ -192,7 +217,15 @@ select id, is_admin, is_seller, seller_status
 from public.profiles where id = '<NON_ADMIN_UUID>';  -- expect pending / false / false
 rollback to savepoint t_b;
 
--- c) Self-approval attempt -> MUST FAIL with the same RLS error as (a).
+-- b) Self-promotion attempt -> MUST FAIL with
+--    "Changing is_admin is not allowed"
+--    (the error + rollback to savepoint is the pass condition).
+savepoint t_a;
+update public.profiles set is_admin = true where id = '<NON_ADMIN_UUID>';
+rollback to savepoint t_a;
+
+-- c) Self-approval attempt -> MUST FAIL with
+--    "Only admins can set seller_status to approved or rejected"
 savepoint t_c;
 update public.profiles set seller_status = 'approved' where id = '<NON_ADMIN_UUID>';
 rollback to savepoint t_c;
@@ -211,5 +244,5 @@ select id, is_admin, is_seller, seller_status
 from public.profiles where id = '<NON_ADMIN_UUID>';  -- expect approved / true
 rollback to savepoint t_d;
 
--- Discard everything (including the pending change in (b)).
+-- Discard everything (including the pending change in (a)).
 rollback;

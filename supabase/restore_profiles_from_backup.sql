@@ -1,0 +1,107 @@
+-- ============================================================================
+-- EMERGENCY USE ONLY: restore profiles from the CSV backup
+-- ----------------------------------------------------------------------------
+-- ⚠️  THIS FILE IS A TEMPLATE WITH PLACEHOLDERS -- it will NOT run as-is.
+-- ⚠️  It is meant for ONE situation only: the fix
+--      (fix_profile_update_recursion.sql) catastrophically damaged the
+--      profiles table and you have decided to restore from the backup
+--      (backup_profiles_before_rls_fix.sql -> profiles_backup_2026-08-11.csv).
+--
+-- RISKS OF RUNNING THIS
+--   * Restoring is DESTRUCTIVE: it deletes the current profiles rows and
+--     re-inserts from the backup. Any row created AFTER the backup (new
+--     signups, WhatsApp updates, admin approvals) will be LOST unless you
+--     merge them first.
+--   * Foreign keys: listings.seller_id, bookings.buyer_id/seller_id and
+--     sales.seller_id reference profiles.id. Deleting profile rows cascades
+--     nothing (profiles has no ON DELETE CASCADE from these), but restoring a
+--     user WITHOUT their listings/bookings/sales leaves orphaned rows pointing
+--     at re-inserted ids. Prefer re-creating the user's row with the SAME id
+--     (this template does), which keeps existing children valid.
+--   * Do NOT run this in production without a human double-checking the
+--     WHERE clauses and the counts first.
+--
+-- WHAT THE FIX ACTUALLY CHANGES (so you know a restore should NOT be needed)
+--   fix_profile_update_recursion.sql only:
+--     1. drops + recreates the "Users can update own profile" POLICY (no data)
+--     2. creates a trigger function + trigger (no data)
+--   It touches ZERO rows. A backup is precautionary; if the fix ran cleanly
+--   (the verify block passed), the data is untouched and this restore is
+--   unnecessary.
+-- ============================================================================
+
+-- ── STEP 0: PRE-FLIGHT ──────────────────────────────────────────────────────
+-- Before doing anything, record the CURRENT state so you can undo this undo:
+--   select count(*) from public.profiles;
+--   select count(*) from public.listings;
+--   select count(*) from public.bookings;
+--   select count(*) from public.sales;
+-- Take a full CURRENT backup too (run backup_profiles_before_rls_fix.sql
+-- again and save it as profiles_backup_BEFORE_RESTORE.csv). This gives you a
+-- second safety net: if the restore goes wrong, you still have the pre-restore
+-- state.
+
+-- ── STEP 1: RESTORE THE TABLE STRUCTURE (if it still exists, skip) ─────────
+-- The fix does NOT drop or alter the profiles table, so the table should be
+-- intact. ONLY run the create below if the table is somehow gone:
+--   create table public.profiles (
+--     id uuid primary key,
+--     full_name text,
+--     whatsapp_number text,
+--     is_seller boolean not null default false,
+--     is_admin boolean not null default false,
+--     seller_status text,
+--     created_at timestamptz default now()
+--   );
+--   alter table public.profiles enable row level security;
+
+-- ── STEP 2: BACK UP THE CURRENT ROWS (paranoia) ─────────────────────────────
+--   create table public.profiles_pre_restore as select * from public.profiles;
+
+-- ── STEP 3: REPLACE CURRENT ROWS WITH THE BACKUP ────────────────────────────
+-- Placeholder: replace '<YOUR_UUID>' and the quoted values with the actual
+-- rows from profiles_backup_2026-08-11.csv -- ONE insert per CSV row.
+-- (Use the CSV export from backup_profiles_before_rls_fix.sql as the source.)
+-- Example for a single row:
+--
+--   begin;
+--   delete from public.profiles where id = '<YOUR_UUID>';
+--   insert into public.profiles (
+--     id, full_name, whatsapp_number, is_seller, is_admin, seller_status, created_at
+--   ) values (
+--     '<YOUR_UUID>',              -- from CSV column 1
+--     'Mark Juni Ander',          -- from CSV column 2 (or NULL)
+--     '233244123456',             -- from CSV column 3 (or NULL)
+--     false,                      -- from CSV column 4
+--     false,                      -- from CSV column 5
+--     'approved',                 -- from CSV column 6 (or NULL)
+--     '2026-08-01 10:00:00+00'    -- from CSV column 7
+--   );
+--   commit;
+--
+-- For a full restore of many rows, prefer generating the INSERTs from the
+-- CSV (e.g. a spreadsheet formula or a script) rather than pasting manually.
+--
+-- ⚠️  Keep the SAME id values as the backup. If you re-insert with new ids,
+--     every listing/booking/sale pointing at the old ids becomes orphaned.
+
+-- ── STEP 4: VERIFY AFTER RESTORE ────────────────────────────────────────────
+--   select count(*) as total from public.profiles;  -- must match backup row count
+--   select count(*) filter (where is_admin = true) as admins from public.profiles;
+--   select count(*) filter (where is_seller = true) as sellers from public.profiles;
+--   select count(*) filter (where seller_status = 'pending') as pending from public.profiles;
+--   -- Cross-check with the numbers you screenshotted from section 1 of the
+--   -- backup script. All must match.
+--   -- Also confirm referential integrity:
+--   select count(*) from public.listings l
+--   left join public.profiles p on p.id = l.seller_id
+--   where p.id is null;  -- expect 0 (no orphaned listings)
+
+-- ── STEP 5: CLEANUP (only after everything verifies) ────────────────────────
+--   drop table if exists public.profiles_pre_restore;
+--   -- Then re-verify the RLS/trigger state is sane:
+--   select policyname, cmd from pg_policies
+--   where schemaname = 'public' and tablename = 'profiles' order by cmd;
+--   select tgname from pg_trigger
+--   where tgrelid = 'public.profiles'::regclass and not tgisinternal;
+-- ============================================================================
