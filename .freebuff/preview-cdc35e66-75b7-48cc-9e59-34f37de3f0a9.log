@@ -6,17 +6,11 @@
 - Local:         http://localhost:56816
 - Network:       http://172.16.0.2:56816
 - Environments: .env.local
-✓ Ready in 1334ms
+✓ Ready in 1450ms
 - Experiments (use with caution):
   · clientTraceMetadata
 
- GET / 200 in 2.7s (next.js: 1568ms, application-code: 1140ms)
- GET / 200 in 103ms (next.js: 15ms, application-code: 88ms)
- GET / 200 in 96ms (next.js: 20ms, application-code: 77ms)
- GET / 200 in 118ms (next.js: 23ms, application-code: 95ms)
-✓ Compiled in 492ms
-✓ Compiled in 295ms
- GET / 200 in 119ms (next.js: 19ms, application-code: 100ms)
-✓ Compiled in 446ms
-✓ Compiled in 483ms
-✓ Compiled in 332ms
+ GET / 200 in 2.1s (next.js: 955ms, application-code: 1114ms)
+ GET / 200 in 110ms (next.js: 13ms, application-code: 96ms)
+ GET / 200 in 199ms (next.js: 34ms, application-code: 165ms)
+✓ Compiled in 487ms
