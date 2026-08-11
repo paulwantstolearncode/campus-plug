@@ -5,6 +5,13 @@
 -- Run in the Supabase SQL editor (Dashboard -> SQL Editor -> New query -> Run).
 -- Idempotent: safe to re-run.
 --
+-- ⚠️  COPY FROM THE LOCAL FILE, NOT A RENDERED VIEW
+--   Copying this from chat, the GitHub web view, or an email can merge or
+--   truncate lines (this bit us before). Open the file locally, Ctrl+A,
+--   copy, paste into the SQL editor. Before running, confirm the blocks
+--   below appear exactly ONCE each: one CREATE POLICY, one CREATE FUNCTION,
+--   one CREATE TRIGGER. If any block is duplicated or looks merged, re-copy.
+--
 -- Root cause
 -- ----------
 -- harden_profiles_rls.sql's "Users can update own profile" policy enforced the
