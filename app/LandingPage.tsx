@@ -29,20 +29,27 @@ export default function LandingPage() {
     // Showcase only; every tap funnels to /login. The whole section hides
     // itself if there are zero approved listings with images.
     async function loadLive() {
-      try {
-        const listingSelect =
-          'id, title, description, price, image_url, listing_type, category, approval_status, seller_id, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)'
+      // Pre-migration safety (same pattern as the original table-missing
+      // fallback): until supabase/add_campus_location.sql has been run, a
+      // select that includes campus_location 400s (unknown column) and would
+      // hide the whole section. If the primary load comes back empty, retry
+      // without the column — locations just won't show until the migration.
+      const listingSelect =
+        'id, title, description, price, image_url, listing_type, category, campus_location, approval_status, seller_id, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)'
+      const legacySelect = listingSelect.replace(', campus_location', '')
 
+      async function loadWith(select: string): Promise<ListingCardData[]> {
         // 1) Admin-curated slots, in order. A slot only counts if its listing
         //    still exists, is approved, and has an image.
         const { data: slotData, error: slotError } = await supabase
           .from('landing_featured_listings')
-          .select('slot, listing:listings!listing_id (' + listingSelect + ')')
+          .select('slot, listing:listings!listing_id (' + select + ')')
           .order('slot', { ascending: true })
 
         let featured: ListingCardData[] = []
         if (slotError) {
-          // Table missing (migration not run yet) — fall through to newest-6.
+          // Table or column missing (migration not run yet) — fall through
+          // to newest-6.
           console.error('Failed to load featured slots:', slotError)
         } else if (slotData) {
           featured = (slotData as unknown as { slot: number; listing: ListingCardData | null }[])
@@ -62,7 +69,7 @@ export default function LandingPage() {
           const picked = combined.map((l) => l.id)
           const fillQuery = supabase
             .from('listings')
-            .select(listingSelect)
+            .select(select)
             .eq('approval_status', 'approved')
             .not('image_url', 'is', null)
             .neq('image_url', '')
@@ -75,7 +82,7 @@ export default function LandingPage() {
             // Last resort: newest-6 with no exclusion (pre-featured behavior).
             const { data: fallback } = await supabase
               .from('listings')
-              .select(listingSelect)
+              .select(select)
               .eq('approval_status', 'approved')
               .not('image_url', 'is', null)
               .neq('image_url', '')
@@ -87,6 +94,12 @@ export default function LandingPage() {
           }
         }
 
+        return combined
+      }
+
+      try {
+        let combined = await loadWith(listingSelect)
+        if (combined.length === 0) combined = await loadWith(legacySelect)
         if (combined.length > 0) setLiveListings(combined)
       } catch (err) {
         // Decorative — a failed fetch just leaves the section hidden.

@@ -39,6 +39,7 @@ interface ListingData {
   image_url: string | null
   listing_type: string
   category: string | null
+  campus_location: string | null
   service_duration: string | null
   service_location: string | null
   approval_status: string
@@ -335,6 +336,12 @@ export default function ListingDetailPage() {
               </span>
             )}
           </div>
+          {listing.campus_location && (
+            <div className="fade-up fade-up-delay-3 flex items-center gap-2 text-sm text-white/80 font-medium mt-3">
+              <span className="text-gold">📍</span>
+              <span>Based at {listing.campus_location}</span>
+            </div>
+          )}
         </div>
       </section>
 

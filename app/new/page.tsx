@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { formatPrice } from '@/lib/format'
 import { getCategoriesByType } from '@/lib/categories'
+import { CAMPUS_LOCATIONS } from '@/lib/campusLocations'
 
 const MAX_PHOTOS = 5
 const MAX_FILE_MB = 5
@@ -31,6 +32,8 @@ function NewListingContent() {
   const [listingType, setListingType] = useState<'product' | 'service'>('product')
   const [category, setCategory] = useState('')
   const [categoryError, setCategoryError] = useState<string | null>(null)
+  const [campusLocation, setCampusLocation] = useState('')
+  const [campusLocationError, setCampusLocationError] = useState<string | null>(null)
   const [serviceDuration, setServiceDuration] = useState('')
   const [serviceLocation, setServiceLocation] = useState('')
   const [checking, setChecking] = useState(true)
@@ -100,6 +103,7 @@ function NewListingContent() {
             description: string | null
             listing_type: string
             category: string | null
+            campus_location: string | null
             service_duration: string | null
             service_location: string | null
             listing_images: { id: string; image_url: string; display_order: number }[] | null
@@ -111,6 +115,7 @@ function NewListingContent() {
           setDescription(typed.description || '')
           setListingType(typed.listing_type as 'product' | 'service')
           setCategory(typed.category || '')
+          setCampusLocation(typed.campus_location || '')
           setServiceDuration(typed.service_duration || '')
           setServiceLocation(typed.service_location || '')
 
@@ -224,6 +229,11 @@ function NewListingContent() {
       return
     }
 
+    if (!campusLocation) {
+      setCampusLocationError('Please choose your location')
+      return
+    }
+
     if (items.length === 0 && !price) {
       alert('Title and price are required')
       return
@@ -289,6 +299,7 @@ function NewListingContent() {
         image_url: finalImages.length > 0 ? finalImages[0].url : null,
         listing_type: listingType,
         category,
+        campus_location: campusLocation,
         service_duration: listingType === 'service' ? serviceDuration : null,
         service_location: listingType === 'service' ? serviceLocation : null,
       }
@@ -498,6 +509,44 @@ function NewListingContent() {
                 <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
                   <span>⚠️</span>
                   {categoryError}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">📍 Where are you on campus? *</label>
+              <select
+                value={campusLocation}
+                onChange={(e) => { setCampusLocation(e.target.value); setCampusLocationError(null) }}
+                required
+                className={"w-full px-5 py-4 rounded-2xl border-2 text-charcoal bg-white focus:outline-none transition-colors text-lg " + (campusLocationError ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-gold")}
+              >
+                <option value="" disabled>Select your location…</option>
+                <optgroup label="Halls of Residence">
+                  {CAMPUS_LOCATIONS.halls.map((l) => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="Hostels">
+                  {CAMPUS_LOCATIONS.hostels.map((l) => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="Off-Campus">
+                  {CAMPUS_LOCATIONS.offCampus.map((l) => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </optgroup>
+                <optgroup label="Flexible">
+                  {CAMPUS_LOCATIONS.flexible.map((l) => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </optgroup>
+              </select>
+              {campusLocationError && (
+                <p className="text-xs text-red-500 mt-2 flex items-center gap-1">
+                  <span>⚠️</span>
+                  {campusLocationError}
                 </p>
               )}
             </div>

@@ -17,6 +17,7 @@ export interface ListingCardData {
   image_url: string | null
   listing_type: string
   category: string | null
+  campus_location: string | null
   approval_status: string
   seller_id: string
   seller: {
@@ -102,6 +103,12 @@ export default function ListingCard({
             <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full mb-3 bg-gold/10 text-gold-dark">
               {cat.emoji} {cat.label}
             </span>
+          )}
+          {listing.campus_location && (
+            <div className="flex items-center gap-1 text-xs text-gray-600 mb-2">
+              <span>📍</span>
+              <span>{listing.campus_location}</span>
+            </div>
           )}
           {listing.seller?.full_name && (
             <p className="text-sm text-gray-500 mb-4 flex items-center gap-1.5">
