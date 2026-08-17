@@ -184,12 +184,12 @@ export default function BecomeSellerPage() {
             {status === 'pending' ? 'Verification In Progress' : 'Apply to be a Seller'}
           </div>
           <h1 className="fade-up fade-up-delay-1 text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-4">
-            {status === 'pending' ? (<>You&apos;re on<br /><span className="gradient-text">the list</span></>) : (<>Join the<br /><span className="gradient-text">Campus Plug family</span></>)}
+            {status === 'pending' ? (<>You&apos;re on<br /><span className="gradient-text">the list</span></>) : (<>Your side hustle deserves<br />a <span className="gradient-text">better front door.</span></>)}
           </h1>
           <p className="fade-up fade-up-delay-2 text-lg text-white/70 max-w-xl mx-auto">
             {status === 'pending'
               ? 'We personally verify every seller to keep Campus Plug safe and trusted.'
-              : 'We hand-pick our sellers to ensure quality. It takes less than 24 hours.'}
+              : 'Campus Plug helps you reach students looking for exactly what you do — while keeping the community intentional, verified, and easy to navigate.'}
           </p>
         </div>
       </section>
@@ -288,12 +288,21 @@ export default function BecomeSellerPage() {
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {['Free to apply', 'Manual review', 'WhatsApp-first enquiries', 'You control your terms'].map((point) => (
+                    <div key={point} className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
+                      <span className="w-6 h-6 shrink-0 rounded-full bg-gold text-charcoal flex items-center justify-center text-xs font-bold">✓</span>
+                      <span className="text-sm font-semibold text-charcoal">{point}</span>
+                    </div>
+                  ))}
+                </div>
+
                 <button
                   type="submit"
                   disabled={loading}
                   className="w-full shine-button text-charcoal py-5 rounded-2xl font-bold text-lg hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-gold/25 flex items-center justify-center gap-2 group"
                 >
-                  {loading ? (<span>Submitting...</span>) : (<><span>Apply to Sell</span><span className="group-hover:translate-x-1 transition-transform">🚀</span></>)}
+                  {loading ? (<span>Submitting...</span>) : (<><span>Apply to list your service</span><span className="group-hover:translate-x-1 transition-transform">→</span></>)}
                 </button>
               </form>
             )}

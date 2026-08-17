@@ -122,6 +122,12 @@ html {
   color: var(--charcoal);
 }
 
+/* Editorial serif accent — Playfair Display via next/font (--font-serif-accent).
+   Applied ONLY to italic gold keywords: hero "guesswork" + section headers. */
+.font-serif-accent {
+  font-family: var(--font-serif-accent), "Playfair Display", Georgia, serif;
+}
+
 /* Gradient text */
 .gradient-text {
   background: linear-gradient(135deg, #d4af37 0%, #e8c66d 50%, #d4af37 100%);

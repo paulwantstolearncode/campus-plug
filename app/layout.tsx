@@ -2,6 +2,18 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import HelpButton from "./HelpButton";
 import { Analytics } from "@vercel/analytics/react";
+import { Playfair_Display } from "next/font/google";
+
+// Editorial serif accent — used ONLY for italic gold keywords (hero
+// "guesswork", section headers). Self-hosted via next/font with
+// font-display: swap (default) so a font swap never causes CLS.
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  weight: ["400", "700"],
+  variable: "--font-serif-accent",
+  display: "swap",
+});
 
 // Explicit viewport export (Next.js App Router convention) — keeps the mobile
 // layout viewport pinned to device width and guards against any environment
@@ -39,7 +51,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={playfair.variable}>
       <body>
         {children}
         <HelpButton />

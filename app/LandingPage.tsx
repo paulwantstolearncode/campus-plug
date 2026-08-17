@@ -225,17 +225,8 @@ export default function LandingPage() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 w-full">
           <div className="text-center max-w-4xl mx-auto">
-            {/* Live badge */}
-            <div className="fade-up inline-flex items-center gap-2 glass-light px-4 py-2 rounded-full text-sm font-semibold text-charcoal mb-4 shadow-lg">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-gold"></span>
-              </span>
-              Now live at University of Ghana
-            </div>
-
             {/* Social proof — live counts, placeholder until fetched */}
-            <div className="fade-up inline-flex items-center gap-2.5 glass-light px-4 py-2 rounded-full text-sm font-semibold text-charcoal mb-8 shadow-lg">
+            <div className="fade-up inline-flex items-center gap-2.5 glass-light px-4 py-2 rounded-full text-sm font-semibold text-charcoal mb-4 shadow-lg">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
@@ -245,14 +236,29 @@ export default function LandingPage() {
                 : 'Live at UG 🇬🇭'}
             </div>
 
+            {/* Trust badge — replaces the old "Now live at University of Ghana" pill */}
+            <div className="fade-up inline-flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 px-5 py-2.5 rounded-full border border-charcoal/15 bg-white/70 backdrop-blur text-charcoal mb-8 shadow-lg max-w-[95vw]">
+              <svg width="14" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path d="M9 12l2 2 4-4" />
+              </svg>
+              <span className="uppercase tracking-widest text-[10px] sm:text-[11px] font-bold">
+                The trusted plug for UG
+              </span>
+              <span className="text-charcoal/25">—</span>
+              <span className="text-xs sm:text-sm font-medium normal-case">
+                Every listing reviewed by a real person
+              </span>
+            </div>
+
             {/* Main headline */}
             <h1 className="fade-up fade-up-delay-1 text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-charcoal leading-[0.95] tracking-tight mb-6">
-              Every skill.<br />
-              <span className="gradient-text">One plug.</span>
+              Campus help, without<br />
+              the <em className="font-serif-accent italic text-gold">guesswork</em>.
             </h1>
 
             <p className="fade-up fade-up-delay-2 text-lg sm:text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-10 px-4">
-              The premium marketplace where UG students book trusted services from fellow students.
+              Find a verified braider, tutor, cook or repairer on campus — then chat directly and agree your terms.
             </p>
 
             {/* CTA Buttons */}
@@ -261,14 +267,14 @@ export default function LandingPage() {
                 href="/services"
                 className="w-full sm:w-auto group bg-charcoal text-white px-8 py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-105 shadow-xl shadow-charcoal/25 flex items-center justify-center gap-2"
               >
-                Explore Services
+                Explore the plug
                 <span className="group-hover:translate-x-1 transition-transform">→</span>
               </Link>
               <Link
                 href="/login"
                 className="w-full sm:w-auto glass-light text-charcoal px-8 py-4 rounded-full font-semibold hover:bg-white transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2 border border-gray-200"
               >
-                Start Selling
+                Start selling
               </Link>
             </div>
 
@@ -310,9 +316,10 @@ export default function LandingPage() {
 
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12 md:mb-16">
-              <div className="inline-flex items-center gap-1.5 bg-gold text-charcoal px-4 py-2 rounded-full text-sm font-semibold mb-4 shadow-lg">
-                🏷️ FEATURED ON CAMPUS
+              <div className="inline-flex items-center gap-2 bg-gold text-charcoal px-4 py-2 rounded-full text-sm font-semibold mb-3 shadow-lg">
+                FEATURED <span className="text-charcoal/50">/</span> 01
               </div>
+              <p className="text-sm italic text-gray-500 mb-3">This week on Campus Plug</p>
               <h2 className="text-4xl md:text-6xl font-bold text-charcoal leading-tight">
                 See what&apos;s fresh <span className="gradient-text">right now</span>
               </h2>
@@ -347,12 +354,12 @@ export default function LandingPage() {
       <section className="relative py-20 md:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 md:mb-16">
-            <div className="inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">
-              How it works
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight">
-              Three steps. That&apos;s it.
+            <h2 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight mb-3">
+              How it <em className="font-serif-accent italic text-gold">works</em>
             </h2>
+            <p className="text-lg md:text-xl text-gray-500">
+              Three steps. That&apos;s it.
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 md:gap-8">
@@ -383,33 +390,28 @@ export default function LandingPage() {
         <section className="relative py-20 md:py-28 bg-off-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12 md:mb-16">
-              <div className="inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">
-                Explore by category
-              </div>
-              <h2 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight">
-                Find exactly <span className="gradient-text">what you need</span>
+              <h2 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight mb-3">
+                Explore by <em className="font-serif-accent italic text-gold">category</em>
               </h2>
+              <p className="text-lg md:text-xl text-gray-500">
+                Find exactly what you need
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            <div className="flex flex-wrap justify-center gap-3">
               {visibleCategories.map((c, idx) => {
                 const count = categoryCounts.get(c.slug) || 0
                 return (
                   <Link
                     key={c.slug}
                     href="/login"
-                    className="fade-up group bg-white rounded-3xl p-6 md:p-8 text-center shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 border-2 border-transparent hover:border-gold"
+                    className="fade-up group inline-flex items-center gap-2 bg-white border border-charcoal/15 text-charcoal px-5 py-2.5 rounded-full font-semibold text-sm hover:border-gold hover:text-gold transition-colors"
                     style={{ animationDelay: (idx * 0.07) + 's' }}
                   >
-                    <div className="text-4xl md:text-5xl mb-3 group-hover:scale-110 transition-transform">
-                      {c.emoji}
-                    </div>
-                    <p className="font-bold text-charcoal mb-1">
-                      {c.label}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {count} {count === 1 ? 'listing' : 'listings'}
-                    </p>
+                    <span>{c.emoji}</span>
+                    <span>{c.label}</span>
+                    <span className="text-charcoal/20 group-hover:text-gold/40">·</span>
+                    <span className="text-gray-400 group-hover:text-gold">{count}</span>
                   </Link>
                 )
               })}
@@ -422,12 +424,12 @@ export default function LandingPage() {
       <section className="relative py-20 md:py-28 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 md:mb-16">
-            <div className="inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">
-              Why Campus Plug
-            </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight">
-              Built for <span className="gradient-text">campus</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight mb-3">
+              Why Campus <em className="font-serif-accent italic text-gold">Plug</em>
             </h2>
+            <p className="text-lg md:text-xl text-gray-500">
+              Built for campus
+            </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
@@ -459,7 +461,7 @@ export default function LandingPage() {
 
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
           <h2 className="fade-up text-5xl md:text-7xl font-bold text-white leading-tight tracking-tight mb-6">
-            Ready to <span className="gradient-text">plug in?</span> 🔌
+            Ready to <em className="font-serif-accent italic text-gold">plug in</em>? 🔌
           </h2>
           <p className="fade-up fade-up-delay-1 text-lg md:text-xl text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed">
             Join UG students already earning and buying on Campus Plug.

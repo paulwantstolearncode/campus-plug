@@ -438,14 +438,14 @@ function NewListingContent() {
         <div className="absolute inset-0 opacity-[0.05]" style={{backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px'}}></div>
 
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
-          <div className="fade-up inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">
-            {isEditMode ? 'Edit Listing' : 'New Listing'}
+          <div className="fade-up inline-flex items-center gap-2 bg-gold/15 border border-gold/30 text-gold-dark px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-5">
+            {isEditMode ? 'Edit Listing · Step 1 of 3' : 'New Listing · Step 1 of 3'}
           </div>
           <h1 className="fade-up fade-up-delay-1 text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-4">
             {isEditMode ? (<>Update your<br /><span className="gradient-text">listing</span></>) : (<>Share what<br /><span className="gradient-text">you offer</span></>)}
           </h1>
           <p className="fade-up fade-up-delay-2 text-lg text-white/70 max-w-xl mx-auto">
-            {isEditMode ? 'Make changes and save when ready.' : 'Reach fellow students on your campus. Set your price, own your terms.'}
+            {isEditMode ? 'Make changes and save when ready.' : 'You&apos;ve got the skill. We&apos;ll help students find it.'}
           </p>
         </div>
       </section>
@@ -760,6 +760,11 @@ function NewListingContent() {
                 </>
               )}
             </button>
+
+            <p className="text-xs text-gray-500 text-center flex items-center justify-center gap-1.5">
+              <span className="text-green-600 font-bold">✓</span>
+              Review by the Campus Plug team
+            </p>
           </form>
 
           <div className="mt-6 p-6 rounded-2xl bg-gradient-to-br from-charcoal to-gray-900 text-white text-center">

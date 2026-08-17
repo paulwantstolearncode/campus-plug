@@ -523,7 +523,7 @@ export default function AdminPage() {
                         ? `What's included in the ${listing.service_duration} session? Any special requirements from buyers?`
                         : "What's included in the session? Any special requirements from buyers?")
                     : 'Is this brand new or used? Any additional photos available?'
-                  const waMessage = `Hi ${namePrefix}! 👋\n\nThis is Paul from Campus Plug 🔌\n\nReviewing your new listing:\n📦 Title: ${listing.title}\n💰 Price: ${price}\n📅 Posted: ${postedDate}\n\nQuick question before I approve: ${reason}\n\nOnce we chat, I'll approve it right away. Thanks for being one of our first sellers! 🙏`
+                  const waMessage = `Hi ${namePrefix}! 👋\n\nThis is Paul from Campus Plug 🔌\n\nReviewing your new listing:\n📦 Title: ${listing.title}\n💰 Price: ${price}\n📅 Posted: ${postedDate}\n\nQuick question before I approve: ${reason}\n\nYour listing was read by the Campus Plug team before going live 🛡️\n\nOnce we chat, I'll approve it right away. Thanks for being one of our first sellers! 🙏`
 
                   return (
                     <div key={listing.id} className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100">
