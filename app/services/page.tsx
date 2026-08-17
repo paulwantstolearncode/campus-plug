@@ -370,10 +370,12 @@ export default function ServicesPage() {
                           </div>
                         )}
                         <div className="absolute inset-0 p-5 md:p-6 flex flex-col justify-end text-white">
-                          <h3 className="text-xl md:text-2xl font-bold mb-2 group-hover:translate-x-1 hover:text-gold transition-all">{service.title}</h3>
-                          <span className={"inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full mb-2 w-fit " + (service.category ? "bg-gold/20 text-gold" : "bg-white/10 text-white/70")}>
-                            {cat.emoji} {cat.label}
-                          </span>
+                          <h3 className="text-xl md:text-2xl font-bold mb-2 line-clamp-2 group-hover:translate-x-1 hover:text-gold transition-all">{service.title}</h3>
+                          {service.category && (
+                            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full mb-2 w-fit bg-gold/20 text-gold">
+                              {cat.emoji} {cat.label}
+                            </span>
+                          )}
                           {service.seller?.full_name && (
                             <p className="text-sm text-white/90 mb-2 flex items-center gap-1.5">
                               <span className="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center text-xs">{formatName(service.seller.full_name).charAt(0)}</span>

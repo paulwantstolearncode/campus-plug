@@ -484,11 +484,13 @@ export default function Home() {
                           </Link>
                           <div className="p-5">
                             <Link href={"/listing/" + item.id} className="block">
-                              <h3 className="font-bold text-charcoal text-lg line-clamp-1 mb-1 hover:text-gold-dark transition-colors">{item.title}</h3>
+                              <h3 className="font-bold text-charcoal text-lg line-clamp-2 min-h-[3.5rem] mb-1 hover:text-gold-dark transition-colors">{item.title}</h3>
                             </Link>
-                            <span className={"inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full mb-3 " + (item.category ? "bg-gold/10 text-gold-dark" : "bg-gray-100 text-gray-500")}>
-                              {cat.emoji} {cat.label}
-                            </span>
+                            {item.category && (
+                              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full mb-3 bg-gold/10 text-gold-dark">
+                                {cat.emoji} {cat.label}
+                              </span>
+                            )}
                             {item.seller?.full_name && (
                               <p className="text-sm text-gray-500 mb-4 flex items-center gap-1.5">
                                 <span className="w-5 h-5 rounded-full bg-gold/10 text-gold-dark flex items-center justify-center text-xs font-semibold">{formatName(item.seller.full_name).charAt(0)}</span>

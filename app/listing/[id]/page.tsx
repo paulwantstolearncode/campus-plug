@@ -307,9 +307,11 @@ export default function ListingDetailPage() {
             <span className={"inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full " + (isService ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700')}>
               {isService ? '💼 Service' : '📦 Product'}
             </span>
-            <span className={"inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full " + (listing.category ? 'bg-gold text-charcoal' : 'bg-white/10 text-white/70 border border-white/20')}>
-              {categoryDisplay.emoji} {categoryDisplay.label}
-            </span>
+            {listing.category && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-gold text-charcoal">
+                {categoryDisplay.emoji} {categoryDisplay.label}
+              </span>
+            )}
             {listing.approval_status !== 'approved' && (
               <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-gold/20 text-gold border border-gold/30">
                 ⏳ {listing.approval_status === 'pending' ? 'Pending review' : 'Not approved'}

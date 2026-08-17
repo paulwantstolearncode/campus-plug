@@ -44,8 +44,10 @@ export function getCategoryLabel(slug: string | null | undefined): string {
   return getCategoryBySlug(slug)?.label ?? 'Uncategorized'
 }
 
-// Emoji + label pair for badges; falls back to "📋 Uncategorized" so legacy
-// listings (category IS NULL) still render a muted, backfill-reminder chip.
+// Emoji + label pair for badges. Legacy listings (category IS NULL/unknown)
+// render no badge at all — call sites gate on `listing.category` truthiness,
+// so the fallback below is only a safety net and never shown on marketplace
+// cards ("📋 Uncategorized" looked unprofessional).
 export function getCategoryDisplay(slug: string | null | undefined): { emoji: string; label: string } {
   const cat = getCategoryBySlug(slug)
   return cat ? { emoji: cat.emoji, label: cat.label } : { emoji: '📋', label: 'Uncategorized' }
