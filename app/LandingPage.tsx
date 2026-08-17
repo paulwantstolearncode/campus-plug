@@ -528,6 +528,10 @@ export default function LandingPage() {
 
           <div className="mt-8 pt-8 border-t border-white/10 text-center text-xs text-white/40">
             © 2026 Campus Plug. All rights reserved.
+            <span className="mx-2">·</span>
+            <Link href="/privacy" className="hover:text-gold transition-colors">Privacy</Link>
+            <span className="mx-2">·</span>
+            <Link href="/terms" className="hover:text-gold transition-colors">Terms</Link>
           </div>
         </div>
       </footer>

@@ -10,6 +10,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${SITE_URL}/`, priority: 1.0, changeFrequency: "daily" },
     { url: `${SITE_URL}/services`, priority: 0.9, changeFrequency: "daily" },
     { url: `${SITE_URL}/become-seller`, priority: 0.7, changeFrequency: "monthly" },
+    { url: `${SITE_URL}/privacy`, priority: 0.3, changeFrequency: "yearly" },
+    { url: `${SITE_URL}/terms`, priority: 0.3, changeFrequency: "yearly" },
   ];
 
   // Dynamic: approved listings only, via the anon client so RLS decides
