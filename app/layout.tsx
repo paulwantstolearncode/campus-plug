@@ -24,13 +24,16 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Campus Plug 🔌 — The Student Marketplace",
-  description: "Book trusted services from verified UG students. Hair braiding, tutoring, tech support, photography, and more — all in one place.",
+  // Canonical origin for all generated metadata URLs (OG, canonical, sitemap)
+  // — the site moved from the Vercel preview domain to campuspluggh.com.
+  metadataBase: new URL("https://campuspluggh.com"),
+  title: "Campus Plug — Student Marketplace at University of Ghana",
+  description: "Campus Plug is a student marketplace for the University of Ghana community. Browse verified student sellers offering services like braiding, tutoring, home-cooked meals, phone repairs, and products. Message sellers directly on WhatsApp to book.",
   keywords: ["campus plug", "UG marketplace", "student services Ghana", "University of Ghana", "book services"],
   openGraph: {
-    title: "Campus Plug 🔌",
-    description: "The premium marketplace for UG students. Every student. Every skill. One plug.",
-    url: "https://campus-plug-oukb.vercel.app",
+    title: "Campus Plug",
+    description: "Campus Plug is a student marketplace for the University of Ghana community. Browse verified student sellers offering services like braiding, tutoring, home-cooked meals, phone repairs, and products. Message sellers directly on WhatsApp to book.",
+    url: "https://campuspluggh.com",
     siteName: "Campus Plug",
     locale: "en_GH",
     type: "website",
@@ -40,8 +43,8 @@ export const metadata: Metadata = {
   // Add openGraph.images + twitter.images when a real 1200x630 asset is ready.
   twitter: {
     card: "summary",
-    title: "Campus Plug 🔌",
-    description: "Book trusted services from verified UG students.",
+    title: "Campus Plug",
+    description: "Campus Plug is a student marketplace for the University of Ghana community. Browse verified student sellers offering services like braiding, tutoring, home-cooked meals, phone repairs, and products. Message sellers directly on WhatsApp to book.",
   },
 };
 

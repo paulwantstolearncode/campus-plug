@@ -316,6 +316,20 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* What is Campus Plug? — plain-English explainer for crawlers and new visitors */}
+      <section className="relative py-16 md:py-24 bg-white">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6">
+          <div className="bg-off-white rounded-3xl shadow-sm px-6 py-12 md:px-12 md:py-16 text-center">
+            <h2 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight mb-6">
+              What is <em className="font-serif-accent italic text-gold">Campus Plug</em>?
+            </h2>
+            <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
+              Campus Plug is a student marketplace built for the University of Ghana community. Browse verified student sellers offering services like braiding, tutoring, home-cooked meals, phone repairs, and everyday products — then message them directly on WhatsApp to book. Every seller is a verified UG student.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Live on Campus — logged-out preview of the marketplace */}
       {liveListings.length > 0 && (
         <section className="relative py-24 md:py-32 bg-off-white overflow-hidden">
