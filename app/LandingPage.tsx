@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { formatPriceRange } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
+import ListingCard, { type ListingCardData } from '@/app/ListingCard'
 
 interface FeaturedService {
   id: string
@@ -19,9 +20,14 @@ interface FeaturedService {
 
 export default function LandingPage() {
   const [featuredServices, setFeaturedServices] = useState<FeaturedService[]>([])
+  const [liveListings, setLiveListings] = useState<ListingCardData[]>([])
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
+    // TODO(seo): convert this page to a Server Component and fetch listings
+    // server-side so the featured + live sections render in the initial HTML.
+    // Requires splitting the client-only scroll-handler logic into a child
+    // component. Client-side fetching is fine for now.
     async function loadFeatured() {
       try {
         const { data } = await supabase
@@ -46,7 +52,28 @@ export default function LandingPage() {
         console.error('Failed to load featured services:', err)
       }
     }
+
+    // "Live on Campus" — the 6 newest approved listings that have an image.
+    // Showcase only; every tap funnels to /login. The whole section hides
+    // itself if there are zero approved listings with images.
+    async function loadLive() {
+      try {
+        const { data } = await supabase
+          .from('listings')
+          .select('id, title, description, price, image_url, listing_type, category, seller_id, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)')
+          .eq('approval_status', 'approved')
+          .not('image_url', 'is', null)
+          .neq('image_url', '')
+          .order('created_at', { ascending: false })
+          .limit(6)
+        if (data) setLiveListings(data as unknown as ListingCardData[])
+      } catch (err) {
+        // Decorative — a failed fetch just leaves the section hidden.
+        console.error('Failed to load live listings:', err)
+      }
+    }
     loadFeatured()
+    loadLive()
 
     const handleScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', handleScroll)
@@ -166,13 +193,54 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Scroll indicator */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 hidden md:flex flex-col items-center gap-2 text-gray-400">
-            <span className="text-xs uppercase tracking-widest">Scroll</span>
-            <div className="w-px h-8 bg-gradient-to-b from-gray-400 to-transparent"></div>
-          </div>
         </div>
       </section>
+
+      {/* Live on Campus — logged-out preview of the marketplace */}
+      {liveListings.length > 0 && (
+        <section className="relative py-24 md:py-32 bg-off-white overflow-hidden">
+          <div
+            className="absolute inset-0 opacity-40"
+            style={{
+              backgroundImage: 'radial-gradient(circle, #d4af37 1px, transparent 1px)',
+              backgroundSize: '30px 30px'
+            }}
+          ></div>
+
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="text-center mb-12 md:mb-16">
+              <div className="inline-flex items-center gap-1.5 bg-gold text-charcoal px-4 py-2 rounded-full text-sm font-semibold mb-4 shadow-lg">
+                🏷️ LIVE ON CAMPUS
+              </div>
+              <h2 className="text-4xl md:text-6xl font-bold text-charcoal leading-tight">
+                See what&apos;s fresh <span className="gradient-text">right now</span>
+              </h2>
+            </div>
+
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {liveListings.map((listing, idx) => (
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  index={idx}
+                  preview
+                  staggerSeconds={0.1}
+                />
+              ))}
+            </div>
+
+            <div className="text-center mt-12 md:mt-14">
+              <Link
+                href="/login"
+                className="group inline-flex items-center gap-2 bg-charcoal text-white px-8 py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-105 shadow-xl shadow-charcoal/25"
+              >
+                See all listings
+                <span className="group-hover:translate-x-1 transition-transform">→</span>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* How It Works */}
       <section className="relative py-24 md:py-32 bg-off-white overflow-hidden">

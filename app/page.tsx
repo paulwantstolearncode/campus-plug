@@ -4,31 +4,12 @@ import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import LandingPage from './LandingPage'
-import { formatPriceRange } from '@/lib/format'
-import { formatName } from '@/lib/formatName'
-import { getCategoriesByType, getCategoryDisplay } from '@/lib/categories'
-import StarRating from '@/app/StarRating'
+import { getCategoriesByType } from '@/lib/categories'
+import ListingCard, { type ListingCardData } from '@/app/ListingCard'
 import { getSellerRatings, type SellerRating } from '@/lib/reviews'
 
-interface Listing {
-  id: string
-  title: string
-  description: string | null
-  price: number
-  image_url: string | null
-  listing_type: string
-  category: string | null
-  seller_id: string
-  seller: {
-    full_name: string | null
-    whatsapp_number: string | null
-  } | null
-  listing_items: { price: number }[] | null
-  listing_images: { id: string }[] | null
-}
-
 export default function Home() {
-  const [listings, setListings] = useState<Listing[]>([])
+  const [listings, setListings] = useState<ListingCardData[]>([])
   const [isSeller, setIsSeller] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
   const [user, setUser] = useState<User | null>(null)
@@ -60,7 +41,7 @@ export default function Home() {
           // run, or an RLS denial for the current role.
           console.error('Failed to load listings:', error)
         } else if (data) {
-          const typed = data as unknown as Listing[]
+          const typed = data as unknown as ListingCardData[]
           setListings(typed)
           // Seller star ratings + Top Rated badges (best-effort; the reviews
           // system is additive — a failed fetch only means no badges).
@@ -444,103 +425,16 @@ export default function Home() {
                 )
               ) : (
                 <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {filteredListings.map((item, idx) => {
-                    const isOwner = user && item.seller_id === user.id
-                    const cat = getCategoryDisplay(item.category)
-                    const priceLabel = formatPriceRange(item.listing_items) || 'GH₵ ' + Number(item.price || 0).toLocaleString()
-                    return (
-                      <div key={item.id} className="group relative fade-up" style={{ animationDelay: (idx * 0.05) + 's' }}>
-                        <div className="relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
-                          <Link href={"/listing/" + item.id} className="relative block aspect-square overflow-hidden bg-gray-100">
-                            {item.image_url ? (
-                              <img src={item.image_url} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-charcoal via-gray-800 to-charcoal">
-                                <span className="text-7xl opacity-40">{item.listing_type === 'service' ? '💼' : '📦'}</span>
-                              </div>
-                            )}
-                            <div className="absolute top-3 left-3 glass px-3 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
-                              <span className="w-2 h-2 bg-gold rounded-full"></span>
-                              {item.listing_type === 'service' ? 'Service' : 'Product'}
-                            </div>
-                            <div className="absolute top-3 right-3 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
-                              {priceLabel}
-                            </div>
-                            {sellerRatings[item.seller_id]?.is_top_rated && (
-                              <div className="absolute top-14 left-3 bg-gold text-charcoal px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1">
-                                ⭐ Top Rated
-                              </div>
-                            )}
-                            {item.listing_images && item.listing_images.length > 1 && (
-                              <div className="absolute bottom-3 left-3 glass px-2.5 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
-                                🖼 {item.listing_images.length}
-                              </div>
-                            )}
-                            {isOwner && (
-                              <div className="absolute bottom-3 right-3 bg-blue-500/90 backdrop-blur text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-lg">
-                                Your listing
-                              </div>
-                            )}
-                          </Link>
-                          <div className="p-5">
-                            <Link href={"/listing/" + item.id} className="block">
-                              <h3 className="font-bold text-charcoal text-lg line-clamp-2 min-h-[3.5rem] mb-1 hover:text-gold-dark transition-colors">{item.title}</h3>
-                            </Link>
-                            {item.category && (
-                              <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full mb-3 bg-gold/10 text-gold-dark">
-                                {cat.emoji} {cat.label}
-                              </span>
-                            )}
-                            {item.seller?.full_name && (
-                              <p className="text-sm text-gray-500 mb-4 flex items-center gap-1.5">
-                                <span className="w-5 h-5 rounded-full bg-gold/10 text-gold-dark flex items-center justify-center text-xs font-semibold">{formatName(item.seller.full_name).charAt(0)}</span>
-                                {formatName(item.seller.full_name)}
-                                {sellerRatings[item.seller_id]?.review_count ? (
-                                  <span className="ml-1 inline-flex items-center gap-1 text-xs font-semibold text-gold-dark" title={'Average ' + Number(sellerRatings[item.seller_id].average_rating).toFixed(1) + ' across ' + sellerRatings[item.seller_id].review_count + ' reviews'}>
-                                    <StarRating rating={Number(sellerRatings[item.seller_id].average_rating) || 0} size="sm" />
-                                    {Number(sellerRatings[item.seller_id].average_rating).toFixed(1)} ({sellerRatings[item.seller_id].review_count})
-                                  </span>
-                                ) : null}
-                              </p>
-                            )}
-                            <div className="flex gap-2">
-                              {isOwner ? (
-                                <>
-                                  <Link href={"/new?edit=" + item.id} className="flex-1 flex items-center justify-center gap-1.5 bg-charcoal text-white py-2.5 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm">
-                                    ✏️ Edit
-                                  </Link>
-                                  <button
-                                    onClick={() => handleDelete(item.id, item.title)}
-                                    className="w-10 h-10 flex items-center justify-center bg-red-500 text-white rounded-full hover:bg-red-600 transition-all hover:scale-110 shrink-0"
-                                    title="Delete listing"
-                                  >
-                                    🗑️
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  {item.listing_type === 'service' ? (
-                                    <Link href={"/services/" + item.id + "/book"} className="flex-1 flex items-center justify-center gap-1.5 bg-charcoal text-white py-2.5 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm">
-                                      📅 Book
-                                    </Link>
-                                  ) : (
-                                    item.seller?.whatsapp_number && (
-                                      <a href={"https://wa.me/" + item.seller.whatsapp_number + "?text=" + encodeURIComponent("Hi! I'm interested in your \"" + item.title + "\" listing on Campus Plug 🔌")} target="_blank" rel="noopener noreferrer" className="flex-1 flex items-center justify-center gap-1.5 bg-charcoal text-white py-2.5 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm">
-                                        💬 Message
-                                      </a>
-                                    )
-                                  )}
-                                  {item.listing_type === 'service' && item.seller?.whatsapp_number && (
-                                    <a href={"https://wa.me/" + item.seller.whatsapp_number + "?text=" + encodeURIComponent("Hi! I have a question about your \"" + item.title + "\" service on Campus Plug 🔌")} target="_blank" rel="noopener noreferrer" className="w-10 h-10 flex items-center justify-center bg-green-500 text-white rounded-full hover:bg-green-600 transition-all hover:scale-110 shrink-0" title="Message on WhatsApp">💬</a>
-                                  )}
-                                </>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
+                  {filteredListings.map((item, idx) => (
+                    <ListingCard
+                      key={item.id}
+                      listing={item}
+                      index={idx}
+                      isOwner={!!(user && item.seller_id === user.id)}
+                      onDelete={handleDelete}
+                      sellerRatings={sellerRatings}
+                    />
+                  ))}
                 </div>
               )}
             </>
