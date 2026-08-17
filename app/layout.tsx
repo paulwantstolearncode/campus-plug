@@ -3,6 +3,7 @@ import "./globals.css";
 import HelpButton from "./HelpButton";
 import { Analytics } from "@vercel/analytics/react";
 import { Playfair_Display } from "next/font/google";
+import { SITE_URL } from "@/lib/site";
 
 // Editorial serif accent — used ONLY for italic gold keywords (hero
 // "guesswork", section headers). Self-hosted via next/font with
@@ -26,14 +27,14 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   // Canonical origin for all generated metadata URLs (OG, canonical, sitemap)
   // — the site moved from the Vercel preview domain to campuspluggh.com.
-  metadataBase: new URL("https://campuspluggh.com"),
+  metadataBase: new URL(SITE_URL),
   title: "Campus Plug — Student Marketplace at University of Ghana",
   description: "Campus Plug is a student marketplace for the University of Ghana community. Browse verified student sellers offering services like braiding, tutoring, home-cooked meals, phone repairs, and products. Message sellers directly on WhatsApp to book.",
   keywords: ["campus plug", "UG marketplace", "student services Ghana", "University of Ghana", "book services"],
   openGraph: {
     title: "Campus Plug",
     description: "Campus Plug is a student marketplace for the University of Ghana community. Browse verified student sellers offering services like braiding, tutoring, home-cooked meals, phone repairs, and products. Message sellers directly on WhatsApp to book.",
-    url: "https://campuspluggh.com",
+    url: SITE_URL,
     siteName: "Campus Plug",
     locale: "en_GH",
     type: "website",
