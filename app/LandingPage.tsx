@@ -2,56 +2,25 @@
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { formatPriceRange } from '@/lib/format'
-import { formatName } from '@/lib/formatName'
 import ListingCard, { type ListingCardData } from '@/app/ListingCard'
+import { CATEGORIES } from '@/lib/categories'
 
-interface FeaturedService {
-  id: string
-  title: string
-  price: number
-  image_url: string | null
-  service_location: string | null
-  seller: {
-    full_name: string | null
-  } | null
-  listing_items: { price: number }[] | null
+interface MarketplaceStats {
+  sellerCount: number
+  listingCount: number
 }
 
 export default function LandingPage() {
-  const [featuredServices, setFeaturedServices] = useState<FeaturedService[]>([])
   const [liveListings, setLiveListings] = useState<ListingCardData[]>([])
+  const [stats, setStats] = useState<MarketplaceStats | null>(null)
+  const [categoryCounts, setCategoryCounts] = useState<Map<string, number>>(new Map())
   const [scrolled, setScrolled] = useState(false)
 
   useEffect(() => {
     // TODO(seo): convert this page to a Server Component and fetch listings
-    // server-side so the featured + live sections render in the initial HTML.
+    // server-side so the live/category sections render in the initial HTML.
     // Requires splitting the client-only scroll-handler logic into a child
     // component. Client-side fetching is fine for now.
-    async function loadFeatured() {
-      try {
-        const { data } = await supabase
-  .from('listings')
-  .select(`
-    id, title, price, image_url, service_location,
-    seller:profiles!seller_id (full_name),
-    listing_items (price)
-  `)
-  .eq('listing_type', 'service')
-  .eq('approval_status', 'approved')
-  .order('created_at', { ascending: false })
-  .limit(6)
-
-        // The explicit-column select makes supabase-js infer the embedded
-        // `seller` join as an array; at runtime it is a single object (to-one
-        // FK join), so cast through unknown.
-        if (data) setFeaturedServices(data as unknown as FeaturedService[])
-      } catch (err) {
-        // Featured section is decorative — a failed fetch should just leave
-        // it empty rather than throw an unhandled rejection.
-        console.error('Failed to load featured services:', err)
-      }
-    }
 
     // "Live on Campus" — the 6 newest approved listings that have an image.
     // Showcase only; every tap funnels to /login. The whole section hides
@@ -72,13 +41,86 @@ export default function LandingPage() {
         console.error('Failed to load live listings:', err)
       }
     }
-    loadFeatured()
+
+    // Hero social-proof pill counts (security-definer RPC — see
+    // supabase/add_marketplace_stats.sql). Shows the loading placeholder
+    // until data arrives; if the RPC hasn't been created yet the pill
+    // simply stays on its placeholder.
+    async function loadStats() {
+      try {
+        const { data } = await supabase.rpc('marketplace_stats')
+        if (data && data[0]) {
+          setStats({
+            sellerCount: Number(data[0].seller_count),
+            listingCount: Number(data[0].listing_count),
+          })
+        }
+      } catch (err) {
+        console.error('Failed to load marketplace stats:', err)
+      }
+    }
+
+    // Category showcase counts — one lightweight query, tallied client-side.
+    async function loadCategoryCounts() {
+      try {
+        const { data } = await supabase
+          .from('listings')
+          .select('category')
+          .eq('approval_status', 'approved')
+        if (!data) return
+        const counts = new Map<string, number>()
+        for (const row of data as { category: string | null }[]) {
+          if (row.category) {
+            counts.set(row.category, (counts.get(row.category) || 0) + 1)
+          }
+        }
+        setCategoryCounts(counts)
+      } catch (err) {
+        console.error('Failed to load category counts:', err)
+      }
+    }
+
     loadLive()
+    loadStats()
+    loadCategoryCounts()
 
     const handleScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Categories with at least one live approved listing, in canonical order.
+  const visibleCategories = CATEGORIES.filter(
+    (c) => (categoryCounts.get(c.slug) || 0) > 0
+  )
+
+  const howItWorks = [
+    {
+      number: '01',
+      emoji: '🔍',
+      title: 'Browse',
+      desc: 'Discover verified UG student sellers offering products and services',
+    },
+    {
+      number: '02',
+      emoji: '💬',
+      title: 'Message',
+      desc: 'Chat directly on WhatsApp — no middleman',
+    },
+    {
+      number: '03',
+      emoji: '✅',
+      title: 'Book',
+      desc: 'Agree on details, meet up, done. Pay via cash or MoMo',
+    },
+  ]
+
+  const whyCards = [
+    { icon: '🛡️', title: 'Verified', desc: 'Every seller manually approved' },
+    { icon: '🇬🇭', title: 'Local', desc: 'Ghana Cedis, MoMo, WhatsApp' },
+    { icon: '⚡', title: 'Fast', desc: 'Direct WhatsApp = instant reply' },
+    { icon: '💛', title: 'Student', desc: 'By UG, for UG community' },
+  ]
 
   return (
     <main className="min-h-screen bg-white overflow-hidden">
@@ -112,7 +154,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section with Animated Background */}
-      <section className="relative min-h-screen flex items-center pt-20 pb-32">
+      <section className="relative min-h-[70vh] flex items-center pt-20 pb-16 md:pb-24">
         {/* Animated gradient blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="blob absolute top-20 -left-20 w-72 h-72 bg-gold/20 rounded-full blur-3xl"></div>
@@ -131,16 +173,24 @@ export default function LandingPage() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 w-full">
           <div className="text-center max-w-4xl mx-auto">
-            {/* Badge */}
-            <div className="fade-up inline-flex items-center gap-2 glass-light px-4 py-2 rounded-full text-sm font-semibold text-charcoal mb-8 shadow-lg">
+            {/* Live badge */}
+            <div className="fade-up inline-flex items-center gap-2 glass-light px-4 py-2 rounded-full text-sm font-semibold text-charcoal mb-4 shadow-lg">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-gold"></span>
               </span>
-              <span className="flex flex-col items-start leading-tight">
-                <span>Now live at University of Ghana</span>
-                <span className="text-xs font-medium text-charcoal/60">Built by an engineering student</span>
+              Now live at University of Ghana
+            </div>
+
+            {/* Social proof — live counts, placeholder until fetched */}
+            <div className="fade-up inline-flex items-center gap-2.5 glass-light px-4 py-2 rounded-full text-sm font-semibold text-charcoal mb-8 shadow-lg">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
               </span>
+              {stats
+                ? stats.sellerCount + ' UG students. ' + stats.listingCount + ' listings. Live.'
+                : 'Live at UG 🇬🇭'}
             </div>
 
             {/* Main headline */}
@@ -164,7 +214,7 @@ export default function LandingPage() {
               </Link>
               <Link
                 href="/login"
-                className="w-full sm:w-auto glass-light text-charcoal px-8 py-4 rounded-full font-semibold hover:bg-white transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                className="w-full sm:w-auto glass-light text-charcoal px-8 py-4 rounded-full font-semibold hover:bg-white transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2 border border-gray-200"
               >
                 Start Selling
               </Link>
@@ -192,7 +242,6 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
-
         </div>
       </section>
 
@@ -243,222 +292,133 @@ export default function LandingPage() {
       )}
 
       {/* How It Works */}
-      <section className="relative py-24 md:py-32 bg-off-white overflow-hidden">
-        <div className="absolute inset-0">
-          <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-radial from-gold/5 to-transparent rounded-full"></div>
-        </div>
-
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16 md:mb-20">
+      <section className="relative py-20 md:py-28 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12 md:mb-16">
             <div className="inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">
               How it works
             </div>
-            <h2 className="text-4xl md:text-6xl font-bold text-charcoal leading-tight">
-              Simple as <span className="gradient-text">1, 2, 3</span>
+            <h2 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight">
+              Three steps. That&apos;s it.
             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6 md:gap-8">
-            {[
-              {
-                number: '01',
-                title: 'Discover',
-                description: 'Browse services from verified students in your campus. Filter by category, price, or location.',
-                icon: '🔍',
-                gradient: 'from-blue-500/10 to-purple-500/10',
-              },
-              {
-                number: '02',
-                title: 'Book',
-                description: 'Pick your preferred date and time. Get instantly connected via WhatsApp for confirmation.',
-                icon: '📅',
-                gradient: 'from-gold/10 to-orange-500/10',
-              },
-              {
-                number: '03',
-                title: 'Enjoy',
-                description: 'Meet up, receive your service, and support fellow students. Rate your experience.',
-                icon: '✨',
-                gradient: 'from-green-500/10 to-teal-500/10',
-              },
-            ].map((step) => (
+            {howItWorks.map((step, idx) => (
               <div
                 key={step.number}
-                className="group relative bg-white p-8 md:p-10 rounded-3xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2"
+                className="fade-up group relative bg-off-white p-8 md:p-10 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1"
+                style={{ animationDelay: (idx * 0.1) + 's' }}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${step.gradient} rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500`}></div>
-
-                <div className="relative">
-                  <div className="flex items-center justify-between mb-6">
-                    <span className="text-6xl">{step.icon}</span>
-                    <span className="text-4xl font-bold text-gray-200 group-hover:text-gold transition-colors">
-                      {step.number}
-                    </span>
-                  </div>
-
-                  <h3 className="text-2xl md:text-3xl font-bold text-charcoal mb-3">
-                    {step.title}
-                  </h3>
-                  <p className="text-gray-600 leading-relaxed">
-                    {step.description}
-                  </p>
-                </div>
+                <span className="absolute top-6 right-8 text-4xl md:text-5xl font-bold text-gold/30 group-hover:text-gold transition-colors">
+                  {step.number}
+                </span>
+                <div className="text-6xl mb-6">{step.emoji}</div>
+                <h3 className="text-2xl md:text-3xl font-bold text-charcoal mb-2">
+                  {step.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {step.desc}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Featured Services */}
-      {featuredServices.length > 0 && (
-        <section className="py-24 md:py-32 bg-white">
+      {/* Explore by Category */}
+      {visibleCategories.length > 0 && (
+        <section className="relative py-20 md:py-28 bg-off-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 mb-12 md:mb-16">
-              <div>
-                <div className="inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">
-                  Featured
-                </div>
-                <h2 className="text-4xl md:text-6xl font-bold text-charcoal leading-tight">
-                  Popular <span className="gradient-text">right now</span>
-                </h2>
+            <div className="text-center mb-12 md:mb-16">
+              <div className="inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">
+                Explore by category
               </div>
-              <Link
-                href="/services"
-                className="group flex items-center gap-2 text-charcoal font-semibold hover:text-gold transition-colors"
-              >
-                View all services
-                <span className="group-hover:translate-x-1 transition-transform">→</span>
-              </Link>
+              <h2 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight">
+                Find exactly <span className="gradient-text">what you need</span>
+              </h2>
             </div>
 
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {featuredServices.map((service, idx) => (
-                <Link
-                  key={service.id}
-                  href="/services"
-                  className="group relative overflow-hidden rounded-3xl"
-                  style={{ animationDelay: `${idx * 0.1}s` }}
-                >
-                  <div className="relative aspect-[4/5] overflow-hidden rounded-3xl bg-gray-100">
-                    {service.image_url ? (
-                      <img
-                        src={service.image_url}
-                        alt={service.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gold/20 via-gold/5 to-transparent">
-                        <span className="text-7xl opacity-40">💼</span>
-                      </div>
-                    )}
-
-                    {/* Gradient overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-
-                    {/* Content on image */}
-                    <div className="absolute inset-0 p-6 flex flex-col justify-end text-white">
-                      <h3 className="text-xl md:text-2xl font-bold mb-2 group-hover:translate-x-1 transition-transform">
-                        {service.title}
-                      </h3>
-                      {service.seller?.full_name && (
-                        <p className="text-sm text-white/80 mb-2">
-                          by {formatName(service.seller.full_name)}
-                        </p>
-                      )}
-                      {service.service_location && (
-                        <p className="text-sm text-white/80 mb-3 flex items-center gap-1">
-                          <span>📍</span> {service.service_location}
-                        </p>
-                      )}
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xl font-bold">
-                          {formatPriceRange(service.listing_items) || 'GH₵ ' + Number(service.price).toLocaleString()}
-                        </span>
-                        <span className="w-10 h-10 rounded-full bg-white/20 backdrop-blur flex items-center justify-center group-hover:bg-gold group-hover:text-charcoal transition-all">
-                          →
-                        </span>
-                      </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+              {visibleCategories.map((c, idx) => {
+                const count = categoryCounts.get(c.slug) || 0
+                return (
+                  <Link
+                    key={c.slug}
+                    href="/login"
+                    className="fade-up group bg-white rounded-3xl p-6 md:p-8 text-center shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1 border-2 border-transparent hover:border-gold"
+                    style={{ animationDelay: (idx * 0.07) + 's' }}
+                  >
+                    <div className="text-4xl md:text-5xl mb-3 group-hover:scale-110 transition-transform">
+                      {c.emoji}
                     </div>
-                  </div>
-                </Link>
-              ))}
+                    <p className="font-bold text-charcoal mb-1">
+                      {c.label}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      {count} {count === 1 ? 'listing' : 'listings'}
+                    </p>
+                  </Link>
+                )
+              })}
             </div>
           </div>
         </section>
       )}
 
-      {/* Stats Section */}
-      <section className="py-20 md:py-24 bg-white">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-            {[
-              { number: '100+', label: 'Verified students' },
-              { number: '50+', label: 'Services available' },
-              { number: '0%', label: 'Signup fees' },
-              { number: '24/7', label: 'Always open' },
-            ].map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="text-4xl md:text-6xl font-bold gradient-text mb-2">
-                  {stat.number}
-                </div>
-                <div className="text-sm md:text-base text-gray-600">
-                  {stat.label}
-                </div>
+      {/* Why Campus Plug */}
+      <section className="relative py-20 md:py-28 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12 md:mb-16">
+            <div className="inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">
+              Why Campus Plug
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight">
+              Built for <span className="gradient-text">campus</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-8">
+            {whyCards.map((card, idx) => (
+              <div
+                key={card.title}
+                className="fade-up group bg-off-white p-8 md:p-10 rounded-3xl shadow-sm hover:shadow-xl transition-all duration-500 hover:-translate-y-1"
+                style={{ animationDelay: (idx * 0.07) + 's' }}
+              >
+                <div className="text-5xl mb-4">{card.icon}</div>
+                <h3 className="text-xl md:text-2xl font-bold text-charcoal mb-2">
+                  {card.title}
+                </h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {card.desc}
+                </p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* For Sellers CTA */}
-      <section className="relative py-24 md:py-32 overflow-hidden">
-        <div className="absolute inset-0 animated-gradient"></div>
-
-        {/* Decorative blobs */}
+      {/* Final CTA */}
+      <section className="relative py-24 md:py-32 overflow-hidden bg-gradient-to-br from-charcoal to-black">
         <div className="absolute inset-0 overflow-hidden">
-          <div className="blob absolute top-10 left-10 w-96 h-96 bg-gold/20 rounded-full blur-3xl"></div>
-          <div className="blob absolute bottom-10 right-10 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" style={{animationDelay: '7s'}}></div>
+          <div className="blob absolute top-10 -left-20 w-96 h-96 bg-gold/20 rounded-full blur-3xl"></div>
+          <div className="blob absolute bottom-10 right-0 w-96 h-96 bg-gold/10 rounded-full blur-3xl" style={{ animationDelay: '6s' }}></div>
         </div>
 
-        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 text-center">
-          <div className="inline-block glass px-4 py-2 rounded-full text-sm font-semibold text-gold mb-8">
-            For sellers
-          </div>
-
-          <h2 className="text-5xl md:text-7xl font-bold text-white leading-tight tracking-tight mb-8">
-            Turn your skills<br />
-            into <span className="gradient-text">income</span>
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <h2 className="fade-up text-5xl md:text-7xl font-bold text-white leading-tight tracking-tight mb-6">
+            Ready to <span className="gradient-text">plug in?</span> 🔌
           </h2>
-
-          <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Whether you braid hair, tutor calculus, or fix laptops — reach hundreds of students
-            actively looking for services like yours.
+          <p className="fade-up fade-up-delay-1 text-lg md:text-xl text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Join UG students already earning and buying on Campus Plug.
           </p>
-
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 shine-button text-charcoal px-10 py-5 rounded-full font-bold text-lg hover:scale-105 transition-transform shadow-2xl shadow-gold/50"
+            className="fade-up fade-up-delay-2 inline-flex items-center gap-2 bg-gold text-charcoal px-10 py-5 rounded-full font-bold text-lg hover:bg-gold-dark transition-all hover:scale-105 shadow-2xl shadow-gold/30"
           >
-            Start Selling Today
+            Get Started Free
             <span>→</span>
           </Link>
-
-          <div className="mt-16 grid grid-cols-3 gap-4 md:gap-8 max-w-3xl mx-auto">
-            {[
-              { number: '0%', label: 'Signup fees' },
-              { number: '100%', label: 'Your prices' },
-              { number: '24/7', label: 'Availability' },
-            ].map((stat) => (
-              <div key={stat.label} className="glass rounded-2xl p-6">
-                <div className="text-3xl md:text-5xl font-bold text-gold mb-2">
-                  {stat.number}
-                </div>
-                <div className="text-xs md:text-sm text-white/60">
-                  {stat.label}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
