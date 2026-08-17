@@ -17,6 +17,7 @@ export interface ListingCardData {
   image_url: string | null
   listing_type: string
   category: string | null
+  approval_status: string
   seller_id: string
   seller: {
     full_name: string | null

@@ -22,20 +22,72 @@ export default function LandingPage() {
     // Requires splitting the client-only scroll-handler logic into a child
     // component. Client-side fetching is fine for now.
 
-    // "Live on Campus" — the 6 newest approved listings that have an image.
+    // "Featured on Campus" — admin-curated slots first (landing_featured_listings),
+    // then fill remaining slots with the newest approved listings that have an
+    // image and aren't already featured. If the migration hasn't been run yet
+    // (table missing), this falls back to the newest-6 behavior automatically.
     // Showcase only; every tap funnels to /login. The whole section hides
     // itself if there are zero approved listings with images.
     async function loadLive() {
       try {
-        const { data } = await supabase
-          .from('listings')
-          .select('id, title, description, price, image_url, listing_type, category, seller_id, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)')
-          .eq('approval_status', 'approved')
-          .not('image_url', 'is', null)
-          .neq('image_url', '')
-          .order('created_at', { ascending: false })
-          .limit(6)
-        if (data) setLiveListings(data as unknown as ListingCardData[])
+        const listingSelect =
+          'id, title, description, price, image_url, listing_type, category, approval_status, seller_id, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)'
+
+        // 1) Admin-curated slots, in order. A slot only counts if its listing
+        //    still exists, is approved, and has an image.
+        const { data: slotData, error: slotError } = await supabase
+          .from('landing_featured_listings')
+          .select('slot, listing:listings!listing_id (' + listingSelect + ')')
+          .order('slot', { ascending: true })
+
+        let featured: ListingCardData[] = []
+        if (slotError) {
+          // Table missing (migration not run yet) — fall through to newest-6.
+          console.error('Failed to load featured slots:', slotError)
+        } else if (slotData) {
+          featured = (slotData as unknown as { slot: number; listing: ListingCardData | null }[])
+            .filter((s) =>
+              s.listing &&
+              s.listing.approval_status === 'approved' &&
+              !!s.listing.image_url &&
+              s.listing.image_url.trim() !== ''
+            )
+            .map((s) => s.listing as ListingCardData)
+        }
+
+        // 2) Fill the remaining slots with the newest approved listings that
+        //    aren't already featured.
+        let combined = featured
+        if (combined.length < 6) {
+          const picked = combined.map((l) => l.id)
+          const fillQuery = supabase
+            .from('listings')
+            .select(listingSelect)
+            .eq('approval_status', 'approved')
+            .not('image_url', 'is', null)
+            .neq('image_url', '')
+            .order('created_at', { ascending: false })
+            .limit(6)
+          if (picked.length > 0) fillQuery.not('id', 'in', picked)
+
+          const { data: fillData, error: fillError } = await fillQuery
+          if (fillError) {
+            // Last resort: newest-6 with no exclusion (pre-featured behavior).
+            const { data: fallback } = await supabase
+              .from('listings')
+              .select(listingSelect)
+              .eq('approval_status', 'approved')
+              .not('image_url', 'is', null)
+              .neq('image_url', '')
+              .order('created_at', { ascending: false })
+              .limit(6)
+            if (fallback) combined = fallback as unknown as ListingCardData[]
+          } else if (fillData) {
+            combined = [...featured, ...(fillData as unknown as ListingCardData[])].slice(0, 6)
+          }
+        }
+
+        if (combined.length > 0) setLiveListings(combined)
       } catch (err) {
         // Decorative — a failed fetch just leaves the section hidden.
         console.error('Failed to load live listings:', err)
@@ -259,7 +311,7 @@ export default function LandingPage() {
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12 md:mb-16">
               <div className="inline-flex items-center gap-1.5 bg-gold text-charcoal px-4 py-2 rounded-full text-sm font-semibold mb-4 shadow-lg">
-                🏷️ LIVE ON CAMPUS
+                🏷️ FEATURED ON CAMPUS
               </div>
               <h2 className="text-4xl md:text-6xl font-bold text-charcoal leading-tight">
                 See what&apos;s fresh <span className="gradient-text">right now</span>

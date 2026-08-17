@@ -39,8 +39,19 @@ interface PendingListing {
   listing_items: { id: string }[] | null
 }
 
+// Approved, image-bearing listings — the picker options for the featured
+// slots on the landing page.
+interface ApprovedListingOption {
+  id: string
+  title: string
+  price: number
+  listing_type: string
+  image_url: string | null
+  seller: { full_name: string | null } | null
+}
+
 export default function AdminPage() {
-  const [tab, setTab] = useState<'sellers' | 'listings' | 'reviews'>('sellers')
+  const [tab, setTab] = useState<'sellers' | 'listings' | 'reviews' | 'featured'>('sellers')
   const [sellers, setSellers] = useState<PendingSeller[]>([])
   const [listings, setListings] = useState<PendingListing[]>([])
   const [flaggedReviews, setFlaggedReviews] = useState<ReviewWithResponse[]>([])
@@ -48,6 +59,10 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true)
   const [isAdmin, setIsAdmin] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [approvedListings, setApprovedListings] = useState<ApprovedListingOption[]>([])
+  const [featuredSelections, setFeaturedSelections] = useState<(string | null)[]>(Array(6).fill(null))
+  const [featuredError, setFeaturedError] = useState<string | null>(null)
+  const [featuredSaving, setFeaturedSaving] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -92,6 +107,39 @@ export default function AdminPage() {
         setReviewsError('Could not load flagged reviews: ' + reviewsErrorData.message)
       } else if (reviewsData) {
         setFlaggedReviews(reviewsData as ReviewWithResponse[])
+      }
+
+      // Approved listings (with images) — the featured-slot picker options.
+      const { data: approvedData, error: approvedError } = await supabase
+        .from('listings')
+        .select('id, title, price, listing_type, image_url, seller:profiles!seller_id (full_name)')
+        .eq('approval_status', 'approved')
+        .not('image_url', 'is', null)
+        .neq('image_url', '')
+        .order('created_at', { ascending: false })
+
+      if (approvedError) {
+        console.error('Approved listings fetch failed:', approvedError)
+      } else if (approvedData) {
+        setApprovedListings(approvedData as unknown as ApprovedListingOption[])
+      }
+
+      // Current landing-featured slot assignments.
+      const { data: featuredData, error: featuredDataError } = await supabase
+        .from('landing_featured_listings')
+        .select('slot, listing_id')
+        .order('slot', { ascending: true })
+
+      if (featuredDataError) {
+        // Table missing until supabase/add_landing_featured_listings.sql runs.
+        console.error('Featured slots fetch failed:', featuredDataError)
+        setFeaturedError('Run supabase/add_landing_featured_listings.sql, then refresh. (' + featuredDataError.message + ')')
+      } else if (featuredData) {
+        const selections: (string | null)[] = Array(6).fill(null)
+        for (const row of featuredData as { slot: number; listing_id: string | null }[]) {
+          if (row.slot >= 1 && row.slot <= 6) selections[row.slot - 1] = row.listing_id
+        }
+        setFeaturedSelections(selections)
       }
     }
 
@@ -257,6 +305,49 @@ export default function AdminPage() {
     }
   }
 
+  // ── Landing page featured slots ──────────────────────────────────────────
+  function clearFeaturedSlot(index: number) {
+    setFeaturedSelections(prev => {
+      const next = [...prev]
+      next[index] = null
+      return next
+    })
+  }
+
+  async function saveFeatured() {
+    // Defense in depth: no listing may occupy two slots (the UI also disables
+    // already-chosen options — this catches stale state).
+    const seen = new Set<string>()
+    for (const id of featuredSelections) {
+      if (id) {
+        if (seen.has(id)) {
+          alert('Each listing can only be assigned to one slot. The duplicate selection was not saved.')
+          return
+        }
+        seen.add(id)
+      }
+    }
+
+    setFeaturedSaving(true)
+    try {
+      const rows = featuredSelections.map((listingId, i) => ({ slot: i + 1, listing_id: listingId }))
+      const { error } = await supabase
+        .from('landing_featured_listings')
+        .upsert(rows)
+
+      if (error) {
+        alert('Could not save: ' + error.message)
+      } else {
+        alert('✅ Featured listings saved. The landing page will show the new order.')
+      }
+    } catch (err) {
+      console.error('Save featured failed:', err)
+      alert('Something went wrong. Please try again.')
+    } finally {
+      setFeaturedSaving(false)
+    }
+  }
+
   const reviewDate = (iso: string) =>
     new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 
@@ -340,6 +431,12 @@ export default function AdminPage() {
               className={"px-6 py-3 rounded-full font-semibold whitespace-nowrap transition-all " + (tab === 'reviews' ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200')}
             >
               🚩 Flagged Reviews ({flaggedReviews.length})
+            </button>
+            <button
+              onClick={() => setTab('featured')}
+              className={"px-6 py-3 rounded-full font-semibold whitespace-nowrap transition-all " + (tab === 'featured' ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200')}
+            >
+              ⭐ Featured ({featuredSelections.filter(Boolean).length}/6)
             </button>
           </div>
 
@@ -504,7 +601,7 @@ export default function AdminPage() {
                 })}
               </div>
             )
-          ) : (
+          ) : tab === 'reviews' ? (
             reviewsError ? (
               <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
                 <div className="text-5xl mb-4">🚩</div>
@@ -567,6 +664,103 @@ export default function AdminPage() {
                     </div>
                   )
                 })}
+              </div>
+            )
+          ) : (
+            featuredError ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
+                <div className="text-5xl mb-4">⭐</div>
+                <p className="text-xl font-bold text-charcoal">Featured listings not available yet</p>
+                <p className="text-gray-500 mt-2">Run supabase/add_landing_featured_listings.sql, then refresh. ({featuredError})</p>
+              </div>
+            ) : (
+              <div>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+                  <div>
+                    <h2 className="text-2xl font-bold text-charcoal">Landing Page Featured Listings</h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Choose which listings appear in the landing page preview and in what order. Empty slots are filled with the newest approved listings automatically.
+                    </p>
+                  </div>
+                  <button
+                    onClick={saveFeatured}
+                    disabled={featuredSaving}
+                    className="shrink-0 bg-charcoal text-white px-6 py-3 rounded-full font-semibold hover:bg-black transition-colors disabled:opacity-50"
+                  >
+                    {featuredSaving ? 'Saving...' : '💾 Save changes'}
+                  </button>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {featuredSelections.map((sel, i) => {
+                    const listing = approvedListings.find(l => l.id === sel)
+                    const takenElsewhere = featuredSelections
+                      .map((id, j) => (j !== i ? id : null))
+                      .filter(Boolean) as string[]
+                    return (
+                      <div key={i} className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Slot {i + 1}</span>
+                          {sel && (
+                            <button
+                              onClick={() => clearFeaturedSlot(i)}
+                              className="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors"
+                            >
+                              ✕ Clear
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Current selection preview */}
+                        {listing ? (
+                          <div className="flex items-center gap-3 mb-3 rounded-2xl border border-gray-100 bg-gray-50 p-2.5">
+                            {listing.image_url && (
+                              <img src={listing.image_url} alt={listing.title} className="w-14 h-14 rounded-xl object-cover shrink-0" />
+                            )}
+                            <div className="min-w-0">
+                              <p className="font-bold text-charcoal text-sm truncate">{listing.title}</p>
+                              <p className="text-xs text-gray-500">
+                                GH₵ {Number(listing.price).toLocaleString()}
+                                {listing.seller?.full_name ? ' · ' + formatName(listing.seller.full_name) : ''}
+                              </p>
+                            </div>
+                          </div>
+                        ) : sel ? (
+                          <div className="mb-3 rounded-2xl border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-700">
+                            This listing is no longer available (it may have been deleted).
+                          </div>
+                        ) : (
+                          <div className="mb-3 rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-4 text-center text-xs text-gray-400">
+                            Empty slot — filled automatically on the landing page
+                          </div>
+                        )}
+
+                        <select
+                          value={sel || ''}
+                          onChange={(e) => {
+                            const v = e.target.value
+                            setFeaturedSelections(prev => {
+                              const next = [...prev]
+                              next[i] = v ? v : null
+                              return next
+                            })
+                          }}
+                          className="w-full px-4 py-2.5 rounded-2xl border-2 border-gray-200 text-sm font-semibold text-charcoal bg-white focus:outline-none focus:border-gold transition-colors"
+                        >
+                          <option value="">— Empty slot —</option>
+                          {approvedListings.map(l => {
+                            const taken = takenElsewhere.includes(l.id)
+                            return (
+                              <option key={l.id} value={l.id} disabled={taken}>
+                                {taken ? '⛔ ' : ''}{l.title} — GH₵ {Number(l.price).toLocaleString()}{l.seller?.full_name ? ' (' + formatName(l.seller.full_name) + ')' : ''}
+                              </option>
+                            )
+                          })}
+                        </select>
+                      </div>
+                    )
+                  })}
+                </div>
               </div>
             )
           )}
