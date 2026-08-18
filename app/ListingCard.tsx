@@ -202,7 +202,7 @@ export default function ListingCard({
                 
                 toggleFavorite()
               }}
-              className="absolute top-3 right-3 bg-white/80 backdrop-blur rounded-full p-2 shadow-lg hover:scale-110 transition-transform duration-200 z-10"
+              className="absolute top-16 right-3 bg-white/80 backdrop-blur rounded-full p-2 shadow-lg hover:scale-110 transition-transform duration-200 z-10"
               aria-label={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
             >
               <svg
@@ -222,7 +222,7 @@ export default function ListingCard({
           
           {/* Toast notification */}
           {toast && (
-            <div className="absolute top-16 right-3 bg-charcoal text-white px-4 py-3 rounded-xl shadow-xl z-20 flex items-center gap-3 animate-fade-in">
+            <div className="absolute top-[120px] right-3 bg-charcoal text-white px-4 py-3 rounded-xl shadow-xl z-20 flex items-center gap-3 animate-fade-in">
               <span className="text-sm">{toast.message}</span>
               {toast.action && (
                 <button
