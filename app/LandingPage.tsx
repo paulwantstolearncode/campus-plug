@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import ListingCard, { type ListingCardData } from '@/app/ListingCard'
 import { CATEGORIES } from '@/lib/categories'
+import type { User } from '@supabase/supabase-js'
 
 interface MarketplaceStats {
   sellerCount: number
@@ -15,8 +16,17 @@ export default function LandingPage() {
   const [stats, setStats] = useState<MarketplaceStats | null>(null)
   const [categoryCounts, setCategoryCounts] = useState<Map<string, number>>(new Map())
   const [scrolled, setScrolled] = useState(false)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
+    // Check auth status
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+    }
+    
+    checkAuth()
+    
     // TODO(seo): convert this page to a Server Component and fetch listings
     // server-side so the live/category sections render in the initial HTML.
     // Requires splitting the client-only scroll-handler logic into a child
@@ -202,18 +212,38 @@ export default function LandingPage() {
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-4">
-            <Link
-              href="/login"
-              className="text-sm font-medium text-charcoal hover:text-gold transition-colors px-3 py-2"
-            >
-              Log in
-            </Link>
-            <Link
-              href="/login"
-              className="bg-charcoal text-white px-4 sm:px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-all hover:scale-105 shadow-lg shadow-charcoal/20"
-            >
-              Get Started
-            </Link>
+            {user ? (
+              <>
+                {/* TODO: Extract nav into shared component */}
+                <Link
+                  href="/favorites"
+                  className="text-sm font-medium text-charcoal hover:text-gold transition-colors px-3 py-2"
+                >
+                  Favorites
+                </Link>
+                <Link
+                  href="/login"
+                  className="text-sm font-medium text-charcoal hover:text-gold transition-colors px-3 py-2"
+                >
+                  Log in
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="text-sm font-medium text-charcoal hover:text-gold transition-colors px-3 py-2"
+                >
+                  Log in
+                </Link>
+                <Link
+                  href="/login"
+                  className="bg-charcoal text-white px-4 sm:px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-all hover:scale-105 shadow-lg shadow-charcoal/20"
+                >
+                  Get Started
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>

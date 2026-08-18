@@ -141,6 +141,8 @@ export default function ServicesPage() {
             {user ? (
               <>
                 <span className="hidden lg:block text-sm text-white/60 max-w-[180px] truncate" title={user.email}>{user.email}</span>
+                {/* TODO: Extract nav into shared component */}
+                <Link href="/favorites" className="text-sm font-medium text-white/60 hover:text-gold transition-colors">Favorites</Link>
                 {isAdmin && (
                   <Link href="/admin" className="bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-xs font-semibold hover:bg-red-500/30 hover:text-red-300 transition-colors">🛡️ Admin</Link>
                 )}
@@ -211,6 +213,11 @@ export default function ServicesPage() {
               <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
                 <span>💼</span> Services
               </Link>
+              {user && (
+                <Link href="/favorites" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
+                  <span>❤️</span> Favorites
+                </Link>
+              )}
               {isAdmin && (
                 <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3">
                   <span>🛡️</span> Admin Panel

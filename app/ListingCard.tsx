@@ -1,10 +1,13 @@
 'use client'
 import Link from 'next/link'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { formatPriceRange } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
 import { getCategoryDisplay } from '@/lib/categories'
 import StarRating from '@/app/StarRating'
 import type { SellerRating } from '@/lib/reviews'
+import { supabase } from '@/lib/supabase'
 
 // Shape of a listing as consumed by the card. Every fetch that feeds a card
 // (homepage marketplace, landing "Live on Campus" preview) must select at
@@ -41,6 +44,10 @@ interface ListingCardProps {
   onDelete?: (id: string, title: string) => void
   /** Logged-out landing mode: every tap funnels to /login */
   preview?: boolean
+  /** Whether the listing is favourited (managed by parent) */
+  isFavorited?: boolean
+  /** Callback when favourite state changes (managed by parent) */
+  onFavoriteToggle?: (listingId: string, isFavorited: boolean) => void
 }
 
 export default function ListingCard({
@@ -51,6 +58,8 @@ export default function ListingCard({
   isOwner,
   onDelete,
   preview = false,
+  isFavorited: isFavoritedProp,
+  onFavoriteToggle,
 }: ListingCardProps) {
   const cat = getCategoryDisplay(listing.category)
   const priceLabel =
@@ -60,6 +69,46 @@ export default function ListingCard({
   // Preview cards deep-link to signup; real cards deep-link to the listing.
   const href = preview ? '/login' : '/listing/' + listing.id
   const delay = index !== undefined ? (index * staggerSeconds) + 's' : undefined
+  
+  // Favourite state management
+  const [localFavorited, setLocalFavorited] = useState(false)
+  const [user, setUser] = useState<{ id: string } | null>(null)
+  const [toast, setToast] = useState<{ message: string; action?: { label: string; onClick: () => void } } | null>(null)
+  const router = useRouter()
+  
+  // Determine if favourited: use prop if provided, otherwise use local state
+  const isFavorited = isFavoritedProp !== undefined ? isFavoritedProp : localFavorited
+  
+  // Check auth status on mount (only if not in preview mode)
+  useEffect(() => {
+    if (preview) return
+    
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      
+      // If no prop provided, fetch favourite state
+      if (isFavoritedProp === undefined && user) {
+        const { data } = await supabase
+          .from('favorites')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('listing_id', listing.id)
+          .limit(1)
+        
+        setLocalFavorited(!!(data && data.length > 0))
+      }
+    }
+    
+    checkAuth()
+  }, [preview, listing.id, isFavoritedProp])
+  
+  // Auto-dismiss toast after 4 seconds
+  useEffect(() => {
+    if (!toast) return
+    const timer = setTimeout(() => setToast(null), 4000)
+    return () => clearTimeout(timer)
+  }, [toast])
 
   return (
     <div className="group relative fade-up" style={delay ? { animationDelay: delay } : undefined}>
@@ -92,6 +141,100 @@ export default function ListingCard({
           {isOwner && (
             <div className="absolute bottom-3 right-3 bg-blue-500/90 backdrop-blur text-white px-2.5 py-1 rounded-full text-xs font-bold shadow-lg">
               Your listing
+            </div>
+          )}
+          
+          {/* Heart icon for favourites */}
+          {!preview && (
+            <button
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                
+                if (!user) {
+                  // Not logged in - show toast with sign in action
+                  setToast({
+                    message: 'Sign in to save favourites',
+                    action: {
+                      label: 'Sign in',
+                      onClick: () => router.push('/login?next=' + encodeURIComponent(window.location.pathname))
+                    }
+                  })
+                  return
+                }
+                
+                // Optimistic UI update
+                const newState = !isFavorited
+                if (onFavoriteToggle) {
+                  onFavoriteToggle(listing.id, newState)
+                } else {
+                  setLocalFavorited(newState)
+                }
+                
+                // Call DB in background
+                async function toggleFavorite() {
+                  if (!user) return
+                  try {
+                    if (newState) {
+                      const { error } = await supabase
+                        .from('favorites')
+                        .insert({ user_id: user.id, listing_id: listing.id })
+                      if (error) throw error
+                    } else {
+                      const { error } = await supabase
+                        .from('favorites')
+                        .delete()
+                        .eq('user_id', user.id)
+                        .eq('listing_id', listing.id)
+                      if (error) throw error
+                    }
+                  } catch (err) {
+                    // Revert on error
+                    console.error('Failed to toggle favorite:', err)
+                    if (onFavoriteToggle) {
+                      onFavoriteToggle(listing.id, isFavorited)
+                    } else {
+                      setLocalFavorited(isFavorited)
+                    }
+                    setToast({ message: 'Failed to save favourite. Please try again.' })
+                  }
+                }
+                
+                toggleFavorite()
+              }}
+              className="absolute top-3 right-3 bg-white/80 backdrop-blur rounded-full p-2 shadow-lg hover:scale-110 transition-transform duration-200 z-10"
+              aria-label={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill={isFavorited ? '#d4af37' : 'none'}
+                stroke="#d4af37"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+              </svg>
+            </button>
+          )}
+          
+          {/* Toast notification */}
+          {toast && (
+            <div className="absolute top-16 right-3 bg-charcoal text-white px-4 py-3 rounded-xl shadow-xl z-20 flex items-center gap-3 animate-fade-in">
+              <span className="text-sm">{toast.message}</span>
+              {toast.action && (
+                <button
+                  onClick={() => {
+                    toast.action!.onClick()
+                    setToast(null)
+                  }}
+                  className="text-gold font-semibold text-sm hover:text-gold-dark transition-colors"
+                >
+                  {toast.action.label}
+                </button>
+              )}
             </div>
           )}
         </Link>

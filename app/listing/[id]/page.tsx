@@ -64,6 +64,9 @@ export default function ListingDetailPage() {
   // qualifying completed transaction I haven't reviewed yet.
   const [myReview, setMyReview] = useState<ReviewWithResponse | null>(null)
   const [reviewAnchor, setReviewAnchor] = useState<{ kind: 'booking' | 'sale'; id: string } | null>(null)
+  const [user, setUser] = useState<{ id: string } | null>(null)
+  const [isFavorited, setIsFavorited] = useState(false)
+  const [toast, setToast] = useState<{ message: string } | null>(null)
   const router = useRouter()
   const params = useParams()
   const rawId = params.id
@@ -76,6 +79,34 @@ export default function ListingDetailPage() {
     }
     return listing?.image_url ? [listing.image_url] : []
   })()
+
+  // Auto-dismiss toast after 4 seconds
+  useEffect(() => {
+    if (!toast) return
+    const timer = setTimeout(() => setToast(null), 4000)
+    return () => clearTimeout(timer)
+  }, [toast])
+
+  // Check auth status and favourite state on mount
+  useEffect(() => {
+    async function checkAuth() {
+      const { data: { user } } = await supabase.auth.getUser()
+      setUser(user)
+      
+      if (user && listingId) {
+        const { data } = await supabase
+          .from('favorites')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('listing_id', listingId)
+          .limit(1)
+        
+        setIsFavorited(!!(data && data.length > 0))
+      }
+    }
+    
+    checkAuth()
+  }, [listingId])
 
   // Reviews for this seller (public) + the current user's review entry point.
   // Declared before the load effect that calls it. Failures here must never
@@ -457,6 +488,62 @@ export default function ListingDetailPage() {
                       This seller hasn&apos;t added their WhatsApp number yet.
                     </p>
                   )}
+                  
+                  {/* Save/Favourite button */}
+                  <button
+                    onClick={() => {
+                      if (!user) {
+                        setToast({ message: 'Sign in to save favourites' })
+                        return
+                      }
+                      
+                      // Optimistic UI update
+                      const newState = !isFavorited
+                      setIsFavorited(newState)
+                      
+                      // Call DB in background
+                      async function toggleFavorite() {
+                        if (!user) return
+                        try {
+                          if (newState) {
+                            const { error } = await supabase
+                              .from('favorites')
+                              .insert({ user_id: user.id, listing_id: listingId })
+                            if (error) throw error
+                          } else {
+                            const { error } = await supabase
+                              .from('favorites')
+                              .delete()
+                              .eq('user_id', user.id)
+                              .eq('listing_id', listingId)
+                            if (error) throw error
+                          }
+                        } catch (err) {
+                          // Revert on error
+                          console.error('Failed to toggle favorite:', err)
+                          setIsFavorited(isFavorited)
+                          setToast({ message: 'Failed to save favourite. Please try again.' })
+                        }
+                      }
+                      
+                      toggleFavorite()
+                    }}
+                    className="mt-3 w-full flex items-center justify-center gap-2 bg-white border-2 border-gold/30 text-charcoal py-3.5 rounded-full font-semibold hover:bg-gold/10 hover:border-gold transition-all text-sm"
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill={isFavorited ? '#d4af37' : 'none'}
+                      stroke="#d4af37"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                    </svg>
+                    {isFavorited ? 'Saved' : 'Save'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -649,6 +736,13 @@ export default function ListingDetailPage() {
           </div>
         </div>
       </section>
+      
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 bg-charcoal text-white px-6 py-4 rounded-xl shadow-xl z-50 flex items-center gap-3 animate-fade-in">
+          <span className="text-sm">{toast.message}</span>
+        </div>
+      )}
     </main>
   )
 }
