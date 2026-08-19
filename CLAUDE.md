@@ -1,6 +1,7 @@
 @AGENTS.md
+@HANDOFF.md
 
-# IMPORTANT: Project-specific rules from AGENTS.md take priority over any general guidance below. If Ruflo's swarm/coordination patterns conflict with the project's ground rules (SQL-first deploys, RLS conventions, don't touch auth/Sentry/Resend/Vercel Analytics, use public.is_admin(), formatName(), CRLF line endings), FOLLOW THE PROJECT RULES.
+# IMPORTANT: Project-specific rules from AGENTS.md take priority over any general guidance below. HANDOFF.md contains the current state of the project — read it to understand what's been shipped, what's in progress, and what conventions apply. If Ruflo's swarm/coordination patterns conflict with the project rules or handoff conventions, FOLLOW THE PROJECT RULES.
 
 # Do NOT modify this file, AGENTS.md, or HANDOFF.md without explicit user permission in the prompt.
 
