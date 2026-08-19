@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import HelpButton from "./HelpButton";
+import FeedbackButton from "./components/FeedbackButton";
 import { Analytics } from "@vercel/analytics/react";
 import { Playfair_Display } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
@@ -59,6 +60,7 @@ export default function RootLayout({
       <body>
         {children}
         <HelpButton />
+        <FeedbackButton />
         <Analytics />
       </body>
     </html>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import ListingCard, { type ListingCardData } from '@/app/ListingCard'
 import { CATEGORIES } from '@/lib/categories'
+import FeedbackModal from '@/app/components/FeedbackModal'
 import type { User } from '@supabase/supabase-js'
 
 interface MarketplaceStats {
@@ -17,6 +18,7 @@ export default function LandingPage() {
   const [categoryCounts, setCategoryCounts] = useState<Map<string, number>>(new Map())
   const [scrolled, setScrolled] = useState(false)
   const [user, setUser] = useState<User | null>(null)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
 
   useEffect(() => {
     // Check auth status
@@ -553,6 +555,12 @@ export default function LandingPage() {
               <Link href="/login" className="text-white/60 hover:text-gold transition-colors">
                 Sign up
               </Link>
+              <button
+                onClick={() => setFeedbackOpen(true)}
+                className="text-white/60 hover:text-gold transition-colors"
+              >
+                Send feedback
+              </button>
             </div>
           </div>
 
@@ -565,6 +573,8 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      <FeedbackModal key={feedbackOpen ? 'open' : 'closed'} isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </main>
   )
 }
