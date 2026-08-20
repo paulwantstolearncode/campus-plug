@@ -120,7 +120,7 @@ function LoginForm() {
     }
     submitAttempted.current = false; setLoading(true)
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password: password.trim() })
-    if (error) { alert('Login failed: ' + error.message) }
+    if (error) { alert('Login failed: ' + (typeof error === 'string' ? error : error?.message || 'Unknown error')) }
     else {
       const next = new URLSearchParams(window.location.search).get('next')
       router.replace(next && next.startsWith('/') && !next.startsWith('//') ? next : '/services')
@@ -180,7 +180,7 @@ function LoginForm() {
       provider: 'google',
       options: { redirectTo: window.location.origin + '/auth/callback' },
     })
-    if (error) alert('Google sign in failed: ' + error.message)
+    if (error) alert('Google sign in failed: ' + (typeof error === 'string' ? error : error?.message || 'Unknown error'))
   }
 
   const toggleMode = () => {
