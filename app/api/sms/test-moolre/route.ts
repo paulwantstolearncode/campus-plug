@@ -3,9 +3,8 @@ import { NextResponse } from 'next/server'
 /**
  * GET /api/sms/test-moolre
  *
- * Temporary diagnostic endpoint — tests 8 Moolre auth variations against
- * https://api.moolre.com/open/sms/send to find which one works.
- * DELETE after confirming which strategy succeeds.
+ * Temporary diagnostic endpoint — tests Moolre auth variations against
+ * the official API spec. DELETE after confirming VASKEY works.
  */
 
 const Endpoint = 'https://api.moolre.com/open/sms/send'
@@ -46,107 +45,89 @@ async function testMoolre(
 }
 
 export async function GET() {
+  const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
   const publicKey = (process.env.MOOLRE_PUBLIC_KEY || '').trim()
-  const privateKey = (process.env.MOOLRE_SECRET_KEY || '').trim()
-  const callbackSecret = 'd78a0c19-b04d-4157-a009-248bc464a371'
   const accountNo = (process.env.MOOLRE_ACCOUNT_NO || '10991106074918').trim()
   const senderId = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
   const recipient = '0202388411'
-  const recipientIntl = '233202388411'
   const message = 'Campus Plug Sweep Test'
 
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
-  console.log(`[SMS Test] Starting 8-variation Moolre sweep`)
+  console.log(`[SMS Test] Starting Moolre auth sweep`)
+  console.log(`[SMS Test] VASKEY (secret):`, vaskey.slice(0, 8) + '...')
   console.log(`[SMS Test] Public key:`, publicKey.slice(0, 8) + '...')
-  console.log(`[SMS Test] Private key:`, privateKey.slice(0, 8) + '...')
-  console.log(`[SMS Test] Callback secret:`, callbackSecret)
   console.log(`[SMS Test] Account:`, accountNo, '| Sender:', senderId)
   console.log(`[SMS Test] Recipient:`, recipient)
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
 
   const baseBody = { account_no: accountNo, sender_id: senderId, recipient, message }
 
-  // ── V1: Public Key Header ──────────────────────────────────────────────
+  // ── V0: OFFICIAL SPEC — X-API-VASKEY header (this is what docs say) ────
+  const v0 = testMoolre(
+    'V0 — X-API-VASKEY (OFFICIAL)',
+    Endpoint,
+    { 'Content-Type': 'application/json', 'X-API-VASKEY': vaskey },
+    baseBody
+  )
+
+  // ── V1: X-API-VASKEY + type:text ───────────────────────────────────────
   const v1 = testMoolre(
-    'V1 — X-Api-Key: publicKey',
+    'V1 — X-API-VASKEY + type:text',
     Endpoint,
-    { 'Content-Type': 'application/json', 'X-Api-Key': publicKey },
-    baseBody
+    { 'Content-Type': 'application/json', 'X-API-VASKEY': vaskey },
+    { ...baseBody, type: 'text' }
   )
 
-  // ── V2: Callback Secret Header ─────────────────────────────────────────
+  // ── V2: X-API-VASKEY + recipient international format ──────────────────
   const v2 = testMoolre(
-    'V2 — X-Api-Key: callbackSecret + X-Secret-Key: callbackSecret',
+    'V2 — X-API-VASKEY + 233XXXXXXXXX',
     Endpoint,
-    {
-      'Content-Type': 'application/json',
-      'X-Api-Key': callbackSecret,
-      'X-Secret-Key': callbackSecret,
-    },
-    baseBody
+    { 'Content-Type': 'application/json', 'X-API-VASKEY': vaskey },
+    { ...baseBody, recipient: '233' + recipient.slice(1) }
   )
 
-  // ── V3: Basic Auth base64(publicKey:privateKey) ────────────────────────
-  const basicAuth = Buffer.from(publicKey + ':' + privateKey).toString('base64')
+  // ── V3: X-Api-Key: vaskey (old format) ─────────────────────────────────
   const v3 = testMoolre(
-    'V3 — Basic Auth base64(publicKey:privateKey)',
+    'V3 — X-Api-Key: vaskey (old)',
     Endpoint,
-    {
-      'Content-Type': 'application/json',
-      'Authorization': `Basic ${basicAuth}`,
-    },
+    { 'Content-Type': 'application/json', 'X-Api-Key': vaskey },
     baseBody
   )
 
-  // ── V4: Query Parameter ?key=privateKey ────────────────────────────────
+  // ── V4: Bearer vaskey ──────────────────────────────────────────────────
   const v4 = testMoolre(
-    'V4 — ?key=privateKey',
-    `${Endpoint}?key=${encodeURIComponent(privateKey)}`,
-    { 'Content-Type': 'application/json' },
+    'V4 — Bearer vaskey',
+    Endpoint,
+    { 'Content-Type': 'application/json', 'Authorization': `Bearer ${vaskey}` },
     baseBody
   )
 
-  // ── V5: Query Parameter ?key=publicKey ─────────────────────────────────
+  // ── V5: X-API-VASKEY + public key in body ──────────────────────────────
   const v5 = testMoolre(
-    'V5 — ?key=publicKey',
-    `${Endpoint}?key=${encodeURIComponent(publicKey)}`,
-    { 'Content-Type': 'application/json' },
-    baseBody
+    'V5 — X-API-VASKEY + public_key in body',
+    Endpoint,
+    { 'Content-Type': 'application/json', 'X-API-VASKEY': vaskey },
+    { ...baseBody, public_key: publicKey }
   )
 
-  // ── V6: Query Parameter ?token=publicKey ───────────────────────────────
+  // ── V6: No auth header, key in body ────────────────────────────────────
   const v6 = testMoolre(
-    'V6 — ?token=publicKey',
-    `${Endpoint}?token=${encodeURIComponent(publicKey)}`,
+    'V6 — No auth header, key in body',
+    Endpoint,
     { 'Content-Type': 'application/json' },
-    baseBody
+    { ...baseBody, key: vaskey, api_key: vaskey }
   )
 
-  // ── V7: Bearer Token = JWT Public Key ──────────────────────────────────
+  // ── V7: Query param ?key=vaskey ────────────────────────────────────────
   const v7 = testMoolre(
-    'V7 — Bearer publicKey (JWT)',
-    Endpoint,
-    {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${publicKey}`,
-    },
-    baseBody
-  )
-
-  // ── V8: Both Keys in Header ────────────────────────────────────────────
-  const v8 = testMoolre(
-    'V8 — X-Public-Key + X-Private-Key',
-    Endpoint,
-    {
-      'Content-Type': 'application/json',
-      'X-Public-Key': publicKey,
-      'X-Private-Key': privateKey,
-    },
+    'V7 — ?key=vaskey',
+    `${Endpoint}?key=${encodeURIComponent(vaskey)}`,
+    { 'Content-Type': 'application/json' },
     baseBody
   )
 
   // Run all 8 in parallel
-  const results = await Promise.all([v1, v2, v3, v4, v5, v6, v7, v8])
+  const results = await Promise.all([v0, v1, v2, v3, v4, v5, v6, v7])
 
   // Parse and summarize
   const summary = results.map((r) => {
@@ -178,16 +159,16 @@ export async function GET() {
   if (winner) {
     console.log(`[SMS Test] 🏆 WINNER: ${winner.label}`)
   } else {
-    console.log(`[SMS Test] ⚠ No variation succeeded — check keys in Vercel`)
+    console.log(`[SMS Test] ⚠ No variation succeeded`)
   }
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
 
   return NextResponse.json({
     config: {
+      hasVaskey: !!vaskey,
+      vaskeyPrefix: vaskey.slice(0, 8),
       hasPublicKey: !!publicKey,
       publicKeyPrefix: publicKey.slice(0, 8),
-      hasPrivateKey: !!privateKey,
-      privateKeyPrefix: privateKey.slice(0, 8),
       accountNo,
       senderId,
       recipient,

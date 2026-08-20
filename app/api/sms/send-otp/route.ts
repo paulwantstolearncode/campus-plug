@@ -6,7 +6,8 @@ import { NextResponse } from 'next/server'
  * Proxy that sends OTP SMS through the Moolre Ghana SMS Gateway.
  * Called by Supabase Auth Hooks when a phone-based OTP is requested.
  *
- * Auth: Dual Public Key (JWT) + Private Key format for Moolre API.
+ * Official Moolre API: POST https://api.moolre.com/open/sms/send
+ * Auth: X-API-VASKEY header with MOOLRE_SECRET_KEY
  * Supabase expects HTTP 200 with JSON {} on success.
  */
 
@@ -73,36 +74,29 @@ export async function POST(request: Request) {
   console.log('[SMS Proxy] Formatted phone:', formattedPhone)
 
   // ── 4. Read Moolre environment variables ───────────────────────────────
-  const publicKey = (process.env.MOOLRE_PUBLIC_KEY || '').trim()
-  const privateKey = (process.env.MOOLRE_SECRET_KEY || '').trim()
+  const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
   const accountNo = (process.env.MOOLRE_ACCOUNT_NO || '').trim()
   const senderId = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
 
-  console.log('[SMS Proxy] Keys loaded — public key:', publicKey.slice(0, 5) + '...', '| private key:', privateKey.slice(0, 5) + '...')
-  console.log('[SMS Proxy] Account:', accountNo.slice(0, 5) + '...', '| Sender:', senderId)
+  console.log('[SMS Proxy] VASKEY:', vaskey.slice(0, 5) + '...')
+  console.log('[SMS Proxy] Account:', accountNo, '| Sender:', senderId)
 
-  // ── 5. Build Moolre request ────────────────────────────────────────────
+  // ── 5. Build Moolre request (official API spec) ────────────────────────
   const moolreHeaders = {
     'Content-Type': 'application/json',
-    'X-Public-Key': publicKey,
-    'X-Private-Key': privateKey,
-    'X-Api-Key': privateKey,
-    'Authorization': `Bearer ${publicKey}`,
+    'X-API-VASKEY': vaskey,
   }
 
   const bodyData = {
-    public_key: publicKey,
-    private_key: privateKey,
-    key: privateKey,
     account_no: accountNo,
     sender_id: senderId,
     recipient: formattedPhone,
     message: message,
-    type: 'text',
   }
 
   console.log('[SMS Proxy] → Dispatching to Moolre:', MoolreEndpoint)
-  console.log('[SMS Proxy] → Payload:', JSON.stringify({ ...bodyData, recipient: formattedPhone }))
+  console.log('[SMS Proxy] → Headers:', JSON.stringify({ 'Content-Type': 'application/json', 'X-API-VASKEY': vaskey.slice(0, 5) + '...' }))
+  console.log('[SMS Proxy] → Body:', JSON.stringify(bodyData))
 
   // ── 6. Send to Moolre ──────────────────────────────────────────────────
   let moolreRes: Response
