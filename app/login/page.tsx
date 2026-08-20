@@ -127,7 +127,7 @@ function LoginForm() {
     setPhoneTouched(true); setPhoneError(phoneValidation)
     if (phoneValidation) { phoneRef.current?.focus(); return }
     setLoading(true); setOtpError(null)
-    const { error } = await supabase.auth.signInWithOtp({ phone: formatPhoneForSupabase(phoneNumber) })
+    const { error } = await supabase.auth.signInWithOtp({ phone: formatPhoneForSupabase(phoneNumber), options: { shouldCreateUser: true } })
     if (error) { setPhoneError(error.message); setLoading(false); return }
     setOtpSent(true); setLoading(false); setOtpCode(''); setOtpTouched(false)
     startCountdown()
@@ -154,7 +154,7 @@ function LoginForm() {
   const handleResendOtp = async () => {
     if (countdown > 0) return
     setLoading(true); setOtpError(null)
-    const { error } = await supabase.auth.signInWithOtp({ phone: formatPhoneForSupabase(phoneNumber) })
+    const { error } = await supabase.auth.signInWithOtp({ phone: formatPhoneForSupabase(phoneNumber), options: { shouldCreateUser: true } })
     if (error) setOtpError(error.message); else startCountdown()
     setLoading(false)
   }
@@ -257,10 +257,12 @@ function LoginForm() {
 
             <div className="mb-8">
               <h2 className="text-3xl md:text-4xl font-bold text-charcoal mb-2">
-                {isSignUp ? 'Create account' : 'Welcome back'}
+                {authMethod === 'phone' ? 'Welcome' : isSignUp ? 'Create account' : 'Welcome back'}
               </h2>
               <p className="text-gray-500">
-                {isSignUp ? 'Sign up with Google to get started' : 'Log in to continue to Campus Plug'}
+                {authMethod === 'phone'
+                  ? 'Enter your phone number — we\u2019ll set you up if you\u2019re new'
+                  : isSignUp ? 'Sign up with Google to get started' : 'Log in to continue to Campus Plug'}
               </p>
             </div>
 
@@ -275,8 +277,6 @@ function LoginForm() {
               {isSignUp ? 'Sign up with Google' : 'Continue with Google'}
             </button>
 
-            {!isSignUp && (
-              <>
                 <div className="flex gap-2 mb-4">
                   <button type="button" onClick={() => setAuthMethod('google-email')}
                     className={'flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ' + (authMethod === 'google-email' ? 'bg-charcoal text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}>
@@ -288,7 +288,13 @@ function LoginForm() {
                   </button>
                 </div>
 
-                {authMethod === 'google-email' && (
+                {authMethod === 'google-email' && isSignUp && (
+                  <div className="text-center py-6 text-gray-500 text-sm">
+                    For email sign-up, use <button type="button" onClick={handleGoogleSignIn} className="text-gold font-semibold hover:text-gold-dark">Google</button> or switch to <button type="button" onClick={switchToPhone} className="text-gold font-semibold hover:text-gold-dark">Phone</button>.
+                  </div>
+                )}
+
+                {authMethod === 'google-email' && !isSignUp && (
                   <form onSubmit={handleSubmit} noValidate className="space-y-4">
                     <div>
                       <label className="block text-sm font-semibold text-charcoal mb-2">Email</label>
@@ -350,7 +356,7 @@ function LoginForm() {
                     </div>
                     <button type="submit" disabled={loading || otpCode.replace(/[^0-9]/g, '').length !== 6}
                       className="w-full bg-charcoal text-white py-4 rounded-2xl font-semibold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-charcoal/20 flex items-center justify-center gap-2 group">
-                      {loading ? <span>Verifying...</span> : <><span>Verify &amp; Log In</span><span className="group-hover:translate-x-1 transition-transform">→</span></>}
+                      {loading ? <span>Verifying...</span> : <><span>Verify &amp; Continue</span><span className="group-hover:translate-x-1 transition-transform">→</span></>}
                     </button>
                     <div className="text-center">
                       {countdown > 0 ? (
@@ -366,10 +372,8 @@ function LoginForm() {
                     </div>
                   </form>
                 )}
-              </>
-            )}
 
-            {isSignUp && (
+            {isSignUp && authMethod === 'google-email' && (
               <div className="p-4 rounded-2xl bg-gradient-to-br from-gold/10 via-gold/5 to-transparent border border-gold/20 mb-4">
                 <div className="flex gap-3">
                   <span className="text-xl">💡</span>
