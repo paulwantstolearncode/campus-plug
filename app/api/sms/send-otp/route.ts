@@ -88,10 +88,10 @@ export async function POST(request: Request) {
   }
 
   const bodyData = {
-    account_no: accountNo,
-    sender_id: senderId,
+    senderid: senderId,
     recipient: formattedPhone,
     message: message,
+    type: 'text',
   }
 
   console.log('[SMS Proxy] → Dispatching to Moolre:', MoolreEndpoint)

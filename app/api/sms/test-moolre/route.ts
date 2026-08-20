@@ -4,7 +4,7 @@ import { NextResponse } from 'next/server'
  * GET /api/sms/test-moolre
  *
  * Temporary diagnostic endpoint — tests 8 body payload variations
- * against Moolre using the confirmed X-API-VASKEY header.
+ * with confirmed X-API-VASKEY header and senderid (no underscore).
  * DELETE after confirming which body shape works.
  */
 
@@ -18,6 +18,7 @@ async function testMoolre(
   httpStatus: number
   raw: string
 }> {
+  const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
   console.log(`[SMS Test] ═══ ${label} ═══`)
   console.log(`[SMS Test] Body:`, JSON.stringify(body))
 
@@ -26,7 +27,7 @@ async function testMoolre(
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-API-VASKEY': (process.env.MOOLRE_SECRET_KEY || '').trim(),
+        'X-API-VASKEY': vaskey,
       },
       body: JSON.stringify(body),
     })
@@ -45,69 +46,73 @@ async function testMoolre(
 export async function GET() {
   const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
   const accountNo = (process.env.MOOLRE_ACCOUNT_NO || '10991106074918').trim()
-  const senderId = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
+  const senderid = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
+  const message = 'Campus Plug OTP body test'
 
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
-  console.log(`[SMS Test] Starting Moolre body-payload sweep`)
+  console.log(`[SMS Test] Starting Moolre body-payload sweep (senderid edition)`)
   console.log(`[SMS Test] VASKEY:`, vaskey.slice(0, 8) + '...')
-  console.log(`[SMS Test] Account:`, accountNo, '| Sender:', senderId)
+  console.log(`[SMS Test] Account:`, accountNo, '| Sender:', senderid)
   console.log(`[SMS Test] Endpoint:`, Endpoint)
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
 
-  // All 8 body variations — same header, different payloads
-  const bodyA = testMoolre('Body A — Standard', {
-    account_no: accountNo,
-    sender_id: senderId,
+  // All 8 body variations — X-API-VASKEY header, senderid (no underscore), type included
+  const bodyA = testMoolre('A — senderid + recipient + type:text', {
+    senderid,
     recipient: '0202388411',
-    message: 'Test A',
+    message,
+    type: 'text',
   })
 
-  const bodyB = testMoolre('Body B — Array recipients', {
-    account_no: accountNo,
-    sender_id: senderId,
-    recipients: ['0202388411'],
-    message: 'Test B',
-  })
-
-  const bodyC = testMoolre('Body C — No account_no', {
-    sender_id: senderId,
+  const bodyB = testMoolre('B — senderid + recipient + type:1', {
+    senderid,
     recipient: '0202388411',
-    message: 'Test C',
-  })
-
-  const bodyD = testMoolre('Body D — sender (not sender_id)', {
-    account_no: accountNo,
-    sender: senderId,
-    recipient: '0202388411',
-    message: 'Test D',
-  })
-
-  const bodyE = testMoolre('Body E — to (not recipient)', {
-    account_no: accountNo,
-    sender_id: senderId,
-    to: '0202388411',
-    message: 'Test E',
-  })
-
-  const bodyF = testMoolre('Body F — Intl phone + type:1', {
-    account_no: accountNo,
-    sender_id: senderId,
-    recipient: '233202388411',
-    message: 'Test F',
+    message,
     type: 1,
   })
 
-  const bodyG = testMoolre('Body G — CamelCase', {
-    accountNo: accountNo,
-    senderId: senderId,
-    recipient: '0202388411',
-    message: 'Test G',
+  const bodyC = testMoolre('C — senderid + recipients[] + type:text', {
+    senderid,
+    recipients: ['0202388411'],
+    message,
+    type: 'text',
   })
 
-  const bodyH = testMoolre('Body H — Minimal', {
-    sender: senderId,
+  const bodyD = testMoolre('D — senderid + to + type:text', {
+    senderid,
     to: '0202388411',
-    msg: 'Test H',
+    message,
+    type: 'text',
+  })
+
+  const bodyE = testMoolre('E — senderid + intl 233phone + type:text', {
+    senderid,
+    recipient: '233202388411',
+    message,
+    type: 'text',
+  })
+
+  const bodyF = testMoolre('F — account_no + senderid + recipient + type:text', {
+    account_no: accountNo,
+    senderid,
+    recipient: '0202388411',
+    message,
+    type: 'text',
+  })
+
+  const bodyG = testMoolre('G — accountno + senderid + recipient + type:text', {
+    accountno: accountNo,
+    senderid,
+    recipient: '0202388411',
+    message,
+    type: 'text',
+  })
+
+  const bodyH = testMoolre('H — senderid + recipient + msg + type:text', {
+    senderid,
+    recipient: '0202388411',
+    msg: message,
+    type: 'text',
   })
 
   // Run all 8 in parallel
@@ -126,6 +131,7 @@ export async function GET() {
       moolreStatus: mStatus,
       moolreCode: mCode,
       moolreMessage: parsed.message,
+      moolreData: parsed.data,
       success: isSuccess,
       rawBody: r.raw.slice(0, 300),
     }
@@ -137,7 +143,7 @@ export async function GET() {
   console.log(`[SMS Test] RESULTS:`)
   summary.forEach((s) => {
     const icon = s.success ? '✓' : '✗'
-    console.log(`[SMS Test] ${icon} ${s.label} — HTTP ${s.httpStatus} — status:${s.moolreStatus} code:${s.moolreCode} msg:${s.moolreMessage}`)
+    console.log(`[SMS Test] ${icon} ${s.label} — HTTP ${s.httpStatus} — status:${s.moolreStatus} code:${s.moolreCode} msg:${s.moolreMessage} data:${s.moolreData}`)
   })
   if (winner) {
     console.log(`[SMS Test] 🏆 WINNER: ${winner.label}`)
@@ -151,7 +157,7 @@ export async function GET() {
       hasVaskey: !!vaskey,
       vaskeyPrefix: vaskey.slice(0, 8),
       accountNo,
-      senderId,
+      senderid,
       endpoint: Endpoint,
     },
     results: summary,
