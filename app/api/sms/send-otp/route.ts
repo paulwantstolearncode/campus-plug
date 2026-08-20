@@ -91,7 +91,7 @@ export async function POST(request: Request) {
     senderid: senderId,
     recipient: formattedPhone,
     message: message,
-    type: 'text',
+    type: 1,
   }
 
   console.log('[SMS Proxy] → Dispatching to Moolre:', MoolreEndpoint)
