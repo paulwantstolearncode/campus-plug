@@ -29,23 +29,30 @@ async function sendMoolre(payload: {
   message: string
   type: string
 }): Promise<{ ok: boolean; status: number; body: string }> {
-  const apiKey = process.env.MOOLRE_SECRET_KEY || ''
+  const secretKey = (process.env.MOOLRE_SECRET_KEY || '').trim()
+  const authorizationHeader = secretKey.startsWith('Bearer ') ? secretKey : `Bearer ${secretKey}`
+
+  const moolreHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'X-Api-Key': secretKey,
+    'X-Secret-Key': secretKey,
+    'X-Moolre-Secret': secretKey,
+    'Authorization': authorizationHeader,
+  }
 
   console.log('[SMS Proxy] → Moolre URL:', MoolreEndpoint)
   console.log('[SMS Proxy] → Moolre Body:', JSON.stringify({ ...payload, message: payload.message.slice(0, 40) + '...' }))
   console.log('[SMS Proxy] → Moolre Headers:', JSON.stringify({
     'Content-Type': 'application/json',
-    'X-Api-Key': redact(apiKey),
-    'Authorization': `Bearer ${redact(apiKey)}`,
+    'X-Api-Key': redact(secretKey),
+    'X-Secret-Key': redact(secretKey),
+    'X-Moolre-Secret': redact(secretKey),
+    'Authorization': `Bearer ${redact(secretKey)}`,
   }))
 
   const res = await fetch(MoolreEndpoint, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Api-Key': apiKey,
-      'Authorization': `Bearer ${apiKey}`,
-    },
+    headers: moolreHeaders,
     body: JSON.stringify(payload),
   })
 
@@ -180,8 +187,8 @@ export async function POST(request: Request) {
   console.log('[SMS Proxy] Formatted — international:', internationalPhone, '| local:', localPhone, '| raw:', rawPhone)
 
   // ── 5. Dispatch to Moolre ──────────────────────────────────────────────
-  const accountNo = process.env.MOOLRE_ACCOUNT_NO || ''
-  const senderId = process.env.MOOLRE_SENDER_ID || 'CampusPlug'
+  const accountNo = (process.env.MOOLRE_ACCOUNT_NO || '').trim()
+  const senderId = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
 
   const moolrePayload = {
     account_no: accountNo,
