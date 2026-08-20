@@ -6,13 +6,15 @@ import { NextResponse } from 'next/server'
  * Proxy that sends OTP SMS through the Moolre Ghana SMS Gateway.
  * Called by Supabase Auth Hooks when a phone-based OTP is requested.
  *
- * Auth: Flexible — Bearer token, webhook signature, Supabase UA, or no secret.
- * Never return 401 during testing — log warning instead.
- *
+ * Auth: Dual Public Key (JWT) + Private Key format for Moolre API.
  * Supabase expects HTTP 200 with JSON {} on success.
  */
 
-const MoolreEndpoint = 'https://api.moolre.com/open/sms/send'
+const MoolreEndpoints = [
+  'https://api.moolre.com/open/sms/send',
+  'https://app.moolre.com/open/sms/send',
+  'https://api.moolre.com/v1/sms/send',
+]
 
 /** Redact a secret value for safe logging. */
 function redact(val: string | undefined): string {
@@ -21,41 +23,53 @@ function redact(val: string | undefined): string {
   return val.slice(0, 3) + '...' + val.slice(-3)
 }
 
-/** Send one SMS via Moolre. Returns { ok, status, body }. */
-async function sendMoolre(payload: {
-  account_no: string
-  sender_id: string
-  recipient: string
-  message: string
-  type: string
-}): Promise<{ ok: boolean; status: number; body: string }> {
-  const secretKey = (process.env.MOOLRE_SECRET_KEY || '').trim()
-  const authorizationHeader = (secretKey.startsWith('Bearer ') || secretKey.startsWith('EyJ')) ? secretKey : `Bearer ${secretKey}`
-
+/** Send one SMS via Moolre on a specific endpoint. Returns { ok, status, body }. */
+async function sendMoolre(
+  endpoint: string,
+  publicKey: string,
+  privateKey: string,
+  payload: {
+    account_no: string
+    sender_id: string
+    recipient: string
+    message: string
+    type: string
+  }
+): Promise<{ ok: boolean; status: number; body: string }> {
   const moolreHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
-    'X-Api-Key': secretKey,
-    'X-Secret-Key': secretKey,
-    'Authorization': authorizationHeader,
+    'X-Public-Key': publicKey,
+    'X-Private-Key': privateKey,
+    'X-Api-Key': privateKey,
+    'Authorization': `Bearer ${publicKey || privateKey}`,
   }
 
-  // Include key fields in payload for Private API Key auth
   const outgoingPayload = {
+    public_key: publicKey,
+    private_key: privateKey,
+    key: privateKey,
+    api_key: privateKey,
     ...payload,
-    key: secretKey,
-    api_key: secretKey,
   }
 
-  console.log('[SMS Proxy] → Moolre URL:', MoolreEndpoint)
-  console.log('[SMS Proxy] → Moolre Body:', JSON.stringify({ ...outgoingPayload, message: outgoingPayload.message.slice(0, 40) + '...' }))
+  console.log('[SMS Proxy] → Moolre URL:', endpoint)
   console.log('[SMS Proxy] → Moolre Headers:', JSON.stringify({
     'Content-Type': 'application/json',
-    'X-Api-Key': redact(secretKey),
-    'X-Secret-Key': redact(secretKey),
-    'Authorization': `Bearer ${redact(secretKey)}`,
+    'X-Public-Key': redact(publicKey),
+    'X-Private-Key': redact(privateKey),
+    'X-Api-Key': redact(privateKey),
+    'Authorization': `Bearer ${redact(publicKey || privateKey)}`,
+  }))
+  console.log('[SMS Proxy] → Moolre Body:', JSON.stringify({
+    ...outgoingPayload,
+    public_key: redact(publicKey),
+    private_key: redact(privateKey),
+    key: redact(privateKey),
+    api_key: redact(privateKey),
+    message: outgoingPayload.message.slice(0, 40) + '...',
   }))
 
-  const res = await fetch(MoolreEndpoint, {
+  const res = await fetch(endpoint, {
     method: 'POST',
     headers: moolreHeaders,
     body: JSON.stringify(outgoingPayload),
@@ -67,23 +81,17 @@ async function sendMoolre(payload: {
 
 /**
  * Check whether Moolre actually accepted the SMS.
- * Moolre returns 200 with a JSON body containing a success indicator.
- * We check both HTTP status AND response body for real confirmation.
  */
 function isMoolreSuccess(status: number, body: string): boolean {
   if (status < 200 || status >= 300) return false
 
   try {
     const parsed = JSON.parse(body) as Record<string, unknown>
-    // Moolre success indicators: status field, success field, or code 200
     if (parsed.status === 'success' || parsed.status === 'sent' || parsed.status === 'queued') return true
     if (parsed.success === true || parsed.code === 200 || parsed.code === '200') return true
-    // If there's an error field, it failed even if HTTP 200
     if (parsed.error || parsed.message?.toString().toLowerCase().includes('error')) return false
-    // If we got a 200 with no clear error, accept it
     return true
   } catch {
-    // Non-JSON response — if HTTP 200 and body is empty or short, accept it
     if (status === 200 && body.length < 5) return true
     return false
   }
@@ -95,8 +103,8 @@ export async function POST(request: Request) {
   console.log(`[SMS Proxy] NEW REQUEST at ${timestamp}`)
 
   // ── 1. Log incoming headers ────────────────────────────────────────────
-  const headers = Object.fromEntries(request.headers.entries())
-  console.log('[SMS Proxy] Incoming Headers:', JSON.stringify(headers))
+  const incomingHeaders = Object.fromEntries(request.headers.entries())
+  console.log('[SMS Proxy] Incoming Headers:', JSON.stringify(incomingHeaders))
 
   // ── 2. Authorization check (permissive) ────────────────────────────────
   const authHeader = request.headers.get('authorization')
@@ -136,7 +144,7 @@ export async function POST(request: Request) {
 
   console.log('[SMS Proxy] Full Supabase Payload:', JSON.stringify(body, null, 2))
 
-  // Extract phone number (flat, nested, or alternate field names)
+  // Extract phone number
   const rawPhone =
     (body.phone as string) ||
     ((body.user as Record<string, unknown>)?.phone as string) ||
@@ -169,8 +177,8 @@ export async function POST(request: Request) {
   // ── 4. Format phone numbers ────────────────────────────────────────────
   const digits = rawPhone.replace(/[^0-9]/g, '')
 
-  let internationalPhone: string  // 233XXXXXXXXX
-  let localPhone: string          // 0XXXXXXXXX
+  let internationalPhone: string
+  let localPhone: string
 
   if (digits.startsWith('233') && digits.length === 12) {
     internationalPhone = digits
@@ -191,45 +199,76 @@ export async function POST(request: Request) {
 
   console.log('[SMS Proxy] Formatted — international:', internationalPhone, '| local:', localPhone, '| raw:', rawPhone)
 
-  // ── 5. Dispatch to Moolre ──────────────────────────────────────────────
+  // ── 5. Read Moolre keys ────────────────────────────────────────────────
+  const publicKey = (process.env.MOOLRE_PUBLIC_KEY || '').trim()
+  const privateKey = (process.env.MOOLRE_SECRET_KEY || '').trim()
   const accountNo = (process.env.MOOLRE_ACCOUNT_NO || '').trim()
   const senderId = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
 
-  const moolrePayload = {
+  console.log('[SMS Proxy] Keys — public:', redact(publicKey), '| private:', redact(privateKey))
+
+  const basePayload = {
     account_no: accountNo,
     sender_id: senderId,
-    recipient: internationalPhone,
     message,
-    type: 'text',
+    type: 'text' as const,
   }
 
-  // Attempt 1: International format (233XXXXXXXXX)
-  console.log('[SMS Proxy] Attempt 1 — sending to international format:', internationalPhone)
-  let result = await sendMoolre(moolrePayload)
-  console.log('[SMS Proxy] ← Moolre status:', result.status, '| body:', result.body)
+  // ── 6. Send with endpoint fallback ─────────────────────────────────────
+  const phoneFormats = [
+    { label: 'international', value: internationalPhone },
+    { label: 'local', value: localPhone },
+  ]
 
-  let usedFormat = 'international'
+  let lastResult: { ok: boolean; status: number; body: string } | null = null
 
-  // Attempt 2: If international fails, retry with local format (0XXXXXXXXX)
-  if (!isMoolreSuccess(result.status, result.body)) {
-    console.log('[SMS Proxy] ✗ International format failed. Retrying with local format:', localPhone)
+  for (const phoneFormat of phoneFormats) {
+    for (let i = 0; i < MoolreEndpoints.length; i++) {
+      const endpoint = MoolreEndpoints[i]
+      const attemptLabel = `${phoneFormat.label}+endpoint[${i}]`
 
-    moolrePayload.recipient = localPhone
-    result = await sendMoolre(moolrePayload)
-    console.log('[SMS Proxy] ← Moolre retry status:', result.status, '| body:', result.body)
-    usedFormat = 'local'
+      console.log(`[SMS Proxy] Attempt — ${attemptLabel} — ${phoneFormat.value} via ${endpoint}`)
+
+      try {
+        const result = await sendMoolre(endpoint, publicKey, privateKey, {
+          ...basePayload,
+          recipient: phoneFormat.value,
+        })
+
+        console.log(`[SMS Proxy] ← ${attemptLabel} — HTTP ${result.status}:`, result.body)
+
+        if (isMoolreSuccess(result.status, result.body)) {
+          console.log(`[SMS Proxy] ✓ SMS delivered via ${attemptLabel}`)
+          console.log(`[SMS Proxy] ═══════════════════════════════════════════════`)
+          return NextResponse.json({}, { status: 200 })
+        }
+
+        lastResult = result
+
+        // Parse error — if it's an auth error, try next endpoint; if it's a phone error, try next phone format
+        try {
+          const parsed = JSON.parse(result.body) as Record<string, unknown>
+          const code = (parsed.code as string) || ''
+          const msg = (parsed.message as string) || ''
+
+          if (code.startsWith('AIN') || msg.toLowerCase().includes('auth')) {
+            console.log(`[SMS Proxy] ✗ Auth error — trying next endpoint`)
+            continue
+          }
+        } catch { /* non-JSON error body — try next endpoint */ }
+
+        // For non-auth errors, skip remaining endpoints for this phone format
+        console.log(`[SMS Proxy] ✗ Non-auth error — skipping remaining endpoints for ${phoneFormat.label}`)
+        break
+      } catch (err) {
+        console.error(`[SMS Proxy] ✗ Network error on ${attemptLabel}:`, err)
+        lastResult = { ok: false, status: 0, body: String(err) }
+      }
+    }
   }
 
-  // ── 6. Final result ────────────────────────────────────────────────────
-  const success = isMoolreSuccess(result.status, result.body)
-
-  if (success) {
-    console.log(`[SMS Proxy] ✓ SMS delivered via ${usedFormat} format to ${usedFormat === 'international' ? internationalPhone : localPhone}`)
-    console.log(`[SMS Proxy] ═══════════════════════════════════════════════`)
-    return NextResponse.json({}, { status: 200 })
-  }
-
-  console.error(`[SMS Proxy] ✗ SMS FAILED (${usedFormat} format). Moolre HTTP ${result.status}:`, result.body)
+  // ── 7. All attempts failed ─────────────────────────────────────────────
+  console.error(`[SMS Proxy] ✗ ALL ATTEMPTS FAILED. Last result:`, lastResult)
   console.log(`[SMS Proxy] ═══════════════════════════════════════════════`)
-  return NextResponse.json({ error: result.body }, { status: 400 })
+  return NextResponse.json({ error: lastResult?.body || 'SMS delivery failed' }, { status: 400 })
 }
