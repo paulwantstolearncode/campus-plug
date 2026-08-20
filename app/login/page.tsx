@@ -44,6 +44,7 @@ function LoginForm() {
   const passwordRef = useRef<HTMLInputElement>(null)
 
   // Phone auth state
+  const [phoneName, setPhoneName] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [phoneError, setPhoneError] = useState<string | null>(null)
   const [phoneTouched, setPhoneTouched] = useState(false)
@@ -127,7 +128,7 @@ function LoginForm() {
     setPhoneTouched(true); setPhoneError(phoneValidation)
     if (phoneValidation) { phoneRef.current?.focus(); return }
     setLoading(true); setOtpError(null)
-    const { error } = await supabase.auth.signInWithOtp({ phone: formatPhoneForSupabase(phoneNumber), options: { shouldCreateUser: true } })
+    const { error } = await supabase.auth.signInWithOtp({ phone: formatPhoneForSupabase(phoneNumber), options: { shouldCreateUser: true, data: { full_name: phoneName.trim() || undefined, name: phoneName.trim() || undefined } } })
     if (error) { setPhoneError(error.message); setLoading(false); return }
     setOtpSent(true); setLoading(false); setOtpCode(''); setOtpTouched(false)
     startCountdown()
@@ -154,7 +155,7 @@ function LoginForm() {
   const handleResendOtp = async () => {
     if (countdown > 0) return
     setLoading(true); setOtpError(null)
-    const { error } = await supabase.auth.signInWithOtp({ phone: formatPhoneForSupabase(phoneNumber), options: { shouldCreateUser: true } })
+    const { error } = await supabase.auth.signInWithOtp({ phone: formatPhoneForSupabase(phoneNumber), options: { shouldCreateUser: true, data: { full_name: phoneName.trim() || undefined, name: phoneName.trim() || undefined } } })
     if (error) setOtpError(error.message); else startCountdown()
     setLoading(false)
   }
@@ -321,6 +322,13 @@ function LoginForm() {
 
                 {authMethod === 'phone' && !otpSent && (
                   <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-charcoal mb-2">Your Name</label>
+                      <input type="text" placeholder="e.g., Kwame Adjei"
+                        className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 focus:border-gold text-charcoal placeholder:text-gray-400 focus:outline-none transition-colors"
+                        value={phoneName} onChange={(e) => setPhoneName(e.target.value)} />
+                      <p className="text-xs text-gray-400 mt-2">This will be your display name on Campus Plug.</p>
+                    </div>
                     <div>
                       <label className="block text-sm font-semibold text-charcoal mb-2">Phone number</label>
                       <div className="flex gap-2">
