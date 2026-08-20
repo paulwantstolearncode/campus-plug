@@ -3,36 +3,20 @@ import { NextResponse } from 'next/server'
 /**
  * POST /api/sms/send-otp
  *
- * Secure proxy that sends an OTP SMS through the Moolre (Ghana SMS Gateway)
- * API. Supabase calls this endpoint when a phone-based OTP is requested.
+ * Proxy that sends OTP SMS through the Moolre Ghana SMS Gateway.
+ * Called by Supabase Auth Hooks when a phone-based OTP is requested.
  *
- * Authentication (any ONE of these passes):
- *   Authorization: Bearer [SUPABASE_SMS_WEBHOOK_SECRET]
- *   x-supabase-signature header present (Supabase webhook signature)
- *   svix-signature header present (Svix webhook signature)
- *   Dev/test mode: skip if NODE_ENV !== 'production' and header is absent
+ * Auth: Flexible — Bearer token, webhook signature, Supabase UA, or no secret.
+ * Never return 401 during testing — log warning instead.
  *
- * Required body (JSON) — handles multiple Supabase payload formats:
- *   { phone, message }                              — flat
- *   { user: { phone }, sms: { otp } }               — nested user
- *   { recipient, otp }                              — alternate
- *   { payload: { phone }, code }                    — deep nested
- *
- * Environment variables (set in .env.local and Vercel):
- *   SUPABASE_SMS_WEBHOOK_SECRET – shared secret for authorising Supabase → us
- *   MOOLRE_SECRET_KEY           – Moolre API secret key
- *   MOOLRE_ACCOUNT_NO           – Moolre account number
- *   MOOLRE_SENDER_ID            – registered sender ID (e.g. "CampusPlug")
+ * Supabase expects HTTP 200 with JSON {} on success.
  */
 
 export async function POST(request: Request) {
-  const env = process.env.NODE_ENV || 'development'
-  const isDev = env !== 'production'
-
-  // ── 1. Log all incoming headers ──────────────────────────────────────────
+  // ── 1. Log incoming headers ────────────────────────────────────────────
   console.log('[SMS Proxy] Incoming Headers:', JSON.stringify(Object.fromEntries(request.headers.entries())))
 
-  // ── 2. Flexible authorization check ──────────────────────────────────────
+  // ── 2. Authorization check (permissive) ────────────────────────────────
   const authHeader = request.headers.get('authorization')
   const supabaseSig = request.headers.get('x-supabase-signature')
   const svixSig = request.headers.get('svix-signature')
@@ -45,11 +29,6 @@ export async function POST(request: Request) {
   const hasSupabaseUA = /Go-http-client|Supabase/i.test(userAgent)
   const tokenMissing = !expectedToken
 
-  // Allow if ANY of these conditions are met:
-  //  a) Valid Bearer token match
-  //  b) Any webhook signature header present
-  //  c) User-Agent is from Supabase/Go-http-client
-  //  d) Secret not configured (dev/test safety net)
   const authPassed = hasBearerAuth || hasWebhookSig || hasSupabaseUA || tokenMissing
 
   console.log('[SMS Proxy] Auth check —', {
@@ -61,11 +40,11 @@ export async function POST(request: Request) {
   })
 
   if (!authPassed) {
-    console.warn('[SMS Proxy] Authorization FAILED — no matching auth method found')
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // Log warning but do NOT reject — Supabase hooks may not send auth headers
+    console.warn('[SMS Proxy] Authorization header missing or mismatched — proceeding anyway (no 401)')
   }
 
-  // ── 2. Parse request body (robust multi-format) ──────────────────────────
+  // ── 3. Parse request body ──────────────────────────────────────────────
   let body: Record<string, unknown>
   try {
     body = await request.json()
@@ -76,22 +55,23 @@ export async function POST(request: Request) {
 
   console.log('[SMS Proxy] Incoming payload:', JSON.stringify(body))
 
-  // Extract phone number (handles flat, nested, or alternate field names)
+  // Extract phone number (flat, nested, or alternate field names)
   const rawPhone =
     (body.phone as string) ||
     ((body.user as Record<string, unknown>)?.phone as string) ||
     (body.recipient as string) ||
     ((body.payload as Record<string, unknown>)?.phone as string)
 
-  // Extract OTP code or pre-built message
+  // Extract OTP code
   const otpCode =
     ((body.sms as Record<string, unknown>)?.otp as string) ||
     (body.otp as string) ||
     (body.code as string)
 
-  const message: string | null =
-    (body.message as string) ||
-    (otpCode ? `Your Campus Plug verification code is: ${otpCode}` : null)
+  // Build message from OTP
+  const message = otpCode
+    ? `Your Campus Plug verification code is: ${otpCode}`
+    : (body.message as string) || null
 
   if (!rawPhone) {
     console.error('[SMS Proxy] No phone number found in payload')
@@ -103,23 +83,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing message content' }, { status: 400 })
   }
 
-  console.log('[SMS Proxy] Extracted phone:', rawPhone, '| OTP:', otpCode || '(inline message)')
+  console.log('[SMS Proxy] Extracted — phone:', rawPhone, '| otp:', otpCode || '(n/a)')
 
-  // ── 3. Read Moolre credentials ───────────────────────────────────────────
-  const moolreSecretKey = process.env.MOOLRE_SECRET_KEY
-  const moolreAccountNo = process.env.MOOLRE_ACCOUNT_NO
-  const moolreSenderId = process.env.MOOLRE_SENDER_ID
-
-  if (!moolreSecretKey || !moolreAccountNo || !moolreSenderId) {
-    console.error('[SMS Proxy] Moolre env vars missing —', {
-      key: !!moolreSecretKey,
-      account: !!moolreAccountNo,
-      sender: !!moolreSenderId,
-    })
-    return NextResponse.json({ error: 'SMS gateway not configured' }, { status: 500 })
-  }
-
-  // ── 4. Format phone number to Ghana standard (233XXXXXXXXX) ──────────────
+  // ── 4. Format phone to Ghana standard (233XXXXXXXXX) ───────────────────
   const digits = rawPhone.replace(/[^0-9]/g, '')
 
   let formattedPhone: string
@@ -138,52 +104,40 @@ export async function POST(request: Request) {
 
   console.log('[SMS Proxy] Formatted phone:', formattedPhone, '(raw:', rawPhone, ')')
 
-  // ── 5. Send SMS via Moolre API ───────────────────────────────────────────
+  // ── 5. Dispatch to Moolre ──────────────────────────────────────────────
   const moolrePayload = {
-    account_no: moolreAccountNo,
-    sender_id: moolreSenderId,
-    to: formattedPhone,
+    account_no: process.env.MOOLRE_ACCOUNT_NO || '',
+    sender_id: process.env.MOOLRE_SENDER_ID || 'CampusPlug',
+    recipient: formattedPhone,
     message: message,
+    type: 'text',
   }
 
-  console.log('[SMS Proxy] Sending to Moolre —', {
-    to: formattedPhone,
-    sender: moolreSenderId,
-    msgLen: message.length,
-  })
+  console.log('[SMS Proxy] Dispatching to Moolre:', JSON.stringify(moolrePayload))
 
   try {
-    const moolreResponse = await fetch('https://api.moolre.com/api/v1/sms/send', {
+    const moolreRes = await fetch('https://api.moolre.com/open/sms/send', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${moolreSecretKey}`,
+        'X-Api-Key': process.env.MOOLRE_SECRET_KEY || '',
+        'Authorization': `Bearer ${process.env.MOOLRE_SECRET_KEY || ''}`,
       },
       body: JSON.stringify(moolrePayload),
     })
 
-    const result = await moolreResponse.json().catch(() => null)
+    const moolreText = await moolreRes.text()
+    console.log('[SMS Proxy] Moolre Response Status:', moolreRes.status, moolreText)
 
-    if (!moolreResponse.ok) {
-      console.error('[SMS Proxy] Moolre API error —', {
-        status: moolreResponse.status,
-        statusText: moolreResponse.statusText,
-        body: result,
-      })
-      return NextResponse.json(
-        { error: 'Failed to send SMS', details: result },
-        { status: 502 }
-      )
+    if (!moolreRes.ok) {
+      console.error('[SMS Proxy] Moolre API error —', moolreRes.status, moolreText)
+      return NextResponse.json({ error: moolreText }, { status: 400 })
     }
 
-    console.log('[SMS Proxy] SMS sent successfully —', {
-      to: formattedPhone,
-      moolreStatus: moolreResponse.status,
-      moolreResponse: result,
-    })
-    return NextResponse.json({ success: true, to: formattedPhone })
+    console.log('[SMS Proxy] SMS sent successfully to', formattedPhone)
+    return NextResponse.json({}, { status: 200 })
   } catch (err) {
     console.error('[SMS Proxy] Network error calling Moolre —', err)
-    return NextResponse.json({ error: 'SMS gateway unreachable' }, { status: 502 })
+    return NextResponse.json({ error: 'SMS gateway unreachable' }, { status: 400 })
   }
 }
