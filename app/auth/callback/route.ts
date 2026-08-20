@@ -47,7 +47,9 @@ export async function GET(request: Request) {
           ? next
           : '/'
 
-      return NextResponse.redirect(origin + target)
+      const response = NextResponse.redirect(origin + target)
+      response.headers.set('X-Replace-Login', '1')
+      return response
     }
 
     console.error('Auth callback code exchange failed:', exchangeError)

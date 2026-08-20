@@ -31,7 +31,8 @@ function LoginForm() {
   const [authMethod, setAuthMethod] = useState<'google-email' | 'phone'>('google-email')
   const submitAttempted = useRef(false)
   const router = useRouter()
-  const authError = useSearchParams().get('error')
+  const searchParams = useSearchParams()
+  const authError = searchParams.get('error')
 
   // Email/password state
   const [email, setEmail] = useState('')
@@ -58,6 +59,11 @@ function LoginForm() {
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   useEffect(() => {
+    const nextParam = searchParams.get('next')
+    const nextPath = nextParam && nextParam.startsWith('/') && !nextParam.startsWith('//') ? nextParam : '/services'
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) router.replace(nextPath)
+    })
     return () => { if (countdownRef.current) clearInterval(countdownRef.current) }
   }, [])
 
@@ -117,8 +123,7 @@ function LoginForm() {
     if (error) { alert('Login failed: ' + error.message) }
     else {
       const next = new URLSearchParams(window.location.search).get('next')
-      router.push(next && next.startsWith('/') && !next.startsWith('//') ? next : '/')
-      router.refresh()
+      router.replace(next && next.startsWith('/') && !next.startsWith('//') ? next : '/services')
     }
     setLoading(false)
   }
@@ -148,8 +153,7 @@ function LoginForm() {
     })
     if (error) { setOtpError(error.message); setLoading(false); return }
     const next = new URLSearchParams(window.location.search).get('next')
-    router.push(next && next.startsWith('/') && !next.startsWith('//') ? next : '/')
-    router.refresh()
+    router.replace(next && next.startsWith('/') && !next.startsWith('//') ? next : '/services')
   }
 
   const handleResendOtp = async () => {
