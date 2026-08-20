@@ -30,30 +30,35 @@ async function sendMoolre(payload: {
   type: string
 }): Promise<{ ok: boolean; status: number; body: string }> {
   const secretKey = (process.env.MOOLRE_SECRET_KEY || '').trim()
-  const authorizationHeader = secretKey.startsWith('Bearer ') ? secretKey : `Bearer ${secretKey}`
+  const authorizationHeader = (secretKey.startsWith('Bearer ') || secretKey.startsWith('EyJ')) ? secretKey : `Bearer ${secretKey}`
 
   const moolreHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     'X-Api-Key': secretKey,
     'X-Secret-Key': secretKey,
-    'X-Moolre-Secret': secretKey,
     'Authorization': authorizationHeader,
   }
 
+  // Include key fields in payload for Private API Key auth
+  const outgoingPayload = {
+    ...payload,
+    key: secretKey,
+    api_key: secretKey,
+  }
+
   console.log('[SMS Proxy] → Moolre URL:', MoolreEndpoint)
-  console.log('[SMS Proxy] → Moolre Body:', JSON.stringify({ ...payload, message: payload.message.slice(0, 40) + '...' }))
+  console.log('[SMS Proxy] → Moolre Body:', JSON.stringify({ ...outgoingPayload, message: outgoingPayload.message.slice(0, 40) + '...' }))
   console.log('[SMS Proxy] → Moolre Headers:', JSON.stringify({
     'Content-Type': 'application/json',
     'X-Api-Key': redact(secretKey),
     'X-Secret-Key': redact(secretKey),
-    'X-Moolre-Secret': redact(secretKey),
     'Authorization': `Bearer ${redact(secretKey)}`,
   }))
 
   const res = await fetch(MoolreEndpoint, {
     method: 'POST',
     headers: moolreHeaders,
-    body: JSON.stringify(payload),
+    body: JSON.stringify(outgoingPayload),
   })
 
   const text = await res.text()
