@@ -3,91 +3,102 @@ import { NextResponse } from 'next/server'
 /**
  * GET /api/sms/test-moolre
  *
- * Diagnostic endpoint — tests the confirmed Moolre API body shape.
- * Flat body with senderid + recipient + message + type:1.
- *
- * Previous findings:
- * - type: "text" → ASMS09 (invalid type)
- * - sender_id (underscore) → ASMS02 (senderid required)
- * - type: 1 (integer) → passes validation
- * - flat {senderid, recipient, message, type:1} → was ASMS07 (sender pending)
- * - messages[] array → ASMS03 (Number required at index 0)
- *
- * NOW sender is approved. Flat body should work.
- * DELETE after confirming production flow works.
+ * Diagnostic — testing the specific Moolre messages[] format:
+ * 1. messages with number as integer (no leading zero)
+ * 2. messages with number as integer (with country code)
+ * 3. flat recipient + messages array of integers
+ * 4. flat to + messages array of objects with Number (capital)
  */
 
 const Endpoint = 'https://api.moolre.com/open/sms/send'
 
-export async function GET() {
+async function testMoolre(
+  label: string,
+  body: Record<string, unknown>
+): Promise<{ label: string; raw: string }> {
   const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
-  const senderid = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
-  const message = 'Campus Plug diagnostic test'
-  const recipient = '0202388411'
-
-  console.log(`[SMS Test] ═══════════════════════════════════════════════`)
-  console.log(`[SMS Test] VASKEY: ${vaskey.slice(0, 8)}...`)
-  console.log(`[SMS Test] Sender: ${senderid}`)
-  console.log(`[SMS Test] ═══════════════════════════════════════════════`)
-
-  // The confirmed winning body shape (flat, type:1 integer)
-  const body = {
-    senderid,
-    recipient,
-    message,
-    type: 1,
-  }
-
-  console.log(`[SMS Test] Sending flat body:`, JSON.stringify(body))
-
   try {
     const res = await fetch(Endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-API-VASKEY': vaskey,
-      },
+      headers: { 'Content-Type': 'application/json', 'X-API-VASKEY': vaskey },
       body: JSON.stringify(body),
     })
-
-    const text = await res.text()
-    console.log(`[SMS Test] ← HTTP ${res.status}:`, text)
-
-    let parsed: Record<string, unknown> = {}
-    try { parsed = JSON.parse(text) } catch {}
-
-    const isSuccess =
-      parsed.status === 1 ||
-      parsed.status === '1' ||
-      parsed.code === 200 ||
-      parsed.code === '200' ||
-      parsed.success === true
-
-    console.log(`[SMS Test] ${isSuccess ? '✓ SUCCESS' : '✗ FAILED'} — code: ${parsed.code} msg: ${parsed.message}`)
-    console.log(`[SMS Test] ═══════════════════════════════════════════════`)
-
-    return NextResponse.json({
-      config: {
-        hasVaskey: !!vaskey,
-        vaskeyPrefix: vaskey.slice(0, 8),
-        senderid,
-        endpoint: Endpoint,
-      },
-      success: isSuccess,
-      response: {
-        status: parsed.status,
-        code: parsed.code,
-        message: parsed.message,
-        data: parsed.data,
-        raw: text.slice(0, 500),
-      },
-    })
+    return { label, raw: await res.text() }
   } catch (err) {
-    console.error(`[SMS Test] ✗ Network error:`, err)
-    return NextResponse.json({
-      config: { hasVaskey: !!vaskey, senderid, endpoint: Endpoint },
-      success: false,
-      response: { raw: `Network error: ${err}` },
-    })
+    return { label, raw: `Error: ${err}` }
   }
+}
+
+function isSuccess(p: Record<string, unknown>): boolean {
+  return p.status === 1 || p.status === '1' || p.code === 200 || p.code === '200' || p.success === true
+}
+
+export async function GET() {
+  const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
+  const senderid = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
+  const message = 'Campus Plug OTP test'
+
+  const a = testMoolre('A — messages[{number:int}] no message in item', {
+    senderid, type: 1, message,
+    messages: [{ number: 202388411 }],
+  })
+
+  const b = testMoolre('B — messages[{number:str}] no message in item', {
+    senderid, type: 1, message,
+    messages: [{ number: '0202388411' }],
+  })
+
+  const c = testMoolre('C — flat: recipient + to + messages[int]', {
+    senderid, type: 1, recipient: '0202388411',
+    message,
+    messages: [202388411],
+  })
+
+  const d = testMoolre('D — flat: recipient + messages[str]', {
+    senderid, type: 1, recipient: '0202388411',
+    message,
+    messages: ['0202388411'],
+  })
+
+  const e = testMoolre('E — flat: to + message + type:1 (retest)', {
+    senderid, type: 1, to: '0202388411', message,
+  })
+
+  const f = testMoolre('F — flat: recipient + message + type:1 (retest)', {
+    senderid, type: 1, recipient: '0202388411', message,
+  })
+
+  const g = testMoolre('G — flat: number + message + type:1', {
+    senderid, type: 1, number: '0202388411', message,
+  })
+
+  const h = testMoolre('H — flat: mobile + message + type:1', {
+    senderid, type: 1, mobile: '0202388411', message,
+  })
+
+  const results = await Promise.all([a, b, c, d, e, f, g, h])
+
+  const summary = results.map((r) => {
+    let p: Record<string, unknown> = {}
+    try { p = JSON.parse(r.raw) } catch {}
+    return {
+      label: r.label,
+      success: isSuccess(p),
+      code: p.code,
+      message: p.message,
+      data: p.data,
+      raw: r.raw.slice(0, 400),
+    }
+  })
+
+  const winner = summary.find((s) => s.success)
+  console.log(`[SMS Test] ═══════════════════════════════════════════════`)
+  summary.forEach((s) => {
+    console.log(`[SMS Test] ${s.success ? '✓ WINNER' : '✗'} ${s.label} — code:${s.code} msg:${s.message} data:${s.data}`)
+    if (!s.success) console.log(`[SMS Test]   raw: ${s.raw}`)
+  })
+  console.log(`[SMS Test] 🏆 ${winner ? winner.label : 'No winner'}`)
+  console.log(`[SMS Test] ═══════════════════════════════════════════════`)
+
+  return NextResponse.json({ winner: winner?.label || null, results: summary })
 }
