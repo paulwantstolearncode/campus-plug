@@ -3,11 +3,12 @@ import { NextResponse } from 'next/server'
 /**
  * GET /api/sms/test-moolre
  *
- * Diagnostic — testing the specific Moolre messages[] format:
- * 1. messages with number as integer (no leading zero)
- * 2. messages with number as integer (with country code)
- * 3. flat recipient + messages array of integers
- * 4. flat to + messages array of objects with Number (capital)
+ * Diagnostic — test the CONFIRMED working Moolre payload shapes:
+ * 1. Flat: { senderid, recipient, message, type: 1 }
+ * 2. Array: { senderid, type: 1, messages: [{ recipient, message }] }
+ *
+ * Both shapes now confirmed working in production send-otp route.
+ * DELETE after confirming everything is stable.
  */
 
 const Endpoint = 'https://api.moolre.com/open/sms/send'
@@ -36,47 +37,34 @@ function isSuccess(p: Record<string, unknown>): boolean {
 export async function GET() {
   const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
   const senderid = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
-  const message = 'Campus Plug OTP test'
+  const message = 'Campus Plug diagnostic test'
+  const recipient = '0202388411'
 
-  const a = testMoolre('A — messages[{number:int}] no message in item', {
-    senderid, type: 1, message,
-    messages: [{ number: 202388411 }],
+  console.log(`[SMS Test] ═══════════════════════════════════════════════`)
+
+  // Test 1: Flat format (primary in send-otp)
+  const a = testMoolre('A — FLAT: {senderid, recipient, message, type:1}', {
+    senderid, type: 1, recipient, message,
   })
 
-  const b = testMoolre('B — messages[{number:str}] no message in item', {
-    senderid, type: 1, message,
-    messages: [{ number: '0202388411' }],
+  // Test 2: Array format (fallback in send-otp) — recipient NOT number
+  const b = testMoolre('B — ARRAY: {messages:[{recipient, message}]}', {
+    senderid, type: 1,
+    messages: [{ recipient, message }],
   })
 
-  const c = testMoolre('C — flat: recipient + to + messages[int]', {
-    senderid, type: 1, recipient: '0202388411',
-    message,
-    messages: [202388411],
+  // Test 3: Array format with intl phone
+  const c = testMoolre('C — ARRAY intl: {messages:[{recipient:"233...", message}]}', {
+    senderid, type: 1,
+    messages: [{ recipient: '233202388411', message }],
   })
 
-  const d = testMoolre('D — flat: recipient + messages[str]', {
-    senderid, type: 1, recipient: '0202388411',
-    message,
-    messages: ['0202388411'],
+  // Test 4: Flat with intl phone
+  const d = testMoolre('D — FLAT intl: {recipient:"233...", message, type:1}', {
+    senderid, type: 1, recipient: '233202388411', message,
   })
 
-  const e = testMoolre('E — flat: to + message + type:1 (retest)', {
-    senderid, type: 1, to: '0202388411', message,
-  })
-
-  const f = testMoolre('F — flat: recipient + message + type:1 (retest)', {
-    senderid, type: 1, recipient: '0202388411', message,
-  })
-
-  const g = testMoolre('G — flat: number + message + type:1', {
-    senderid, type: 1, number: '0202388411', message,
-  })
-
-  const h = testMoolre('H — flat: mobile + message + type:1', {
-    senderid, type: 1, mobile: '0202388411', message,
-  })
-
-  const results = await Promise.all([a, b, c, d, e, f, g, h])
+  const results = await Promise.all([a, b, c, d])
 
   const summary = results.map((r) => {
     let p: Record<string, unknown> = {}
@@ -95,10 +83,13 @@ export async function GET() {
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
   summary.forEach((s) => {
     console.log(`[SMS Test] ${s.success ? '✓ WINNER' : '✗'} ${s.label} — code:${s.code} msg:${s.message} data:${s.data}`)
-    if (!s.success) console.log(`[SMS Test]   raw: ${s.raw}`)
   })
   console.log(`[SMS Test] 🏆 ${winner ? winner.label : 'No winner'}`)
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
 
-  return NextResponse.json({ winner: winner?.label || null, results: summary })
+  return NextResponse.json({
+    config: { hasVaskey: !!vaskey, senderid },
+    winner: winner?.label || null,
+    results: summary,
+  })
 }
