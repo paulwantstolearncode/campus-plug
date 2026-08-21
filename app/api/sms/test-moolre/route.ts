@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server'
 /**
  * GET /api/sms/test-moolre
  *
- * Temporary diagnostic — Moolre wants "messages" field but rejects all
- * messages[] structures. Testing completely different payloads.
+ * Temporary diagnostic — testing entirely different top-level structures.
+ * Moolre rejects all messages[] phone field names. Trying alternatives.
  * DELETE after confirming production flow works.
  */
 
@@ -48,68 +48,69 @@ function isSuccess(parsed: Record<string, unknown>): boolean {
 export async function GET() {
   const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
   const senderid = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
-  const message = 'Campus Plug OTP test'
+  const msg = 'Campus Plug OTP test'
 
-  // ── Try completely different structures ────────────────────────────────
+  // ── Try entirely different top-level structures ────────────────────────
 
-  // A: number as top-level field + messages array with just message text
-  const bodyA = testMoolre('A — top-level number + messages[].message', {
+  // A: recipients (plural) instead of messages
+  const bodyA = testMoolre('A — recipients[{number,message}] + type:1', {
     senderid,
-    number: '0202388411',
-    messages: [{ message }],
+    recipients: [{ number: '0202388411', message: msg }],
     type: 1,
   })
 
-  // B: number + to at top-level + messages with just text
-  const bodyB = testMoolre('B — top-level to + number + messages', {
+  // B: destinations
+  const bodyB = testMoolre('B — destinations[{number,message}] + type:1', {
+    senderid,
+    destinations: [{ number: '0202388411', message: msg }],
+    type: 1,
+  })
+
+  // C: contacts
+  const bodyC = testMoolre('C — contacts[{number,message}] + type:1', {
+    senderid,
+    contacts: [{ number: '0202388411', message: msg }],
+    type: 1,
+  })
+
+  // D: The Moolre "Compose" pattern: flat recipient + message + type:1 + sender
+  //    but with the phone as just "to"
+  const bodyD = testMoolre('D — flat: to + message + type:1 + sender', {
     senderid,
     to: '0202388411',
-    number: '0202388411',
-    messages: [{ message }],
+    message: msg,
     type: 1,
   })
 
-  // C: messages as flat string, not array
-  const bodyC = testMoolre('C — messages: "text" string + number', {
+  // E: flat with "number" as top-level field
+  const bodyE = testMoolre('E — flat: number + message + type:1', {
     senderid,
     number: '0202388411',
-    messages: message,
+    message: msg,
     type: 1,
   })
 
-  // D: mobile field inside messages
-  const bodyD = testMoolre('D — messages[{mobile, message}]', {
+  // F: flat with "mobile" as top-level field
+  const bodyF = testMoolre('F — flat: mobile + message + type:1', {
     senderid,
-    messages: [{ mobile: '0202388411', message }],
+    mobile: '0202388411',
+    message: msg,
     type: 1,
   })
 
-  // E: msisdn field inside messages
-  const bodyE = testMoolre('E — messages[{msisdn, message}]', {
+  // G: Try with "dest" or "destinations" as flat string
+  const bodyG = testMoolre('G — flat: dest + message + type:1', {
     senderid,
-    messages: [{ msisdn: '0202388411', message }],
+    dest: '0202388411',
+    message: msg,
     type: 1,
   })
 
-  // F: Contact field inside messages
-  const bodyF = testMoolre('F — messages[{Contact, message}]', {
+  // H: Maybe Moolre wants number as integer, messages[{number(int), message}]
+  const bodyH = testMoolre('H — flat: phone + message + type:1', {
     senderid,
-    messages: [{ Contact: '0202388411', message }],
-    type: 1,
-  })
-
-  // G: Recipient field inside messages
-  const bodyG = testMoolre('G — messages[{Recipient, message}]', {
-    senderid,
-    messages: [{ Recipient: '0202388411', message }],
-    type: 1,
-  })
-
-  // H: number at top level, messages as array of strings
-  const bodyH = testMoolre('H — number + messages: ["text"]', {
-    senderid,
-    number: '0202388411',
-    messages: [message],
+    phone: '0202388411',
+    message: msg,
     type: 1,
   })
 
@@ -135,7 +136,7 @@ export async function GET() {
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
   summary.forEach((s) => {
     const icon = s.success ? '✓ WINNER' : '✗'
-    console.log(`[SMS Test] ${icon} ${s.label} — HTTP ${s.httpStatus} — msg:${s.moolreMessage} data:${s.moolreData}`)
+    console.log(`[SMS Test] ${icon} ${s.label} — msg:${s.moolreMessage} data:${s.moolreData}`)
   })
   if (winner) {
     console.log(`[SMS Test] 🏆 WINNER: ${winner.label}`)
