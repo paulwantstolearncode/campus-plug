@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 
 /**
  * GET /api/sms/test-moolre
- * Temporary — testing messages as object/map, flat strings, etc.
+ * Temporary — testing if "number" means message index, not phone.
+ * Also trying completely flat with "to" only (no messages field).
  * DELETE after confirming production flow works.
  */
 
@@ -39,55 +40,56 @@ export async function GET() {
   const senderid = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
   const message = 'Campus Plug OTP test'
 
-  // A: messages as object { phone: message }
-  const a = testMoolre('A — messages: {phone: message}', {
+  // A: number=index, phone=number
+  const a = testMoolre('A — number:index + phone + message', {
     senderid, type: 1,
-    messages: { '0202388411': message },
+    messages: [{ number: 1, phone: '0202388411', message }],
   })
 
-  // B: messages as flat comma-separated string
-  const b = testMoolre('B — messages: "0202388411"', {
-    senderid, type: 1, message,
-    messages: '0202388411',
-  })
-
-  // C: messages as single phone string, message at top level
-  const c = testMoolre('C — messages: ["0202388411"]', {
-    senderid, type: 1, message,
-    messages: ['0202388411'],
-  })
-
-  // D: target instead of messages
-  const d = testMoolre('D — target: [{number,message}]', {
+  // B: number=index, to=number
+  const b = testMoolre('B — number:index + to + message', {
     senderid, type: 1,
-    target: [{ number: '0202388411', message }],
+    messages: [{ number: 1, to: '0202388411', message }],
   })
 
-  // E: Maybe we need BOTH recipient AND messages
-  const e = testMoolre('E — recipient + messages + type:1', {
+  // C: number=1, Number=phone (capital N for the actual number)
+  const c = testMoolre('C — number:1 + Number:phone + message', {
     senderid, type: 1,
-    recipient: '0202388411',
-    messages: [{ number: '0202388411', message }],
+    messages: [{ number: 1, Number: '0202388411', message }],
   })
 
-  // F: The original body B that got ASMS07 before (approved now) — flat recipient + message + type:1
-  const f = testMoolre('F — FLAT: recipient + message + type:1', {
+  // D: single flat message with to (no messages field) — Moolre might accept it now
+  const d = testMoolre('D — flat: to + message + type:1', {
+    senderid, type: 1,
+    to: '0202388411',
+    message,
+  })
+
+  // E: flat recipient+message+type:1 retest — maybe sender approval changed result
+  const e = testMoolre('E — flat: recipient + message + type:1', {
     senderid, type: 1,
     recipient: '0202388411',
     message,
   })
 
-  // G: Same as F but with intl phone
-  const g = testMoolre('G — FLAT: recipient + message + type:1 (intl)', {
+  // F: flat with "number" as phone at top level
+  const f = testMoolre('F — flat: number + message + type:1', {
     senderid, type: 1,
-    recipient: '233202388411',
+    number: '0202388411',
     message,
   })
 
-  // H: Maybe the issue is encoding — try with explicit JSON parse/stringify
-  const h = testMoolre('H — FLAT: recipient + message + type:1 (024)', {
-    senderid, type: 1,
-    recipient: '0241234567',
+  // G: flat to+message with type:0 (maybe 0=single, 1=bulk?)
+  const g = testMoolre('G — flat: to + message + type:0', {
+    senderid, type: 0,
+    to: '0202388411',
+    message,
+  })
+
+  // H: flat to+message with no type at all
+  const h = testMoolre('H — flat: to + message (no type)', {
+    senderid,
+    to: '0202388411',
     message,
   })
 
