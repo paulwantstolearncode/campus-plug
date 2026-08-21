@@ -9,21 +9,21 @@ const PHONE_AUTH_ENABLED = true
 
 // ── Phone formatting helpers ──────────────────────────────────────────────
 
-/** Normalise any Ghana phone input to 233XXXXXXXXX for Supabase OTP. */
+/** Normalise any Ghana phone input to +233XXXXXXXXX for Supabase OTP. */
 function formatPhoneForSupabase(raw: string): string {
   const digits = raw.replace(/[^0-9]/g, '')
-  if (digits.startsWith('233') && digits.length === 12) return digits
-  if (digits.startsWith('0') && digits.length === 10) return '233' + digits.slice(1)
-  if (digits.length === 9) return '233' + digits
-  if (raw.startsWith('+')) return raw.replace('+', '')
-  return '233' + digits
+  if (digits.startsWith('233') && digits.length === 12) return '+' + digits
+  if (digits.startsWith('0') && digits.length === 10) return '+233' + digits.slice(1)
+  if (digits.length === 9) return '+233' + digits
+  if (raw.startsWith('+')) return raw
+  return '+233' + digits
 }
 
-/** Display-friendly format: 233 XXX XXX XXXX */
+/** Display-friendly format: +233 XXX XXX XXXX */
 function formatPhoneDisplay(e164: string): string {
   const digits = e164.replace(/[^0-9]/g, '')
   if (digits.length >= 12) {
-    return digits.slice(0, 3) + ' ' + digits.slice(3, 6) + ' ' + digits.slice(6, 9) + ' ' + digits.slice(9, 12)
+    return '+233 ' + digits.slice(3, 6) + ' ' + digits.slice(6, 9) + ' ' + digits.slice(9, 12)
   }
   return e164
 }
