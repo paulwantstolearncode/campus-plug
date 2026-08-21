@@ -3,9 +3,8 @@ import { NextResponse } from 'next/server'
 /**
  * GET /api/sms/test-moolre
  *
- * Temporary diagnostic — testing messages[].number format variations.
- * Moolre says "Number for message at (0) is required" even when provided.
- * Maybe it wants a specific phone format or field name.
+ * Temporary diagnostic — Moolre wants "messages" field but rejects all
+ * messages[] structures. Testing completely different payloads.
  * DELETE after confirming production flow works.
  */
 
@@ -20,9 +19,6 @@ async function testMoolre(
   raw: string
 }> {
   const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
-  console.log(`[SMS Test] ═══ ${label} ═══`)
-  console.log(`[SMS Test] Body:`, JSON.stringify(body))
-
   try {
     const res = await fetch(Endpoint, {
       method: 'POST',
@@ -32,15 +28,10 @@ async function testMoolre(
       },
       body: JSON.stringify(body),
     })
-
     const text = await res.text()
-    console.log(`[SMS Test] ← ${label} — HTTP ${res.status}:`, text)
-
     return { label, httpStatus: res.status, raw: text }
   } catch (err) {
-    const errMsg = `Network error: ${err}`
-    console.error(`[SMS Test] ✗ ${label}:`, errMsg)
-    return { label, httpStatus: 0, raw: errMsg }
+    return { label, httpStatus: 0, raw: `Network error: ${err}` }
   }
 }
 
@@ -59,67 +50,74 @@ export async function GET() {
   const senderid = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
   const message = 'Campus Plug OTP test'
 
-  console.log(`[SMS Test] ═══════════════════════════════════════════════`)
-  console.log(`[SMS Test] Testing number field format variations`)
-  console.log(`[SMS Test] ═══════════════════════════════════════════════`)
+  // ── Try completely different structures ────────────────────────────────
 
-  // ── Test number format variations ──────────────────────────────────────
-  const bodyA = testMoolre('A — number: 233202388411 (intl string)', {
+  // A: number as top-level field + messages array with just message text
+  const bodyA = testMoolre('A — top-level number + messages[].message', {
     senderid,
-    messages: [{ number: '233202388411', message }],
+    number: '0202388411',
+    messages: [{ message }],
     type: 1,
   })
 
-  const bodyB = testMoolre('B — number: +233202388411 (e164)', {
+  // B: number + to at top-level + messages with just text
+  const bodyB = testMoolre('B — top-level to + number + messages', {
     senderid,
-    messages: [{ number: '+233202388411', message }],
+    to: '0202388411',
+    number: '0202388411',
+    messages: [{ message }],
     type: 1,
   })
 
-  const bodyC = testMoolre('C — number: 0202388411, text field', {
+  // C: messages as flat string, not array
+  const bodyC = testMoolre('C — messages: "text" string + number', {
     senderid,
-    messages: [{ number: '0202388411', text: message }],
+    number: '0202388411',
+    messages: message,
     type: 1,
   })
 
-  const bodyD = testMoolre('D — to: 0202388411 + message', {
+  // D: mobile field inside messages
+  const bodyD = testMoolre('D — messages[{mobile, message}]', {
     senderid,
-    messages: [{ to: '0202388411', message }],
+    messages: [{ mobile: '0202388411', message }],
     type: 1,
   })
 
-  const bodyE = testMoolre('E — phone: 0202388411 + message', {
+  // E: msisdn field inside messages
+  const bodyE = testMoolre('E — messages[{msisdn, message}]', {
     senderid,
-    messages: [{ phone: '0202388411', message }],
+    messages: [{ msisdn: '0202388411', message }],
     type: 1,
   })
 
-  const bodyF = testMoolre('F — number: 0202388411 + content field', {
+  // F: Contact field inside messages
+  const bodyF = testMoolre('F — messages[{Contact, message}]', {
     senderid,
-    messages: [{ number: '0202388411', content: message }],
+    messages: [{ Contact: '0202388411', message }],
     type: 1,
   })
 
-  const bodyG = testMoolre('G — number int + message', {
+  // G: Recipient field inside messages
+  const bodyG = testMoolre('G — messages[{Recipient, message}]', {
     senderid,
-    messages: [{ number: 233202388411, message }],
+    messages: [{ Recipient: '0202388411', message }],
     type: 1,
   })
 
-  const bodyH = testMoolre('H — single msg string in messages[]', {
+  // H: number at top level, messages as array of strings
+  const bodyH = testMoolre('H — number + messages: ["text"]', {
     senderid,
-    messages: [{ number: '0202388411', msg: message }],
+    number: '0202388411',
+    messages: [message],
     type: 1,
   })
 
-  // Run all 8 in parallel
   const results = await Promise.all([bodyA, bodyB, bodyC, bodyD, bodyE, bodyF, bodyG, bodyH])
 
-  // Parse and summarize
   const summary = results.map((r) => {
     let parsed: Record<string, unknown> = {}
     try { parsed = JSON.parse(r.raw) } catch { /* non-JSON */ }
-    const ok = isSuccess(parsed)
     return {
       label: r.label,
       httpStatus: r.httpStatus,
@@ -127,7 +125,7 @@ export async function GET() {
       moolreCode: parsed.code,
       moolreMessage: parsed.message,
       moolreData: parsed.data,
-      success: ok,
+      success: isSuccess(parsed),
       rawBody: r.raw.slice(0, 300),
     }
   })
@@ -135,10 +133,9 @@ export async function GET() {
   const winner = summary.find((s) => s.success)
 
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
-  console.log(`[SMS Test] RESULTS:`)
   summary.forEach((s) => {
     const icon = s.success ? '✓ WINNER' : '✗'
-    console.log(`[SMS Test] ${icon} ${s.label} — HTTP ${s.httpStatus} — status:${s.moolreStatus} code:${s.moolreCode} msg:${s.moolreMessage} data:${s.moolreData}`)
+    console.log(`[SMS Test] ${icon} ${s.label} — HTTP ${s.httpStatus} — msg:${s.moolreMessage} data:${s.moolreData}`)
   })
   if (winner) {
     console.log(`[SMS Test] 🏆 WINNER: ${winner.label}`)
@@ -148,12 +145,7 @@ export async function GET() {
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
 
   return NextResponse.json({
-    config: {
-      hasVaskey: !!vaskey,
-      vaskeyPrefix: vaskey.slice(0, 8),
-      senderid,
-      endpoint: Endpoint,
-    },
+    config: { hasVaskey: !!vaskey, senderid },
     winner: winner ? { label: winner.label, moolreMessage: winner.moolreMessage } : null,
     results: summary,
   })
