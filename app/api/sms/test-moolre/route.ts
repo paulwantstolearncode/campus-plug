@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 
 /**
  * GET /api/sms/test-moolre
- * Temporary diagnostic — testing capitalized field names.
+ * Temporary — testing messages as object/map, flat strings, etc.
  * DELETE after confirming production flow works.
  */
 
@@ -38,54 +38,57 @@ export async function GET() {
   const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
   const senderid = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
   const message = 'Campus Plug OTP test'
-  const phone = '0202388411'
 
-  // A: Number (capital N)
-  const a = testMoolre('A — Number (capital N)', {
+  // A: messages as object { phone: message }
+  const a = testMoolre('A — messages: {phone: message}', {
     senderid, type: 1,
-    messages: [{ Number: phone, message }],
+    messages: { '0202388411': message },
   })
 
-  // B: NUMBER (all caps)
-  const b = testMoolre('B — NUMBER (all caps)', {
-    senderid, type: 1,
-    messages: [{ NUMBER: phone, message }],
-  })
-
-  // C: Number + Message (both capitalized)
-  const c = testMoolre('C — Number + Message', {
-    senderid, type: 1,
-    messages: [{ Number: phone, Message: message }],
-  })
-
-  // D: number + Number both
-  const d = testMoolre('D — number + Number both', {
-    senderid, type: 1,
-    messages: [{ number: phone, Number: phone, message }],
-  })
-
-  // E: try with account_no field included
-  const e = testMoolre('E — number + account_no in array item', {
-    senderid, type: 1,
-    messages: [{ number: phone, message, account_no: (process.env.MOOLRE_ACCOUNT_NO || '').trim() }],
-  })
-
-  // F: try with senderid inside array item too
-  const f = testMoolre('F — number + senderid in array item', {
-    senderid, type: 1,
-    messages: [{ number: phone, message, senderid }],
-  })
-
-  // G: messages with just the number as the only key (no message field)
-  const g = testMoolre('G — messages: [{number}] only', {
+  // B: messages as flat comma-separated string
+  const b = testMoolre('B — messages: "0202388411"', {
     senderid, type: 1, message,
-    messages: [{ number: phone }],
+    messages: '0202388411',
   })
 
-  // H: maybe Moolre wants sender_id (underscore) inside messages, not at top level
-  const h = testMoolre('H — sender_id (underscore) top-level', {
-    sender_id: senderid, type: 1,
-    messages: [{ number: phone, message }],
+  // C: messages as single phone string, message at top level
+  const c = testMoolre('C — messages: ["0202388411"]', {
+    senderid, type: 1, message,
+    messages: ['0202388411'],
+  })
+
+  // D: target instead of messages
+  const d = testMoolre('D — target: [{number,message}]', {
+    senderid, type: 1,
+    target: [{ number: '0202388411', message }],
+  })
+
+  // E: Maybe we need BOTH recipient AND messages
+  const e = testMoolre('E — recipient + messages + type:1', {
+    senderid, type: 1,
+    recipient: '0202388411',
+    messages: [{ number: '0202388411', message }],
+  })
+
+  // F: The original body B that got ASMS07 before (approved now) — flat recipient + message + type:1
+  const f = testMoolre('F — FLAT: recipient + message + type:1', {
+    senderid, type: 1,
+    recipient: '0202388411',
+    message,
+  })
+
+  // G: Same as F but with intl phone
+  const g = testMoolre('G — FLAT: recipient + message + type:1 (intl)', {
+    senderid, type: 1,
+    recipient: '233202388411',
+    message,
+  })
+
+  // H: Maybe the issue is encoding — try with explicit JSON parse/stringify
+  const h = testMoolre('H — FLAT: recipient + message + type:1 (024)', {
+    senderid, type: 1,
+    recipient: '0241234567',
+    message,
   })
 
   const results = await Promise.all([a, b, c, d, e, f, g, h])
