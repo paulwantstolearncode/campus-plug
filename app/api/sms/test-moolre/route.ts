@@ -2,15 +2,16 @@ import { NextResponse } from 'next/server'
 
 /**
  * GET /api/sms/test-moolre
- * Temporary — testing form-urlencoded and XML payloads.
+ * Temporary — raw body string test + V1 endpoint retry.
  * DELETE after confirming production flow works.
  */
 
-const Endpoint = 'https://api.moolre.com/open/sms/send'
+const VASKEY_ENDPOINT = 'https://api.moolre.com/open/sms/send'
 
-async function testMoolre(
+async function testRaw(
   label: string,
-  bodyOrParams: string,
+  endpoint: string,
+  bodyStr: string,
   contentType: string
 ): Promise<{
   label: string
@@ -19,13 +20,10 @@ async function testMoolre(
 }> {
   const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
   try {
-    const res = await fetch(Endpoint, {
+    const res = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': contentType,
-        'X-API-VASKEY': vaskey,
-      },
-      body: bodyOrParams,
+      headers: { 'Content-Type': contentType, 'X-API-VASKEY': vaskey },
+      body: bodyStr,
     })
     const text = await res.text()
     return { label, httpStatus: res.status, raw: text }
@@ -41,49 +39,39 @@ function isSuccess(p: Record<string, unknown>): boolean {
 export async function GET() {
   const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
   const senderid = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
-  const message = 'Campus Plug OTP test'
 
-  // A: form-urlencoded flat
-  const a = testMoolre('A — form-urlencoded flat',
-    `senderid=${senderid}&recipient=0202388411&message=${encodeURIComponent(message)}&type=1`,
-    'application/x-www-form-urlencoded')
+  // Raw JSON strings — bypass any serialization
+  const rawBodies = [
+    ['A — raw string: number in messages[]', VASKEY_ENDPOINT,
+      `{"senderid":"${senderid}","type":1,"messages":[{"number":"0202388411","message":"Campus Plug OTP test"}]}`],
 
-  // B: form-urlencoded with "number" field
-  const b = testMoolre('B — form-urlencoded number',
-    `senderid=${senderid}&number=0202388411&message=${encodeURIComponent(message)}&type=1`,
-    'application/x-www-form-urlencoded')
+    ['B — raw string: mobile in messages[]', VASKEY_ENDPOINT,
+      `{"senderid":"${senderid}","type":1,"messages":[{"mobile":"0202388411","message":"Campus Plug OTP test"}]}`],
 
-  // C: JSON but with the message inside a "data" wrapper
-  const c = testMoolre('C — JSON: {data: [{number, message}]}',
-    JSON.stringify({ senderid, type: 1, data: [{ number: '0202388411', message }] }),
-    'application/json')
+    ['C — raw string: phone in messages[]', VASKEY_ENDPOINT,
+      `{"senderid":"${senderid}","type":1,"messages":[{"phone":"0202388411","message":"Campus Plug OTP test"}]}`],
 
-  // D: JSON — maybe messages needs "mobile" as a string
-  const d = testMoolre('D — JSON: messages[{mobile:String}]',
-    JSON.stringify({ senderid, type: 1, messages: [{ mobile: '0202388411', message }] }),
-    'application/json')
+    ['D — raw string: flat recipient+message', VASKEY_ENDPOINT,
+      `{"senderid":"${senderid}","type":1,"recipient":"0202388411","message":"Campus Plug OTP test"}`],
 
-  // E: JSON — try "recipients" as flat string (not array)
-  const e = testMoolre('E — JSON: recipients:"0202388411"',
-    JSON.stringify({ senderid, type: 1, recipients: '0202388411', message }),
-    'application/json')
+    ['E — raw: messages[] number+message (V1)', 'https://api.moolre.com/v1/sms/send',
+      `{"senderid":"${senderid}","type":1,"messages":[{"number":"0202388411","message":"Campus Plug OTP test"}]}`],
 
-  // F: JSON — "message_list" array
-  const f = testMoolre('F — JSON: message_list[{number,message}]',
-    JSON.stringify({ senderid, type: 1, message_list: [{ number: '0202388411', message }] }),
-    'application/json')
+    ['F — raw: flat recipient (V1)', 'https://api.moolre.com/v1/sms/send',
+      `{"senderid":"${senderid}","type":1,"recipient":"0202388411","message":"Campus Plug OTP test"}`],
 
-  // G: JSON — "sms" wrapper
-  const g = testMoolre('G — JSON: sms:{number,message}',
-    JSON.stringify({ senderid, type: 1, sms: { number: '0202388411', message } }),
-    'application/json')
+    ['G — raw: to flat (V1)', 'https://api.moolre.com/v1/sms/send',
+      `{"senderid":"${senderid}","type":1,"to":"0202388411","message":"Campus Plug OTP test"}`],
 
-  // H: form-urlencoded with "to" field
-  const h = testMoolre('H — form-urlencoded to',
-    `senderid=${senderid}&to=0202388411&message=${encodeURIComponent(message)}&type=1`,
-    'application/x-www-form-urlencoded')
+    ['H — raw: flat with Bearer auth (V1)', 'https://api.moolre.com/v1/sms/send',
+      `{"senderid":"${senderid}","type":1,"recipient":"0202388411","message":"Campus Plug OTP test"}`],
+  ]
 
-  const results = await Promise.all([a, b, c, d, e, f, g, h])
+  const results = await Promise.all(
+    rawBodies.map(([label, endpoint, body]) =>
+      testRaw(label, endpoint, body, 'application/json')
+    )
+  )
 
   const summary = results.map((r) => {
     let p: Record<string, unknown> = {}
@@ -93,15 +81,16 @@ export async function GET() {
       success: isSuccess(p),
       moolreMessage: p.message,
       moolreData: p.data,
-      rawBody: r.raw.slice(0, 400),
+      rawBody: r.raw.slice(0, 500),
     }
   })
 
   const winner = summary.find((s) => s.success)
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
   summary.forEach((s) => {
-    console.log(`[SMS Test] ${s.success ? '✓ WINNER' : '✗'} ${s.label} — msg:${s.moolreMessage} data:${s.moolreData}`)
-    if (!s.success) console.log(`[SMS Test]   raw: ${s.rawBody}`)
+    console.log(`[SMS Test] ${s.success ? '✓ WINNER' : '✗'} ${s.label}`)
+    console.log(`[SMS Test]   msg: ${s.moolreMessage} | data: ${s.moolreData}`)
+    console.log(`[SMS Test]   raw: ${s.rawBody}`)
   })
   console.log(`[SMS Test] 🏆 ${winner ? winner.label : 'No winner'}`)
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
