@@ -6,7 +6,7 @@ Last updated: 2026-08-21
 
 - **Repo**: github.com/paulwantstolearncode/campus-plug (origin/main)
 - **Live**: campuspluggh.com
-- **Latest commit**: `a81a3cc` — "Add feedback system + restore project rules" (pushed to origin/main, deployed to production, build green)
+- **Latest commit**: pending — Phone + Password auth + WhatsApp seller numbers
 - **Working tree**: clean
 - **Local preview**: port 56816 via `nohup npm run dev -- -p 56816`
 
@@ -15,8 +15,9 @@ Last updated: 2026-08-21
 ### Phone Auth System — Moolre SMS OTP (be4c714 → cb0ab96)
 - **Moolre SMS proxy**: `app/api/sms/send-otp/route.ts` — Next.js webhook API at `/api/sms/send-otp` using `X-API-VASKEY` header (from `MOOLRE_SECRET_KEY`) and confirmed body shape: `{ senderid, type: 1, messages: [{ recipient, message }] }`. Flat format `{ recipient }` at top level fails ASMS08 — only the `messages[]` array with `recipient` inside each item succeeds (SMS01). Phone formatted to Ghana local `0XXXXXXXXX`.
 - **Hardened profiles trigger**: `supabase/harden_profiles_trigger_for_phone.sql` — adds `phone` column to profiles, gracefully handles phone-only users (null email/metadata), copies `auth.users.phone` → `profiles.phone`, sets `full_name` to `Student_[last4]` fallback. Idempotent (DROP + CREATE).
-- **Phone tab UI on /login**: Email/Phone toggle in both Sign In and Sign Up modes. Name input field binds to Supabase auth metadata (`full_name`, `name`). 60-second resend countdown. `shouldCreateUser: true` for seamless registration. Back-button loop fixed with `router.replace()` + session check on mount.
+- **Phone tab UI on /login**: Email/Phone toggle in both Sign In and Sign Up modes. Phone Auth upgraded to Phone + Password: sign-up flow collects Name + Phone + Password via `signUp({phone, password})` → OTP verify; sign-in flow uses `signInWithPassword({phone, password})` for **0 SMS cost on returning logins**. Fallback "Forgot password? Log in with 1-time SMS code" link toggles OTP flow. Name input binds to Supabase auth metadata (`full_name`). Back-button loop fixed with `router.replace()` + session check on mount.
 - **Login page phone format**: `formatPhoneForSupabase()` returns `+233XXXXXXXXX` (E.164) for Supabase Auth. SMS proxy formats to `0XXXXXXXXX` (Ghana local) for Moolre.
+- **WhatsApp seller numbers**: `/become-seller` page has editable "WhatsApp Number for Buyers" field with helper text "Buyers will message this number on WhatsApp to book your services" — pre-filled from profile, saved to `profiles.whatsapp_number`.
 - **Required Vercel env vars**: `MOOLRE_SECRET_KEY` (VASKEY), `MOOLRE_ACCOUNT_NO`, `MOOLRE_SENDER_ID`, `SUPABASE_SMS_WEBHOOK_SECRET`.
 - **Supabase config**: Enable Phone provider in Auth → Providers → Phone. Set SMS webhook URL to `https://campuspluggh.com/api/sms/send-otp`.
 
