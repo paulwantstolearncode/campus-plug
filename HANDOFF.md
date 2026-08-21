@@ -1,6 +1,6 @@
 # Handoff — Campus Plug
 
-Last updated: 2026-08-19
+Last updated: 2026-08-21
 
 ## Current state
 
@@ -11,6 +11,14 @@ Last updated: 2026-08-19
 - **Local preview**: port 56816 via `nohup npm run dev -- -p 56816`
 
 ## Recently shipped
+
+### Phone Auth System — Moolre SMS OTP (be4c714 → cb0ab96)
+- **Moolre SMS proxy**: `app/api/sms/send-otp/route.ts` — Next.js webhook API at `/api/sms/send-otp` using `X-API-VASKEY` header (from `MOOLRE_SECRET_KEY`) and confirmed body shape: `{ senderid, type: 1, messages: [{ recipient, message }] }`. Flat format `{ recipient }` at top level fails ASMS08 — only the `messages[]` array with `recipient` inside each item succeeds (SMS01). Phone formatted to Ghana local `0XXXXXXXXX`.
+- **Hardened profiles trigger**: `supabase/harden_profiles_trigger_for_phone.sql` — adds `phone` column to profiles, gracefully handles phone-only users (null email/metadata), copies `auth.users.phone` → `profiles.phone`, sets `full_name` to `Student_[last4]` fallback. Idempotent (DROP + CREATE).
+- **Phone tab UI on /login**: Email/Phone toggle in both Sign In and Sign Up modes. Name input field binds to Supabase auth metadata (`full_name`, `name`). 60-second resend countdown. `shouldCreateUser: true` for seamless registration. Back-button loop fixed with `router.replace()` + session check on mount.
+- **Login page phone format**: `formatPhoneForSupabase()` returns `+233XXXXXXXXX` (E.164) for Supabase Auth. SMS proxy formats to `0XXXXXXXXX` (Ghana local) for Moolre.
+- **Required Vercel env vars**: `MOOLRE_SECRET_KEY` (VASKEY), `MOOLRE_ACCOUNT_NO`, `MOOLRE_SENDER_ID`, `SUPABASE_SMS_WEBHOOK_SECRET`.
+- **Supabase config**: Enable Phone provider in Auth → Providers → Phone. Set SMS webhook URL to `https://campuspluggh.com/api/sms/send-otp`.
 
 ### Feedback system (a81a3cc)
 - `supabase/add_feedback.sql` — feedback table + RLS (public INSERT for anon+authenticated; admin-only SELECT/UPDATE/DELETE via `public.is_admin()`). Migration ran successfully in production; 4 policies verified; anonymous insert smoke test passed.
