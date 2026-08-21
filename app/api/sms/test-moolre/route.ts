@@ -2,33 +2,26 @@ import { NextResponse } from 'next/server'
 
 /**
  * GET /api/sms/test-moolre
- * Temporary — raw body string test + V1 endpoint retry.
+ * Temporary — final desperate sweep before contacting Moolre support.
  * DELETE after confirming production flow works.
  */
 
-const VASKEY_ENDPOINT = 'https://api.moolre.com/open/sms/send'
+const Endpoint = 'https://api.moolre.com/open/sms/send'
 
-async function testRaw(
+async function testMoolre(
   label: string,
-  endpoint: string,
-  bodyStr: string,
-  contentType: string
-): Promise<{
-  label: string
-  httpStatus: number
-  raw: string
-}> {
+  body: Record<string, unknown>
+): Promise<{ label: string; raw: string }> {
   const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
   try {
-    const res = await fetch(endpoint, {
+    const res = await fetch(Endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': contentType, 'X-API-VASKEY': vaskey },
-      body: bodyStr,
+      headers: { 'Content-Type': 'application/json', 'X-API-VASKEY': vaskey },
+      body: JSON.stringify(body),
     })
-    const text = await res.text()
-    return { label, httpStatus: res.status, raw: text }
+    return { label, raw: await res.text() }
   } catch (err) {
-    return { label, httpStatus: 0, raw: `Network error: ${err}` }
+    return { label, raw: `Error: ${err}` }
   }
 }
 
@@ -39,39 +32,65 @@ function isSuccess(p: Record<string, unknown>): boolean {
 export async function GET() {
   const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
   const senderid = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
+  const message = 'Campus Plug OTP test'
 
-  // Raw JSON strings — bypass any serialization
-  const rawBodies = [
-    ['A — raw string: number in messages[]', VASKEY_ENDPOINT,
-      `{"senderid":"${senderid}","type":1,"messages":[{"number":"0202388411","message":"Campus Plug OTP test"}]}`],
+  // A: "message" (singular) array instead of "messages" (plural)
+  const a = testMoolre('A — message[] (singular) array', {
+    senderid, type: 1,
+    message: [{ number: '0202388411', message }],
+  })
 
-    ['B — raw string: mobile in messages[]', VASKEY_ENDPOINT,
-      `{"senderid":"${senderid}","type":1,"messages":[{"mobile":"0202388411","message":"Campus Plug OTP test"}]}`],
+  // B: "message" (singular) with just one message object (not array)
+  const b = testMoolre('B — message: {} object (not array)', {
+    senderid, type: 1,
+    message: { number: '0202388411', message },
+  })
 
-    ['C — raw string: phone in messages[]', VASKEY_ENDPOINT,
-      `{"senderid":"${senderid}","type":1,"messages":[{"phone":"0202388411","message":"Campus Plug OTP test"}]}`],
+  // C: "sms" wrapper with "messages" inside
+  const c = testMoolre('C — sms.messages[]', {
+    senderid, type: 1,
+    sms: {
+      messages: [{ number: '0202388411', message }],
+    },
+  })
 
-    ['D — raw string: flat recipient+message', VASKEY_ENDPOINT,
-      `{"senderid":"${senderid}","type":1,"recipient":"0202388411","message":"Campus Plug OTP test"}`],
+  // D: "body" wrapper
+  const d = testMoolre('D — body.messages[]', {
+    senderid, type: 1,
+    body: {
+      messages: [{ number: '0202388411', message }],
+    },
+  })
 
-    ['E — raw: messages[] number+message (V1)', 'https://api.moolre.com/v1/sms/send',
-      `{"senderid":"${senderid}","type":1,"messages":[{"number":"0202388411","message":"Campus Plug OTP test"}]}`],
+  // E: completely flat with "msg" instead of "message"
+  const e = testMoolre('E — flat: recipient + msg (not message)', {
+    senderid, type: 1,
+    recipient: '0202388411',
+    msg: message,
+  })
 
-    ['F — raw: flat recipient (V1)', 'https://api.moolre.com/v1/sms/send',
-      `{"senderid":"${senderid}","type":1,"recipient":"0202388411","message":"Campus Plug OTP test"}`],
+  // F: flat with "text" instead of "message"
+  const f = testMoolre('F — flat: recipient + text', {
+    senderid, type: 1,
+    recipient: '0202388411',
+    text: message,
+  })
 
-    ['G — raw: to flat (V1)', 'https://api.moolre.com/v1/sms/send',
-      `{"senderid":"${senderid}","type":1,"to":"0202388411","message":"Campus Plug OTP test"}`],
+  // G: flat with "content"
+  const g = testMoolre('G — flat: recipient + content', {
+    senderid, type: 1,
+    recipient: '0202388411',
+    content: message,
+  })
 
-    ['H — raw: flat with Bearer auth (V1)', 'https://api.moolre.com/v1/sms/send',
-      `{"senderid":"${senderid}","type":1,"recipient":"0202388411","message":"Campus Plug OTP test"}`],
-  ]
+  // H: flat with "sms" as the message content key
+  const h = testMoolre('H — flat: recipient + sms', {
+    senderid, type: 1,
+    recipient: '0202388411',
+    sms: message,
+  })
 
-  const results = await Promise.all(
-    rawBodies.map(([label, endpoint, body]) =>
-      testRaw(label, endpoint, body, 'application/json')
-    )
-  )
+  const results = await Promise.all([a, b, c, d, e, f, g, h])
 
   const summary = results.map((r) => {
     let p: Record<string, unknown> = {}
@@ -79,21 +98,20 @@ export async function GET() {
     return {
       label: r.label,
       success: isSuccess(p),
-      moolreMessage: p.message,
-      moolreData: p.data,
-      rawBody: r.raw.slice(0, 500),
+      code: p.code,
+      message: p.message,
+      data: p.data,
+      raw: r.raw.slice(0, 400),
     }
   })
 
   const winner = summary.find((s) => s.success)
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
   summary.forEach((s) => {
-    console.log(`[SMS Test] ${s.success ? '✓ WINNER' : '✗'} ${s.label}`)
-    console.log(`[SMS Test]   msg: ${s.moolreMessage} | data: ${s.moolreData}`)
-    console.log(`[SMS Test]   raw: ${s.rawBody}`)
+    console.log(`[SMS Test] ${s.success ? '✓ WINNER' : '✗'} ${s.label} — code:${s.code} msg:${s.message} data:${s.data}`)
   })
   console.log(`[SMS Test] 🏆 ${winner ? winner.label : 'No winner'}`)
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
 
-  return NextResponse.json({ config: { hasVaskey: !!vaskey, senderid }, winner: winner?.label || null, results: summary })
+  return NextResponse.json({ winner: winner?.label || null, results: summary })
 }
