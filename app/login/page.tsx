@@ -50,9 +50,11 @@ function LoginForm() {
   // Phone auth state
   const [phoneName, setPhoneName] = useState('')
   const [phoneNumber, setPhoneNumber] = useState('')
+  const [phonePassword, setPhonePassword] = useState('')
   const [phoneError, setPhoneError] = useState<string | null>(null)
   const [phoneTouched, setPhoneTouched] = useState(false)
   const phoneRef = useRef<HTMLInputElement>(null)
+  const phonePasswordRef = useRef<HTMLInputElement>(null)
   const [otpCode, setOtpCode] = useState('')
   const [otpSent, setOtpSent] = useState(false)
   const [otpError, setOtpError] = useState<string | null>(null)
@@ -60,6 +62,8 @@ function LoginForm() {
   const otpRef = useRef<HTMLInputElement>(null)
   const [countdown, setCountdown] = useState(0)
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  // Fallback: "Forgot password? Log in with SMS" — switches to OTP-only flow
+  const [useOtpFallback, setUseOtpFallback] = useState(false)
 
   useEffect(() => {
     const nextParam = searchParams.get('next')
@@ -110,6 +114,8 @@ function LoginForm() {
   const showPhoneError = phoneTouched && phoneError !== null
   const showOtpError = otpTouched && otpError !== null
 
+  // ── Email sign-in ──────────────────────────────────────────────────────
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const emailValidation = validateEmail(email)
@@ -130,6 +136,62 @@ function LoginForm() {
     }
     setLoading(false)
   }
+
+  // ── Phone + Password sign-up ───────────────────────────────────────────
+
+  const handlePhoneSignUp = async () => {
+    const phoneValidation = validatePhone(phoneNumber)
+    const pwValidation = validatePassword(phonePassword)
+    setPhoneTouched(true); setPhoneError(phoneValidation || pwValidation)
+    if (phoneValidation) { phoneRef.current?.focus(); return }
+    if (pwValidation) { phonePasswordRef.current?.focus(); return }
+    setLoading(true); setOtpError(null)
+
+    const { error } = await supabase.auth.signUp({
+      phone: formatPhoneForSupabase(phoneNumber),
+      password: phonePassword,
+      options: {
+        data: {
+          full_name: phoneName.trim() || undefined,
+          name: phoneName.trim() || undefined,
+        },
+      },
+    })
+
+    if (error) { setPhoneError(error.message); setLoading(false); return }
+    setOtpSent(true); setLoading(false); setOtpCode(''); setOtpTouched(false)
+    startCountdown()
+    setTimeout(() => otpRef.current?.focus(), 100)
+  }
+
+  // ── Phone + Password sign-in (0 SMS cost!) ────────────────────────────
+
+  const handlePhoneSignIn = async () => {
+    const phoneValidation = validatePhone(phoneNumber)
+    const pwValidation = validatePassword(phonePassword)
+    setPhoneTouched(true); setPhoneError(phoneValidation || pwValidation)
+    if (phoneValidation) { phoneRef.current?.focus(); return }
+    if (pwValidation) { phonePasswordRef.current?.focus(); return }
+    setLoading(true); setOtpError(null)
+
+    const { error } = await supabase.auth.signInWithPassword({
+      phone: formatPhoneForSupabase(phoneNumber),
+      password: phonePassword,
+    })
+
+    if (error) {
+      // If the error suggests the user doesn't exist, hint at sign-up
+      const msg = error.message || 'Login failed'
+      setPhoneError(msg)
+      setLoading(false)
+      return
+    }
+
+    const next = new URLSearchParams(window.location.search).get('next')
+    router.replace(next && next.startsWith('/') && !next.startsWith('//') ? next : '/services')
+  }
+
+  // ── OTP fallback (forgot password / one-time SMS) ──────────────────────
 
   const handleSendOtp = async () => {
     const phoneValidation = validatePhone(phoneNumber)
@@ -192,12 +254,45 @@ function LoginForm() {
     submitAttempted.current = false
     setOtpSent(false); setOtpCode(''); setOtpError(null); setOtpTouched(false)
     setPhoneError(null); setPhoneTouched(false)
+    setUseOtpFallback(false); setPhonePassword('')
   }
 
   const switchToPhone = () => {
     if (!PHONE_AUTH_ENABLED) return
     setAuthMethod('phone')
     setOtpSent(false); setOtpCode(''); setOtpError(null); setPhoneError(null); setPhoneTouched(false)
+    setUseOtpFallback(false); setPhonePassword('')
+  }
+
+  // ── Phone tab submit handler (dispatches to sign-up, sign-in, or OTP) ──
+
+  const handlePhoneSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (otpSent) {
+      handleVerifyOtp(e)
+    } else if (useOtpFallback) {
+      handleSendOtp()
+    } else if (isSignUp) {
+      handlePhoneSignUp()
+    } else {
+      handlePhoneSignIn()
+    }
+  }
+
+  // ── Render phone tab heading ───────────────────────────────────────────
+
+  const phoneHeading = () => {
+    if (otpSent) return 'Verify your phone'
+    if (useOtpFallback) return 'SMS login'
+    if (isSignUp) return 'Create account'
+    return 'Welcome back'
+  }
+
+  const phoneSubheading = () => {
+    if (otpSent) return `Code sent to ${formatPhoneDisplay(formatPhoneForSupabase(phoneNumber))}`
+    if (useOtpFallback) return "We'll text you a 6-digit code"
+    if (isSignUp) return 'Set a password and verify your phone'
+    return 'Log in with your phone and password'
   }
 
   return (
@@ -266,11 +361,11 @@ function LoginForm() {
 
             <div className="mb-8">
               <h2 className="text-3xl md:text-4xl font-bold text-charcoal mb-2">
-                {PHONE_AUTH_ENABLED && authMethod === 'phone' ? 'Welcome' : isSignUp ? 'Create account' : 'Welcome back'}
+                {PHONE_AUTH_ENABLED && authMethod === 'phone' ? phoneHeading() : isSignUp ? 'Create account' : 'Welcome back'}
               </h2>
               <p className="text-gray-500">
                 {PHONE_AUTH_ENABLED && authMethod === 'phone'
-                  ? 'Enter your phone number — we\u2019ll set you up if you\u2019re new'
+                  ? phoneSubheading()
                   : isSignUp ? 'Sign up with Google to get started' : 'Log in to continue to Campus Plug'}
               </p>
             </div>
@@ -330,15 +425,24 @@ function LoginForm() {
                   </form>
                 )}
 
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* PHONE TAB: Password auth + OTP fallback                      */}
+                {/* ═══════════════════════════════════════════════════════════ */}
+
                 {PHONE_AUTH_ENABLED && authMethod === 'phone' && !otpSent && (
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-charcoal mb-2">Your Name</label>
-                      <input type="text" placeholder="e.g., Kwame Adjei"
-                        className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 focus:border-gold text-charcoal placeholder:text-gray-400 focus:outline-none transition-colors"
-                        value={phoneName} onChange={(e) => setPhoneName(e.target.value)} />
-                      <p className="text-xs text-gray-400 mt-2">This will be your display name on Campus Plug.</p>
-                    </div>
+                  <form onSubmit={handlePhoneSubmit} noValidate className="space-y-4">
+                    {/* Name field — sign-up only */}
+                    {isSignUp && (
+                      <div>
+                        <label className="block text-sm font-semibold text-charcoal mb-2">Your Name</label>
+                        <input type="text" placeholder="e.g., Kwame Adjei"
+                          className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 focus:border-gold text-charcoal placeholder:text-gray-400 focus:outline-none transition-colors"
+                          value={phoneName} onChange={(e) => setPhoneName(e.target.value)} />
+                        <p className="text-xs text-gray-400 mt-2">This will be your display name on Campus Plug.</p>
+                      </div>
+                    )}
+
+                    {/* Phone number — always shown */}
                     <div>
                       <label className="block text-sm font-semibold text-charcoal mb-2">Phone number</label>
                       <div className="flex gap-2">
@@ -348,15 +452,55 @@ function LoginForm() {
                           value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)}
                           onBlur={handlePhoneBlur} onFocus={handlePhoneFocus} />
                       </div>
-                      {showPhoneError && phoneError && <p className="text-xs text-red-500 mt-2 flex items-center gap-1"><span>⚠️</span> {phoneError}</p>}
-                      <p className="text-xs text-gray-400 mt-2">Enter your Ghana mobile number. We&apos;ll send a 6-digit code.</p>
                     </div>
-                    <button type="button" onClick={handleSendOtp} disabled={loading}
+
+                    {/* Password field — only in password mode (not OTP fallback) */}
+                    {!useOtpFallback && (
+                      <div>
+                        <label className="block text-sm font-semibold text-charcoal mb-2">Password</label>
+                        <input ref={phonePasswordRef} type="password" placeholder="At least 6 characters"
+                          className={"w-full px-4 py-3.5 rounded-2xl border-2 text-charcoal placeholder:text-gray-400 focus:outline-none transition-colors " + (showPhoneError && phonePassword.length < 6 ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-gold")}
+                          value={phonePassword} onChange={(e) => setPhonePassword(e.target.value)} />
+                      </div>
+                    )}
+
+                    {/* Error display */}
+                    {showPhoneError && phoneError && (
+                      <p className="text-xs text-red-500 flex items-center gap-1"><span>⚠️</span> {phoneError}</p>
+                    )}
+
+                    {/* Submit button */}
+                    <button type="submit" disabled={loading}
                       className="w-full bg-charcoal text-white py-4 rounded-2xl font-semibold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-charcoal/20 flex items-center justify-center gap-2 group">
-                      {loading ? <span>Sending code...</span> : <><span>Send Code</span><span className="group-hover:translate-x-1 transition-transform">→</span></>}
+                      {loading ? (
+                        <span>{useOtpFallback ? 'Sending code...' : isSignUp ? 'Creating account...' : 'Logging in...'}</span>
+                      ) : (
+                        <><span>{useOtpFallback ? 'Send Code' : isSignUp ? 'Create Account' : 'Log In'}</span><span className="group-hover:translate-x-1 transition-transform">→</span></>
+                      )}
                     </button>
-                  </div>
+
+                    {/* OTP fallback link — sign-in only */}
+                    {!isSignUp && (
+                      <div className="text-center">
+                        {useOtpFallback ? (
+                          <button type="button" onClick={() => { setUseOtpFallback(false); setPhoneError(null) }}
+                            className="text-sm text-gray-500 hover:text-charcoal transition-colors">
+                            ← Back to password login
+                          </button>
+                        ) : (
+                          <button type="button" onClick={() => { setUseOtpFallback(true); setPhoneError(null); setPhonePassword('') }}
+                            className="text-sm text-gold hover:text-gold-dark font-semibold transition-colors">
+                            Forgot password? Log in with 1-time SMS code
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </form>
                 )}
+
+                {/* ═══════════════════════════════════════════════════════════ */}
+                {/* OTP VERIFICATION SCREEN (after signUp or OTP send)          */}
+                {/* ═══════════════════════════════════════════════════════════ */}
 
                 {PHONE_AUTH_ENABLED && authMethod === 'phone' && otpSent && (
                   <form onSubmit={handleVerifyOtp} noValidate className="space-y-4">

@@ -257,7 +257,7 @@ export default function BecomeSellerPage() {
 
                 <div>
                   <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
-                    WhatsApp Number
+                    WhatsApp Number for Buyers
                   </label>
                   <div className="relative">
                     <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-lg">🇬🇭</span>
@@ -272,7 +272,7 @@ export default function BecomeSellerPage() {
                   </div>
                   <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
                     <span>ℹ️</span>
-                    Ghana numbers only. This is how buyers will contact you.
+                    Buyers will message this number on WhatsApp to book your services.
                   </p>
                 </div>
 
