@@ -3,8 +3,8 @@ import { NextResponse } from 'next/server'
 /**
  * GET /api/sms/test-moolre
  *
- * Temporary diagnostic endpoint — tests body payload variations.
- * Body B shape is confirmed; now testing "messages" vs "message" field.
+ * Temporary diagnostic — testing messages[] with "number" field.
+ * Previous sweep revealed Moolre wants: messages[].number (not .phone).
  * DELETE after confirming production flow works.
  */
 
@@ -59,61 +59,57 @@ export async function GET() {
   const message = 'Campus Plug OTP body test'
 
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
-  console.log(`[SMS Test] Starting Moolre body sweep (messages field test)`)
+  console.log(`[SMS Test] Testing messages[] with "number" field`)
   console.log(`[SMS Test] VASKEY:`, vaskey.slice(0, 8) + '...')
   console.log(`[SMS Test] Sender:`, senderid)
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
 
-  // ── Test "messages" (plural) vs "message" ──────────────────────────────
-  const bodyA = testMoolre('A — senderid + messages[] + type:1', {
+  // ── messages[] with number field (local + intl) ────────────────────────
+  const bodyA = testMoolre('A — messages[{number,message}] + type:1 (local)', {
+    senderid,
+    messages: [{ number: '0202388411', message }],
+    type: 1,
+  })
+
+  const bodyB = testMoolre('B — messages[{number,message}] + type:1 (intl)', {
+    senderid,
+    messages: [{ number: '233202388411', message }],
+    type: 1,
+  })
+
+  const bodyC = testMoolre('C — messages[{number,text}] + type:1 (local)', {
+    senderid,
+    messages: [{ number: '0202388411', text: message }],
+    type: 1,
+  })
+
+  const bodyD = testMoolre('D — messages[{number,msg}] + type:1 (local)', {
+    senderid,
+    messages: [{ number: '0202388411', msg: message }],
+    type: 1,
+  })
+
+  const bodyE = testMoolre('E — messages[{number,message}] no type', {
+    senderid,
+    messages: [{ number: '0202388411', message }],
+  })
+
+  const bodyF = testMoolre('F — messages[{number,message}] type:text', {
+    senderid,
+    messages: [{ number: '0202388411', message }],
+    type: 'text',
+  })
+
+  const bodyG = testMoolre('G — messages[{number,message}] + account_no', {
+    senderid,
+    account_no: (process.env.MOOLRE_ACCOUNT_NO || '10991106074918').trim(),
+    messages: [{ number: '0202388411', message }],
+    type: 1,
+  })
+
+  const bodyH = testMoolre('H — messages[{phone,message}] + type:1 (local)', {
     senderid,
     messages: [{ phone: '0202388411', message }],
-    type: 1,
-  })
-
-  const bodyB = testMoolre('B — senderid + recipient + message + type:1', {
-    senderid,
-    recipient: '0202388411',
-    message,
-    type: 1,
-  })
-
-  const bodyC = testMoolre('C — senderid + messages (string) + type:1', {
-    senderid,
-    messages: message,
-    recipient: '0202388411',
-    type: 1,
-  })
-
-  const bodyD = testMoolre('D — senderid + message + type:1 (intl)', {
-    senderid,
-    recipient: '233202388411',
-    message,
-    type: 1,
-  })
-
-  const bodyE = testMoolre('E — senderid + messages[] + type:1 (intl)', {
-    senderid,
-    messages: [{ phone: '233202388411', message }],
-    type: 1,
-  })
-
-  const bodyF = testMoolre('F — senderid + messages[] no type', {
-    senderid,
-    messages: [{ phone: '0202388411', message }],
-  })
-
-  const bodyG = testMoolre('G — senderid + msg + type:1', {
-    senderid,
-    recipient: '0202388411',
-    msg: message,
-    type: 1,
-  })
-
-  const bodyH = testMoolre('H — senderid + text + type:1', {
-    senderid,
-    recipient: '0202388411',
-    text: message,
     type: 1,
   })
 
