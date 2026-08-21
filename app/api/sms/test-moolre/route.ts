@@ -3,9 +3,8 @@ import { NextResponse } from 'next/server'
 /**
  * GET /api/sms/test-moolre
  *
- * Temporary diagnostic endpoint — tests body payload variations
- * with confirmed X-API-VASKEY header and senderid (no underscore).
- * Body B (senderid + recipient + type:1) is the known winner.
+ * Temporary diagnostic endpoint — tests body payload variations.
+ * Body B shape is confirmed; now testing "messages" vs "message" field.
  * DELETE after confirming production flow works.
  */
 
@@ -60,86 +59,77 @@ export async function GET() {
   const message = 'Campus Plug OTP body test'
 
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
-  console.log(`[SMS Test] Starting Moolre body sweep`)
+  console.log(`[SMS Test] Starting Moolre body sweep (messages field test)`)
   console.log(`[SMS Test] VASKEY:`, vaskey.slice(0, 8) + '...')
   console.log(`[SMS Test] Sender:`, senderid)
-  console.log(`[SMS Test] Endpoint:`, Endpoint)
   console.log(`[SMS Test] ═══════════════════════════════════════════════`)
 
-  // ── Body B (WINNING SHAPE) first ──────────────────────────────────────
-  const bodyB = testMoolre('★ B — senderid + recipient + type:1 (WINNER)', {
+  // ── Test "messages" (plural) vs "message" ──────────────────────────────
+  const bodyA = testMoolre('A — senderid + messages[] + type:1', {
+    senderid,
+    messages: [{ phone: '0202388411', message }],
+    type: 1,
+  })
+
+  const bodyB = testMoolre('B — senderid + recipient + message + type:1', {
     senderid,
     recipient: '0202388411',
     message,
     type: 1,
   })
 
-  // ── Other variations ───────────────────────────────────────────────────
-  const bodyA = testMoolre('A — senderid + recipient + type:text', {
+  const bodyC = testMoolre('C — senderid + messages (string) + type:1', {
     senderid,
+    messages: message,
     recipient: '0202388411',
-    message,
-    type: 'text',
+    type: 1,
   })
 
-  const bodyC = testMoolre('C — senderid + recipients[] + type:text', {
-    senderid,
-    recipients: ['0202388411'],
-    message,
-    type: 'text',
-  })
-
-  const bodyD = testMoolre('D — senderid + to + type:text', {
-    senderid,
-    to: '0202388411',
-    message,
-    type: 'text',
-  })
-
-  const bodyE = testMoolre('E — senderid + intl 233phone + type:text', {
-    senderid,
-    recipient: '233202388411',
-    message,
-    type: 'text',
-  })
-
-  const bodyF = testMoolre('F — account_no + senderid + recipient + type:text', {
-    account_no: (process.env.MOOLRE_ACCOUNT_NO || '10991106074918').trim(),
-    senderid,
-    recipient: '0202388411',
-    message,
-    type: 'text',
-  })
-
-  const bodyG = testMoolre('G — senderid + recipient + type:1 (intl phone)', {
+  const bodyD = testMoolre('D — senderid + message + type:1 (intl)', {
     senderid,
     recipient: '233202388411',
     message,
     type: 1,
   })
 
-  const bodyH = testMoolre('H — senderid + recipient + msg + type:text', {
+  const bodyE = testMoolre('E — senderid + messages[] + type:1 (intl)', {
+    senderid,
+    messages: [{ phone: '233202388411', message }],
+    type: 1,
+  })
+
+  const bodyF = testMoolre('F — senderid + messages[] no type', {
+    senderid,
+    messages: [{ phone: '0202388411', message }],
+  })
+
+  const bodyG = testMoolre('G — senderid + msg + type:1', {
     senderid,
     recipient: '0202388411',
     msg: message,
-    type: 'text',
+    type: 1,
+  })
+
+  const bodyH = testMoolre('H — senderid + text + type:1', {
+    senderid,
+    recipient: '0202388411',
+    text: message,
+    type: 1,
   })
 
   // Run all 8 in parallel
-  const results = await Promise.all([bodyB, bodyA, bodyC, bodyD, bodyE, bodyF, bodyG, bodyH])
+  const results = await Promise.all([bodyA, bodyB, bodyC, bodyD, bodyE, bodyF, bodyG, bodyH])
 
   // Parse and summarize
   const summary = results.map((r) => {
     let parsed: Record<string, unknown> = {}
     try { parsed = JSON.parse(r.raw) } catch { /* non-JSON */ }
-    const mStatus = parsed.status
-    const mCode = parsed.code
     const ok = isSuccess(parsed)
     return {
       label: r.label,
       httpStatus: r.httpStatus,
-      moolreStatus: mStatus,
-      moolreCode: mCode,
+      moolreStatus: parsed.status,
+      moolreCode: parsed.code,
       moolreMessage: parsed.message,
       moolreData: parsed.data,
       success: ok,
