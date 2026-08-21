@@ -8,7 +8,10 @@ import { NextResponse } from 'next/server'
  *
  * Moolre API: POST https://api.moolre.com/open/sms/send
  * Auth: X-API-VASKEY header with MOOLRE_SECRET_KEY
- * Tries flat payload first; falls back to messages[] array on ASMS08.
+ * Body: { senderid, type: 1, messages: [{ recipient, message }] }
+ *
+ * CONFIRMED: flat format (recipient at top level) fails ASMS08.
+ * Array format with recipient inside messages[] succeeds (SMS01).
  */
 
 const MoolreEndpoint = 'https://api.moolre.com/open/sms/send'
@@ -21,29 +24,6 @@ function isMoolreSuccess(parsed: Record<string, unknown>): boolean {
     parsed.code === '200' ||
     parsed.success === true
   )
-}
-
-function needsArrayFallback(parsed: Record<string, unknown>): boolean {
-  const code = (parsed.code as string) || ''
-  const data = (parsed.data as string) || ''
-  return code === 'ASMS08' || data === 'messages'
-}
-
-async function sendMoolre(
-  vaskey: string,
-  body: Record<string, unknown>
-): Promise<{ success: boolean; parsed: Record<string, unknown>; raw: string }> {
-  const res = await fetch(MoolreEndpoint, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-API-VASKEY': vaskey },
-    body: JSON.stringify(body),
-  })
-
-  const text = await res.text()
-  let parsed: Record<string, unknown> = {}
-  try { parsed = JSON.parse(text) } catch { /* non-JSON */ }
-
-  return { success: isMoolreSuccess(parsed), parsed, raw: text }
 }
 
 export async function POST(request: Request) {
@@ -113,57 +93,49 @@ export async function POST(request: Request) {
   console.log('[SMS Proxy] VASKEY:', vaskey.slice(0, 5) + '...')
   console.log('[SMS Proxy] Sender:', senderId)
 
-  // ── 5. Payload 1 — Flat format ─────────────────────────────────────────
-  const flatPayload = {
+  // ── 5. Build Moolre payload — array format (CONFIRMED WORKING) ────────
+  const moolrePayload = {
     senderid: senderId,
     type: 1,
-    recipient: formattedPhone,
-    message: message,
+    messages: [
+      {
+        recipient: formattedPhone,
+        message: message,
+      },
+    ],
   }
 
-  console.log('[SMS Proxy] → Attempt 1 (flat):', JSON.stringify(flatPayload))
-  const result1 = await sendMoolre(vaskey, flatPayload)
-  console.log('[SMS Proxy] ← Response:', result1.raw)
+  console.log('[SMS Proxy] → Moolre:', MoolreEndpoint)
+  console.log('[SMS Proxy] → Payload:', JSON.stringify(moolrePayload))
 
-  if (result1.success) {
-    console.log('[SMS Proxy] ✓ SMS delivered (flat) to', formattedPhone)
+  // ── 6. Send to Moolre ──────────────────────────────────────────────────
+  let moolreRes: Response
+  try {
+    moolreRes = await fetch(MoolreEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-VASKEY': vaskey },
+      body: JSON.stringify(moolrePayload),
+    })
+  } catch (err) {
+    console.error('[SMS Proxy] ✗ Network error:', err)
+    return NextResponse.json({ error: 'SMS gateway unreachable' }, { status: 400 })
+  }
+
+  const moolreText = await moolreRes.text()
+  console.log('[SMS Proxy] ← HTTP', moolreRes.status, ':', moolreText)
+
+  // ── 7. Parse response ──────────────────────────────────────────────────
+  let moolreData: Record<string, unknown> = {}
+  try { moolreData = JSON.parse(moolreText) } catch { /* non-JSON */ }
+
+  if (isMoolreSuccess(moolreData)) {
+    console.log('[SMS Proxy] ✓ SMS delivered to', formattedPhone)
     console.log('[SMS Proxy] ═══════════════════════════════════════════════')
     return NextResponse.json({}, { status: 200 })
   }
 
-  // ── 6. Payload 2 — Array format (fallback for ASMS08 / messages error) ─
-  if (needsArrayFallback(result1.parsed)) {
-    console.log('[SMS Proxy] ↻ Flat rejected, trying array format')
-
-    const arrayPayload = {
-      senderid: senderId,
-      type: 1,
-      messages: [
-        {
-          recipient: formattedPhone,
-          message: message,
-        },
-      ],
-    }
-
-    console.log('[SMS Proxy] → Attempt 2 (array):', JSON.stringify(arrayPayload))
-    const result2 = await sendMoolre(vaskey, arrayPayload)
-    console.log('[SMS Proxy] ← Response:', result2.raw)
-
-    if (result2.success) {
-      console.log('[SMS Proxy] ✓ SMS delivered (array) to', formattedPhone)
-      console.log('[SMS Proxy] ═══════════════════════════════════════════════')
-      return NextResponse.json({}, { status: 200 })
-    }
-
-    const finalMsg = (result2.parsed.message as string) || 'Moolre send failed'
-    console.error('[SMS Proxy] ✗ Both payloads failed. Last error:', finalMsg)
-    console.log('[SMS Proxy] ═══════════════════════════════════════════════')
-    return NextResponse.json({ error: finalMsg }, { status: 400 })
-  }
-
-  // ── 7. Non-phone error (auth, account, etc.) — no retry ────────────────
-  const errorMsg = (result1.parsed.message as string) || 'Moolre send failed'
+  // ── 8. Error — return to Supabase ──────────────────────────────────────
+  const errorMsg = (moolreData.message as string) || moolreText || 'Moolre send failed'
   console.error('[SMS Proxy] ✗ Moolre error:', errorMsg)
   console.log('[SMS Proxy] ═══════════════════════════════════════════════')
   return NextResponse.json({ error: errorMsg }, { status: 400 })
