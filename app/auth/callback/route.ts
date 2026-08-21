@@ -47,7 +47,7 @@ export async function GET(request: Request) {
           ? next
           : '/'
 
-      const response = NextResponse.redirect(origin + target)
+      const response = NextResponse.redirect(`${origin}${target}`, 303)
       response.headers.set('X-Replace-Login', '1')
       return response
     }

@@ -241,11 +241,21 @@ function LoginForm() {
   }
 
   const handleGoogleSignIn = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
+    const next = new URLSearchParams(window.location.search).get('next')
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + '/auth/callback' },
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback${next ? `?next=${encodeURIComponent(next)}` : ''}`,
+        skipBrowserRedirect: true,
+      },
     })
-    if (error) alert('Google sign in failed: ' + (typeof error === 'string' ? error : error?.message || 'Unknown error'))
+    if (error) {
+      alert('Google sign in failed: ' + (typeof error === 'string' ? error : error?.message || 'Unknown error'))
+      return
+    }
+    if (data?.url) {
+      window.location.replace(data.url)
+    }
   }
 
   const toggleMode = () => {
