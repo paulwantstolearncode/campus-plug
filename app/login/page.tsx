@@ -4,23 +4,26 @@ import { supabase } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
+// Set to true when Moolre Sender ID "CampusPlug" is Approved in Moolre dashboard
+const PHONE_AUTH_ENABLED = true
+
 // ── Phone formatting helpers ──────────────────────────────────────────────
 
-/** Normalise any Ghana phone input to +233XXXXXXXXX for Supabase OTP. */
+/** Normalise any Ghana phone input to 233XXXXXXXXX for Supabase OTP. */
 function formatPhoneForSupabase(raw: string): string {
   const digits = raw.replace(/[^0-9]/g, '')
-  if (digits.startsWith('233') && digits.length === 12) return '+' + digits
-  if (digits.startsWith('0') && digits.length === 10) return '+233' + digits.slice(1)
-  if (digits.length === 9) return '+233' + digits
-  if (raw.startsWith('+')) return raw
-  return '+233' + digits
+  if (digits.startsWith('233') && digits.length === 12) return digits
+  if (digits.startsWith('0') && digits.length === 10) return '233' + digits.slice(1)
+  if (digits.length === 9) return '233' + digits
+  if (raw.startsWith('+')) return raw.replace('+', '')
+  return '233' + digits
 }
 
-/** Display-friendly format: +233 XXX XXX XXXX */
+/** Display-friendly format: 233 XXX XXX XXXX */
 function formatPhoneDisplay(e164: string): string {
   const digits = e164.replace(/[^0-9]/g, '')
   if (digits.length >= 12) {
-    return '+233 ' + digits.slice(3, 6) + ' ' + digits.slice(6, 9) + ' ' + digits.slice(9, 12)
+    return digits.slice(0, 3) + ' ' + digits.slice(3, 6) + ' ' + digits.slice(6, 9) + ' ' + digits.slice(9, 12)
   }
   return e164
 }
@@ -192,6 +195,7 @@ function LoginForm() {
   }
 
   const switchToPhone = () => {
+    if (!PHONE_AUTH_ENABLED) return
     setAuthMethod('phone')
     setOtpSent(false); setOtpCode(''); setOtpError(null); setPhoneError(null); setPhoneTouched(false)
   }
@@ -262,10 +266,10 @@ function LoginForm() {
 
             <div className="mb-8">
               <h2 className="text-3xl md:text-4xl font-bold text-charcoal mb-2">
-                {authMethod === 'phone' ? 'Welcome' : isSignUp ? 'Create account' : 'Welcome back'}
+                {PHONE_AUTH_ENABLED && authMethod === 'phone' ? 'Welcome' : isSignUp ? 'Create account' : 'Welcome back'}
               </h2>
               <p className="text-gray-500">
-                {authMethod === 'phone'
+                {PHONE_AUTH_ENABLED && authMethod === 'phone'
                   ? 'Enter your phone number — we\u2019ll set you up if you\u2019re new'
                   : isSignUp ? 'Sign up with Google to get started' : 'Log in to continue to Campus Plug'}
               </p>
@@ -282,20 +286,22 @@ function LoginForm() {
               {isSignUp ? 'Sign up with Google' : 'Continue with Google'}
             </button>
 
-                <div className="flex gap-2 mb-4">
+                <div className={'mb-4 ' + (PHONE_AUTH_ENABLED ? 'flex gap-2' : '')}>
                   <button type="button" onClick={() => setAuthMethod('google-email')}
-                    className={'flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ' + (authMethod === 'google-email' ? 'bg-charcoal text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}>
+                    className={(PHONE_AUTH_ENABLED ? 'flex-1' : 'w-full') + ' py-2.5 rounded-xl text-sm font-semibold transition-all ' + (authMethod === 'google-email' ? 'bg-charcoal text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}>
                     ✉️ Email
                   </button>
-                  <button type="button" onClick={switchToPhone}
-                    className={'flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ' + (authMethod === 'phone' ? 'bg-charcoal text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}>
-                    📱 Phone
-                  </button>
+                  {PHONE_AUTH_ENABLED && (
+                    <button type="button" onClick={switchToPhone}
+                      className={'flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ' + (authMethod === 'phone' ? 'bg-charcoal text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}>
+                      📱 Phone
+                    </button>
+                  )}
                 </div>
 
                 {authMethod === 'google-email' && isSignUp && (
                   <div className="text-center py-6 text-gray-500 text-sm">
-                    For email sign-up, use <button type="button" onClick={handleGoogleSignIn} className="text-gold font-semibold hover:text-gold-dark">Google</button> or switch to <button type="button" onClick={switchToPhone} className="text-gold font-semibold hover:text-gold-dark">Phone</button>.
+                    For email sign-up, use <button type="button" onClick={handleGoogleSignIn} className="text-gold font-semibold hover:text-gold-dark">Google</button>{PHONE_AUTH_ENABLED ? <> or switch to <button type="button" onClick={switchToPhone} className="text-gold font-semibold hover:text-gold-dark">Phone</button></> : null}.
                   </div>
                 )}
 
@@ -324,7 +330,7 @@ function LoginForm() {
                   </form>
                 )}
 
-                {authMethod === 'phone' && !otpSent && (
+                {PHONE_AUTH_ENABLED && authMethod === 'phone' && !otpSent && (
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-semibold text-charcoal mb-2">Your Name</label>
@@ -352,7 +358,7 @@ function LoginForm() {
                   </div>
                 )}
 
-                {authMethod === 'phone' && otpSent && (
+                {PHONE_AUTH_ENABLED && authMethod === 'phone' && otpSent && (
                   <form onSubmit={handleVerifyOtp} noValidate className="space-y-4">
                     <div className="p-3 rounded-2xl bg-gold/10 border border-gold/20 text-sm text-charcoal">
                       Code sent to <span className="font-semibold">{formatPhoneDisplay(formatPhoneForSupabase(phoneNumber))}</span>

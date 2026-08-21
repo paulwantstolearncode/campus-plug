@@ -56,16 +56,18 @@ export async function POST(request: Request) {
 
   console.log('[SMS Proxy] Extracted — phone:', rawPhone, '| otp:', otpCode || '(n/a)')
 
-  // ── 3. Format phone to Ghana local (0XXXXXXXXX) ────────────────────────
+  // ── 3. Format phone to international 233XXXXXXXXX ──────────────────────
   const digits = rawPhone.replace(/[^0-9]/g, '')
 
   let formattedPhone: string
   if (digits.startsWith('233') && digits.length === 12) {
-    formattedPhone = '0' + digits.slice(3)
-  } else if (digits.startsWith('0') && digits.length === 10) {
     formattedPhone = digits
+  } else if (digits.startsWith('0') && digits.length === 10) {
+    formattedPhone = '233' + digits.slice(1)
   } else if (digits.length === 9) {
-    formattedPhone = '0' + digits
+    formattedPhone = '233' + digits
+  } else if (rawPhone.startsWith('+')) {
+    formattedPhone = rawPhone.replace('+', '')
   } else {
     console.error('[SMS Proxy] ✗ Invalid phone format:', rawPhone, '| digits:', digits)
     return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 })
