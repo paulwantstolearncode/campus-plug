@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { createNotification } from './notifications'
 
 export interface Feedback {
   id: string
@@ -30,6 +31,29 @@ export async function submitFeedback(input: {
     message: input.message.trim(),
   })
   if (error) return { success: false, error: error.message }
+
+  // Notify admins about new feedback (fire-and-forget)
+  try {
+    const { data: admins } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('is_admin', true)
+
+    if (admins && admins.length > 0) {
+      const categoryLabel = input.category.charAt(0).toUpperCase() + input.category.slice(1)
+      for (const admin of admins) {
+        await createNotification({
+          userId: admin.id,
+          title: `New ${categoryLabel} Feedback`,
+          message: input.message.slice(0, 120) + (input.message.length > 120 ? '...' : ''),
+          link: '/admin/feedback',
+        })
+      }
+    }
+  } catch (err) {
+    console.error('Failed to notify admins of feedback:', err)
+  }
+
   return { success: true }
 }
 

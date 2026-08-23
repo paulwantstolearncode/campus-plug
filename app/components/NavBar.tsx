@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import NotificationBell from './NotificationBell'
 
 interface NavBarProps {
   /** 'dark' = charcoal bg (marketplace/services), 'light' = white bg (landing) */
@@ -141,6 +142,9 @@ export default function NavBar({ variant = 'dark' }: NavBarProps) {
                 </Link>
               )}
 
+              {/* Notification bell */}
+              <NotificationBell />
+
               {/* Avatar dropdown */}
               <div className="relative" ref={dropdownRef}>
                 <button
@@ -205,14 +209,17 @@ export default function NavBar({ variant = 'dark' }: NavBarProps) {
           )}
         </div>
 
-        {/* Mobile: Post button + hamburger */}
-        <div className="md:hidden flex items-center gap-3">
+        {/* Mobile: Post button + bell + hamburger */}
+        <div className="md:hidden flex items-center gap-2">
           {user ? (
-            isSeller ? (
-              <Link href="/new" className="bg-white text-charcoal px-4 py-2 rounded-full text-sm font-semibold">+ Post</Link>
-            ) : (
-              <Link href="/become-seller" className="shine-button text-charcoal px-4 py-2 rounded-full text-sm font-semibold">Sell</Link>
-            )
+            <>
+              {isSeller ? (
+                <Link href="/new" className="bg-white text-charcoal px-4 py-2 rounded-full text-sm font-semibold">+ Post</Link>
+              ) : (
+                <Link href="/become-seller" className="shine-button text-charcoal px-4 py-2 rounded-full text-sm font-semibold">Sell</Link>
+              )}
+              <NotificationBell />
+            </>
           ) : (
             <Link href="/login" className="bg-gold text-charcoal px-4 py-2 rounded-full text-sm font-semibold">Login</Link>
           )}

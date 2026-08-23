@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { broadcastNotification } from '@/lib/notifications'
 
 export interface PlugRequest {
   id: string
@@ -62,6 +63,28 @@ export async function createPlugRequest(request: {
     return { success: false, error: error.message }
   }
 
+  // Notify sellers in the same category (fire-and-forget)
+  try {
+    const { data: sellers } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('is_seller', true)
+      .neq('id', user.id)
+
+    if (sellers && sellers.length > 0) {
+      const sellerIds = sellers.map((s) => s.id)
+      await broadcastNotification(
+        sellerIds,
+        'New Wanted Board Request',
+        `Someone is looking for "${request.title.trim()}" on the Wanted Board${request.budget ? ` (GH₵ ${request.budget})` : ''}.`,
+        '/requests'
+      )
+    }
+  } catch (err) {
+    // Notification failure must never block request creation
+    console.error('Failed to send plug request notifications:', err)
+  }
+
   return { success: true }
 }
 
@@ -82,6 +105,19 @@ export async function closePlugRequest(id: string): Promise<{ success: boolean; 
   if (error) {
     console.error('Failed to close plug request:', error)
     return { success: false, error: error.message }
+  }
+
+  // Notify the requester that their request was fulfilled (fire-and-forget)
+  try {
+    const { createNotification } = await import('@/lib/notifications')
+    await createNotification({
+      userId: user.id,
+      title: 'Request Fulfilled',
+      message: 'Your Wanted Board request has been marked as fulfilled.',
+      link: '/requests',
+    })
+  } catch (err) {
+    console.error('Failed to send fulfillment notification:', err)
   }
 
   return { success: true }
