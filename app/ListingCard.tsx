@@ -200,16 +200,6 @@ export default function ListingCard({
             {priceLabel}
           </div>
 
-          {!preview && (
-            <button
-              onClick={handleFavoriteClick}
-              className="absolute bottom-3 right-3 bg-white/80 backdrop-blur-sm rounded-full p-2.5 shadow-md hover:scale-110 transition-transform duration-200 z-10"
-              aria-label={isFavorited ? 'Remove from favourites' : 'Add to favourites'}
-            >
-              <HeartIcon filled={isFavorited} />
-            </button>
-          )}
-
           {toast && (
             <div className="absolute top-14 right-3 bg-ink text-white px-4 py-3 rounded-xl shadow-xl z-20 flex items-center gap-3 animate-fade-in">
               <span className="text-sm">{toast.message}</span>
