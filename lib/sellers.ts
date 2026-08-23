@@ -33,8 +33,9 @@ export interface SellerWithListings extends SellerProfile {
 }
 
 /**
- * Fetch seller profile + all approved listings + rating by profile ID.
- * Server-side only (uses cookie-based Supabase client).
+ * Fetch seller profile + all approved listings + rating.
+ * Accepts the profile UUID (standard) or, as a fallback for legacy/shared
+ * links, a display-name slug. Server-side only (cookie-based Supabase client).
  */
 export async function getSellerWithListings(
   sellerId: string
@@ -54,13 +55,25 @@ export async function getSellerWithListings(
       }
     )
 
-    const { data: profile, error: profileError } = await supabase
+    const trimmedId = typeof sellerId === 'string' ? sellerId.trim() : ''
+    if (!trimmedId) return null
+
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    let profileQuery = supabase
       .from('profiles')
       .select('id, full_name, whatsapp_number, is_seller, campus_location')
-      .eq('id', sellerId)
-      .eq('is_seller', true)
-      .single()
+    profileQuery = UUID_RE.test(trimmedId)
+      ? profileQuery.eq('id', trimmedId)
+      : profileQuery.ilike('full_name', trimmedId)
 
+    // Rows created before the is_seller default existed can have NULL there;
+    // treat NULL like TRUE so valid sellers are not rejected. Only explicit
+    // is_seller = false stays hidden.
+    const { data: profileRows, error: profileError } = await profileQuery
+      .or('is_seller.eq.true,is_seller.is.null')
+      .limit(1)
+
+    const profile = profileRows?.[0] ?? null
     if (profileError || !profile) return null
 
     // Fetch approved listings
