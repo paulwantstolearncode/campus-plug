@@ -36,6 +36,19 @@ Last updated: 2026-08-23
 ### PageSpeed & Image Optimization
 - Converted 100% of raw `<img>` tags across 9 files to Next.js `<Image />` with `remotePatterns` configured for Supabase Storage, Google Avatars, and Unsplash. Implemented responsive `sizes`, `fill` containers, WebP auto-formatting, and `priority` loading for above-the-fold cards. Zero `<img>` tags remain in the codebase.
 
+### ⭐ Top-Rated Badges
+- Added gold "Top Rated" pill badge to ListingCards and a prominent "Top Rated Seller" badge with gold border in the seller proof section on the listing detail page. Badge eligibility is computed by the existing `seller_ratings` PostgreSQL view (`is_top_rated` = review count >= 10 AND average rating >= 4.8).
+
+### 📱 PWA & Add to Home Screen
+- Added `app/manifest.ts` web manifest (name: "Campus Plug — Student Marketplace at UG", standalone display, theme `#0f0f0f`, background `#f8f8f8`).
+- Added `app/components/PWAInstallPrompt.tsx` — catches `beforeinstallprompt` on Chrome/Android for a floating install banner, detects iOS Safari for a "Tap Share → Add to Home Screen" helper toast. Dismissal persisted in localStorage to avoid spam.
+- Integrated in `app/layout.tsx` alongside HelpButton and FeedbackButton.
+
+### 📊 Admin Sales Analytics Polish
+- Added status filter tabs (`All` / `Completed` / `Pending` / `Cancelled`) with live transaction counts to `/admin/sales`.
+- Added transaction status breakdown cards (green/amber/red) at the top of the metrics section.
+- CSV export now respects both time and status filters (filtered results, not all transactions).
+
 ### Feedback system (a81a3cc)
 - `supabase/add_feedback.sql` — feedback table + RLS (public INSERT for anon+authenticated; admin-only SELECT/UPDATE/DELETE via `public.is_admin()`). Migration ran successfully in production; 4 policies verified; anonymous insert smoke test passed.
 - `lib/feedback.ts` — Supabase client helper for inserting feedback.
