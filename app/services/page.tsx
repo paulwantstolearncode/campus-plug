@@ -1,13 +1,14 @@
 'use client'
 import { useEffect, useState } from 'react'
-import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { formatPriceRange } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
 import { getCategoriesByType, getCategoryDisplay } from '@/lib/categories'
+import { CAMPUS_LOCATIONS, ALL_LOCATIONS } from '@/lib/campusLocations'
 import StarRating from '@/app/StarRating'
 import { getSellerRatings, type SellerRating } from '@/lib/reviews'
+import NavBar from '@/app/components/NavBar'
 
 interface Service {
   id: string
@@ -27,39 +28,27 @@ interface Service {
   listing_images: { id: string }[] | null
 }
 
+/** Curated location chips for the filter bar. */
+const LOCATION_CHIPS = [
+  'All Locations',
+  ...CAMPUS_LOCATIONS.halls,
+  ...CAMPUS_LOCATIONS.hostels,
+  'Off-campus',
+  'I come to you',
+  'We meet on campus',
+  'Delivery available',
+]
+
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<User | null>(null)
-  const [isSeller, setIsSeller] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [categoryFilter, setCategoryFilter] = useState('')
+  const [locationFilter, setLocationFilter] = useState('')
   const [sellerRatings, setSellerRatings] = useState<Record<string, SellerRating>>({})
 
   useEffect(() => {
     async function loadEverything() {
       try {
-        const { data: { user } } = await supabase.auth.getUser()
-        setUser(user)
-
-        // Seller/admin flags are best-effort UI — a failed profile lookup
-        // must not hide the services feed.
-        if (user) {
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('is_seller, is_admin')
-            .eq('id', user.id)
-            .single()
-
-          if (profileError) {
-            console.error('Failed to load profile flags:', profileError)
-          }
-          setIsSeller(profile?.is_seller || false)
-          setIsAdmin(profile?.is_admin || false)
-        }
-
         const { data, error } = await supabase
           .from('listings')
           .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)')
@@ -68,19 +57,14 @@ export default function ServicesPage() {
           .order('created_at', { ascending: false })
 
         if (error) {
-          // See app/page.tsx — surfaces missing-table or RLS failures that
-          // previously emptied the feed silently.
           console.error('Failed to load services:', error)
         } else if (data) {
           const typed = data as unknown as Service[]
           setServices(typed)
-          // Seller star ratings + Top Rated badges (best-effort, additive).
           const ratings = await getSellerRatings(typed.map((s) => s.seller_id))
           setSellerRatings(ratings)
         }
       } catch (err) {
-        // A failed auth/network lookup must not strand the page on the
-        // loading screen forever.
         console.error('Failed to load services:', err)
       } finally {
         setLoading(false)
@@ -88,28 +72,19 @@ export default function ServicesPage() {
     }
 
     loadEverything()
-
-    const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut()
-    } catch (err) {
-      // Even if sign-out fails on the network, the local session is dropped
-      // by the reload below, so never leave the button appearing dead.
-      console.error('Logout failed:', err)
-    } finally {
-      setUser(null)
-      window.location.reload()
+  const filteredServices = services.filter((s) => {
+    if (categoryFilter && s.category !== categoryFilter) return false
+    if (locationFilter) {
+      if (locationFilter === 'Off-campus') {
+        if (!s.service_location?.startsWith('Off-campus')) return false
+      } else if (s.service_location !== locationFilter) {
+        return false
+      }
     }
-  }
-
-  const filteredServices = services.filter(
-    (s) => !categoryFilter || s.category === categoryFilter
-  )
+    return true
+  })
 
   if (loading) {
     return (
@@ -124,142 +99,7 @@ export default function ServicesPage() {
 
   return (
     <main className="min-h-screen bg-charcoal">
-      <nav className={"fixed top-0 w-full z-50 transition-all duration-300 " + (scrolled ? "bg-charcoal/80 backdrop-blur-xl border-b border-white/10" : "bg-transparent")}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4 sm:gap-8">
-            <Link href="/" className="flex items-center gap-2 group">
-              <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
-              <span className="text-lg sm:text-xl font-bold text-white tracking-tight">Campus Plug</span>
-            </Link>
-            <div className="hidden md:flex gap-6">
-              <Link href="/" className="text-sm font-medium text-white/60 hover:text-gold transition-colors">All</Link>
-              <Link href="/services" className="text-sm font-medium text-white border-b-2 border-gold pb-1">Services</Link>
-            </div>
-          </div>
-
-          <div className="hidden md:flex items-center gap-4">
-            {user ? (
-              <>
-                <span className="hidden lg:block text-sm text-white/60 max-w-[180px] truncate" title={user.email}>{user.email}</span>
-                {/* TODO: Extract nav into shared component */}
-                <Link href="/requests" className="text-sm font-medium text-white/60 hover:text-gold transition-colors">Wanted Board</Link>
-                <Link href="/favorites" className="text-sm font-medium text-white/60 hover:text-gold transition-colors">Favorites</Link>
-                {isAdmin && (
-                  <Link href="/admin" className="bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-xs font-semibold hover:bg-red-500/30 hover:text-red-300 transition-colors">🛡️ Admin</Link>
-                )}
-                {isSeller && (
-                  <span className="bg-gold/20 text-gold px-3 py-1 rounded-full text-xs font-semibold border border-gold/30">✓ Seller</span>
-                )}
-                {isSeller && (
-                  <Link href="/dashboard" className="bg-white/10 text-white px-3 py-1 rounded-full text-xs font-semibold border border-white/20 hover:bg-white/20 transition-colors">📊 Dashboard</Link>
-                )}
-                {isSeller ? (
-                  <Link href="/new" className="bg-white text-charcoal px-5 py-2 rounded-full text-sm font-semibold hover:bg-gold transition-all hover:scale-105">+ Post</Link>
-                ) : (
-                  <Link href="/become-seller" className="shine-button text-charcoal px-5 py-2 rounded-full text-sm font-semibold hover:scale-105 transition-transform">Sell</Link>
-                )}
-                <button onClick={handleLogout} className="text-sm text-white/50 hover:text-white transition-colors">Logout</button>
-              </>
-            ) : (
-              <Link href="/login" className="bg-gold text-charcoal px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-gold-dark transition-all hover:scale-105">Get Started</Link>
-            )}
-          </div>
-
-          <div className="md:hidden flex items-center gap-3">
-            {user ? (
-              isSeller ? (
-                <Link href="/new" className="bg-white text-charcoal px-4 py-2 rounded-full text-sm font-semibold">+ Post</Link>
-              ) : (
-                <Link href="/become-seller" className="shine-button text-charcoal px-4 py-2 rounded-full text-sm font-semibold">Sell</Link>
-              )
-            ) : (
-              <Link href="/login" className="bg-gold text-charcoal px-4 py-2 rounded-full text-sm font-semibold">Login</Link>
-            )}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="text-white p-2 -mr-2"
-              aria-label="Menu"
-            >
-              {mobileMenuOpen ? (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M18 6L6 18M6 6l12 12"/>
-                </svg>
-              ) : (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M3 12h18M3 6h18M3 18h18"/>
-                </svg>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-charcoal/95 backdrop-blur-xl border-t border-white/10 px-4 py-4">
-            <div className="flex flex-col gap-1">
-              {user && (
-                <div className="px-4 py-3 border-b border-white/10 mb-2">
-                  <p className="text-xs text-white/50 mb-1">Signed in as</p>
-                  <p className="text-sm text-white truncate">{user.email}</p>
-                  {isSeller && (
-                    <span className="inline-block mt-2 bg-gold/20 text-gold px-2 py-0.5 rounded-full text-xs font-semibold border border-gold/30">✓ Seller</span>
-                  )}
-                  {isAdmin && (
-                    <span className="inline-block mt-2 ml-1.5 bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full text-xs font-semibold border border-red-500/30">🛡️ Admin</span>
-                  )}
-                </div>
-              )}
-              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-                <span>✨</span> All Listings
-              </Link>
-              <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-                <span>💼</span> Services
-              </Link>
-              {user && (
-                <>
-                  <Link href="/requests" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-                    <span>📋</span> Wanted Board
-                  </Link>
-                  <Link href="/favorites" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-                    <span>❤️</span> Favorites
-                  </Link>
-                </>
-              )}
-              {isAdmin && (
-                <Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3">
-                  <span>🛡️</span> Admin Panel
-                </Link>
-              )}
-              {user && isSeller && (
-                <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-                  <span>📊</span> Dashboard
-                </Link>
-              )}
-              {user && isSeller && (
-                <Link href="/new" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-                  <span>➕</span> Post New Listing
-                </Link>
-              )}
-              {user && !isSeller && (
-                <Link href="/become-seller" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3">
-                  <span>💚</span> Become a Seller
-                </Link>
-              )}
-              {user ? (
-                <button
-                  onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
-                  className="px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3 text-left"
-                >
-                  <span>🚪</span> Logout
-                </button>
-              ) : (
-                <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-gold hover:bg-gold/10 rounded-xl transition-colors flex items-center gap-3">
-                  <span>🔑</span> Sign In
-                </Link>
-              )}
-            </div>
-          </div>
-        )}
-      </nav>
+      <NavBar />
 
       <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden animated-gradient">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -300,21 +140,9 @@ export default function ServicesPage() {
                 <div className="text-6xl mb-4">💼</div>
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">No services yet</h2>
                 <p className="text-white/60 mb-8 max-w-md mx-auto">Be the first to offer your skills to fellow students.</p>
-                {user ? (
-                  isSeller ? (
-                    <Link href="/new" className="inline-flex items-center gap-2 bg-white text-charcoal px-8 py-4 rounded-full font-semibold hover:bg-gold transition-all hover:scale-105 shadow-xl group">
-                      Post Your Service <span className="group-hover:translate-x-1 transition-transform">→</span>
-                    </Link>
-                  ) : (
-                    <Link href="/become-seller" className="inline-flex items-center gap-2 shine-button text-charcoal px-8 py-4 rounded-full font-semibold hover:scale-105 transition-transform shadow-xl">
-                      Start Selling <span>→</span>
-                    </Link>
-                  )
-                ) : (
-                  <Link href="/login" className="inline-flex items-center gap-2 bg-white text-charcoal px-8 py-4 rounded-full font-semibold hover:bg-gold transition-all hover:scale-105 shadow-xl group">
-                    Get Started <span className="group-hover:translate-x-1 transition-transform">→</span>
-                  </Link>
-                )}
+                <Link href="/login" className="inline-flex items-center gap-2 bg-white text-charcoal px-8 py-4 rounded-full font-semibold hover:bg-gold transition-all hover:scale-105 shadow-xl group">
+                  Get Started <span className="group-hover:translate-x-1 transition-transform">→</span>
+                </Link>
               </div>
             </div>
           ) : (
@@ -325,10 +153,8 @@ export default function ServicesPage() {
                   {filteredServices.length} service{filteredServices.length !== 1 ? 's' : ''}
                 </p>
 
-                {/* CATEGORY FILTER — service categories only, combines with the
-                    grid below. */}
                 <div className="mt-4 flex flex-wrap items-center gap-3">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Filter by category</span>
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Category</span>
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
@@ -344,12 +170,61 @@ export default function ServicesPage() {
                       onClick={() => setCategoryFilter('')}
                       className="text-xs font-semibold text-gray-500 hover:text-charcoal underline underline-offset-2 transition-colors"
                     >
-                      ✕ Clear category
+                      ✕ Clear
+                    </button>
+                  )}
+                </div>
+
+                <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest mr-1">Location</span>
+                  {LOCATION_CHIPS.map((loc) => {
+                    const isActive = locationFilter === loc || (loc === 'All Locations' && !locationFilter)
+                    return (
+                      <button
+                        key={loc}
+                        onClick={() => setLocationFilter(loc === 'All Locations' ? '' : loc)}
+                        className={
+                          'px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all border ' +
+                          (isActive
+                            ? 'bg-gold-soft text-charcoal font-bold border-gold'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-gold hover:text-charcoal')
+                        }
+                      >
+                        📍 {loc}
+                      </button>
+                    )
+                  })}
+                  {locationFilter && (
+                    <button
+                      onClick={() => setLocationFilter('')}
+                      className="text-xs font-semibold text-gray-500 hover:text-charcoal underline underline-offset-2 transition-colors ml-1"
+                    >
+                      ✕ Clear location
                     </button>
                   )}
                 </div>
               </div>
 
+              {filteredServices.length === 0 ? (
+                <div className="relative overflow-hidden bg-gradient-to-br from-off-white to-white rounded-3xl p-12 md:p-16 text-center border border-gray-200 shadow-sm">
+                  <div className="relative">
+                    <div className="text-6xl mb-4 opacity-60">🔍</div>
+                    <h2 className="text-2xl md:text-3xl font-bold text-charcoal mb-3">
+                      Nothing matching your search on campus yet
+                    </h2>
+                    <p className="text-gray-500 mb-8 max-w-lg mx-auto leading-relaxed">
+                      Can&apos;t find what you&apos;re looking for? Put it on the Wanted Board and verified student sellers will pitch you directly.
+                    </p>
+                    <Link
+                      href="/requests"
+                      className="inline-flex items-center gap-2 bg-gold text-charcoal px-8 py-4 rounded-full font-semibold hover:bg-gold-dark transition-all hover:scale-105 shadow-lg shadow-gold/25 group"
+                    >
+                      Put it on the Wanted Board
+                      <span className="group-hover:translate-x-1 transition-transform">→</span>
+                    </Link>
+                  </div>
+                </div>
+              ) : (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredServices.map((service, idx) => {
                   const cat = getCategoryDisplay(service.category)
@@ -420,6 +295,7 @@ export default function ServicesPage() {
                   )
                 })}
               </div>
+              )}
             </>
           )}
         </div>

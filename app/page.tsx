@@ -4,6 +4,7 @@ import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import LandingPage from './LandingPage'
+import NavBar from './components/NavBar'
 import { getCategoriesByType } from '@/lib/categories'
 import ListingCard, { type ListingCardData } from '@/app/ListingCard'
 import { getSellerRatings, type SellerRating } from '@/lib/reviews'
@@ -11,12 +12,9 @@ import { getSellerRatings, type SellerRating } from '@/lib/reviews'
 export default function Home() {
   const [listings, setListings] = useState<ListingCardData[]>([])
   const [isSeller, setIsSeller] = useState(false)
-  const [isAdmin, setIsAdmin] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
-  const [scrolled, setScrolled] = useState(false)
   const [filter, setFilter] = useState<'all' | 'product' | 'service' | 'mine'>('all')
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('')
   const [sellerRatings, setSellerRatings] = useState<Record<string, SellerRating>>({})
@@ -49,13 +47,13 @@ export default function Home() {
           setSellerRatings(ratings)
         }
 
-        // Seller/admin flags are best-effort UI only — independent of the
-        // listings fetch and failure-tolerant (worst case: no Sell/Admin
-        // buttons, the feed still renders).
+        // Seller flag is best-effort UI only — independent of the listings
+        // fetch and failure-tolerant (worst case: no Sell button, the feed
+        // still renders).
         if (user) {
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
-            .select('is_seller, is_admin')
+            .select('is_seller')
             .eq('id', user.id)
             .single()
 
@@ -63,7 +61,6 @@ export default function Home() {
             console.error('Failed to load profile flags:', profileError)
           }
           setIsSeller(profile?.is_seller || false)
-          setIsAdmin(profile?.is_admin || false)
         }
       } catch (err) {
         console.error('Failed to load:', err)
@@ -73,24 +70,7 @@ export default function Home() {
     }
 
     loadEverything()
-
-    const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut()
-    } catch (err) {
-      // Even if sign-out fails on the network, the local session is dropped
-      // by the reload below, so never leave the button appearing dead.
-      console.error('Logout failed:', err)
-    } finally {
-      setUser(null)
-      window.location.reload()
-    }
-  }
 
   const handleDelete = async (listingId: string, listingTitle: string) => {
     if (!confirm('Delete "' + listingTitle + '"?\n\nThis cannot be undone.')) return
@@ -173,82 +153,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-charcoal">
-      <nav className={"fixed top-0 w-full z-50 transition-all duration-300 " + (scrolled ? "bg-charcoal/80 backdrop-blur-xl border-b border-white/10" : "bg-transparent")}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4 sm:gap-8">
-            <Link href="/" className="flex items-center gap-2 group">
-              <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
-              <span className="text-lg sm:text-xl font-bold text-white tracking-tight">Campus Plug</span>
-            </Link>
-            <div className="hidden md:flex gap-6">
-              <Link href="/" className="text-sm font-medium text-white border-b-2 border-gold pb-1">All</Link>
-              <Link href="/services" className="text-sm font-medium text-white/60 hover:text-gold transition-colors">Services</Link>
-            </div>
-          </div>
-
-          <div className="hidden md:flex items-center gap-4">
-            <span className="hidden lg:block text-sm text-white/60 max-w-[180px] truncate" title={user.email}>{user.email}</span>
-            <Link href="/requests" className="text-sm font-medium text-white/60 hover:text-gold transition-colors">Wanted Board</Link>
-            <Link href="/favorites" className="text-sm font-medium text-white/60 hover:text-gold transition-colors">Favorites</Link>
-            {isAdmin && (
-              <Link href="/admin" className="bg-red-500/20 text-red-400 border border-red-500/30 px-3 py-1 rounded-full text-xs font-semibold hover:bg-red-500/30 hover:text-red-300 transition-colors">🛡️ Admin</Link>
-            )}
-            {isSeller && (
-              <span className="bg-gold/20 text-gold px-3 py-1 rounded-full text-xs font-semibold border border-gold/30">✓ Seller</span>
-            )}
-            {isSeller && (
-              <Link href="/dashboard" className="bg-white/10 text-white px-3 py-1 rounded-full text-xs font-semibold border border-white/20 hover:bg-white/20 transition-colors">📊 Dashboard</Link>
-            )}
-            {isSeller ? (
-              <Link href="/new" className="bg-white text-charcoal px-5 py-2 rounded-full text-sm font-semibold hover:bg-gold transition-all hover:scale-105">+ Post</Link>
-            ) : (
-              <Link href="/become-seller" className="shine-button text-charcoal px-5 py-2 rounded-full text-sm font-semibold hover:scale-105 transition-transform">Sell</Link>
-            )}
-            <button onClick={handleLogout} className="text-sm text-white/50 hover:text-white transition-colors">Logout</button>
-          </div>
-
-          <div className="md:hidden flex items-center gap-3">
-            {isSeller ? (
-              <Link href="/new" className="bg-white text-charcoal px-4 py-2 rounded-full text-sm font-semibold">+ Post</Link>
-            ) : (
-              <Link href="/become-seller" className="shine-button text-charcoal px-4 py-2 rounded-full text-sm font-semibold">Sell</Link>
-            )}
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-white p-2 -mr-2" aria-label="Menu">
-              {mobileMenuOpen ? (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              ) : (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-charcoal/95 backdrop-blur-xl border-t border-white/10 px-4 py-4">
-            <div className="flex flex-col gap-1">
-              <div className="px-4 py-3 border-b border-white/10 mb-2">
-                <p className="text-xs text-white/50 mb-1">Signed in as</p>
-                <p className="text-sm text-white truncate">{user.email}</p>
-                {isSeller && (
-                  <span className="inline-block mt-2 bg-gold/20 text-gold px-2 py-0.5 rounded-full text-xs font-semibold border border-gold/30">✓ Seller</span>
-                )}
-                {isAdmin && (
-                  <span className="inline-block mt-2 ml-1.5 bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full text-xs font-semibold border border-red-500/30">🛡️ Admin</span>
-                )}
-              </div>
-              <Link href="/" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>✨</span> All Listings</Link>
-              <Link href="/services" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>💼</span> Services</Link>
-              <Link href="/requests" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>📋</span> Wanted Board</Link>
-              <Link href="/favorites" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>❤️</span> Favorites</Link>
-              {isAdmin && (<Link href="/admin" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3"><span>🛡️</span> Admin Panel</Link>)}
-              {isSeller && (<Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>📊</span> Dashboard</Link>)}
-              {isSeller && (<Link href="/new" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>➕</span> Post New Listing</Link>)}
-              {!isSeller && (<Link href="/become-seller" onClick={() => setMobileMenuOpen(false)} className="px-4 py-3 text-white hover:bg-white/10 rounded-xl transition-colors flex items-center gap-3"><span>💚</span> Become a Seller</Link>)}
-              <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }} className="px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-colors flex items-center gap-3 text-left"><span>🚪</span> Logout</button>
-            </div>
-          </div>
-        )}
-      </nav>
+      <NavBar />
 
       <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden animated-gradient">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">

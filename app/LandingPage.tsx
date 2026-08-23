@@ -6,6 +6,7 @@ import ListingCard, { type ListingCardData } from '@/app/ListingCard'
 import { CATEGORIES } from '@/lib/categories'
 import FeedbackModal from '@/app/components/FeedbackModal'
 import type { User } from '@supabase/supabase-js'
+import NavBar from '@/app/components/NavBar'
 
 interface MarketplaceStats {
   sellerCount: number
@@ -16,7 +17,6 @@ export default function LandingPage() {
   const [liveListings, setLiveListings] = useState<ListingCardData[]>([])
   const [stats, setStats] = useState<MarketplaceStats | null>(null)
   const [categoryCounts, setCategoryCounts] = useState<Map<string, number>>(new Map())
-  const [scrolled, setScrolled] = useState(false)
   const [user, setUser] = useState<User | null>(null)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
 
@@ -160,10 +160,6 @@ export default function LandingPage() {
     loadLive()
     loadStats()
     loadCategoryCounts()
-
-    const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   // Categories with at least one live approved listing, in canonical order.
@@ -201,60 +197,7 @@ export default function LandingPage() {
 
   return (
     <main className="min-h-screen bg-white overflow-hidden">
-      {/* Navigation */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white/80 backdrop-blur-xl shadow-sm' : 'bg-transparent'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
-            <span className="text-lg sm:text-xl font-bold text-charcoal tracking-tight">
-              Campus Plug
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-2 sm:gap-4">
-            {user ? (
-              <>
-                {/* TODO: Extract nav into shared component */}
-                <Link
-                  href="/requests"
-                  className="text-sm font-medium text-charcoal hover:text-gold transition-colors px-3 py-2"
-                >
-                  Wanted Board
-                </Link>
-                <Link
-                  href="/favorites"
-                  className="text-sm font-medium text-charcoal hover:text-gold transition-colors px-3 py-2"
-                >
-                  Favorites
-                </Link>
-                <Link
-                  href="/login"
-                  className="text-sm font-medium text-charcoal hover:text-gold transition-colors px-3 py-2"
-                >
-                  Log in
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="text-sm font-medium text-charcoal hover:text-gold transition-colors px-3 py-2"
-                >
-                  Log in
-                </Link>
-                <Link
-                  href="/login"
-                  className="bg-charcoal text-white px-4 sm:px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-all hover:scale-105 shadow-lg shadow-charcoal/20"
-                >
-                  Get Started
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </nav>
+      <NavBar />
 
       {/* Hero Section with Animated Background */}
       <section className="relative min-h-[70vh] flex items-center pt-20 pb-16 md:pb-24">
