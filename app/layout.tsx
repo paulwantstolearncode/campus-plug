@@ -3,7 +3,7 @@ import "./globals.css";
 import HelpButton from "./HelpButton";
 import FeedbackButton from "./components/FeedbackButton";
 import { Analytics } from "@vercel/analytics/react";
-import { Playfair_Display, Manrope } from "next/font/google";
+import { Playfair_Display, Manrope, DM_Serif_Display, IBM_Plex_Mono } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
 
 // Editorial serif accent — used ONLY for italic gold keywords (hero
@@ -11,7 +11,22 @@ import { SITE_URL } from "@/lib/site";
 // font-display: swap (default) so a font swap never causes CLS.
 const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-manrope",
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const dmSerif = DM_Serif_Display({
+  subsets: ["latin"],
+  style: ["normal", "italic"],
+  weight: ["400"],
+  variable: "--font-serif",
+  display: "swap",
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-mono",
   display: "swap",
 });
 
@@ -62,7 +77,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${manrope.variable}`}>
+    <html lang="en" className={`${playfair.variable} ${manrope.variable} ${dmSerif.variable} ${ibmPlexMono.variable}`}>
       <body>
         {children}
         <HelpButton />

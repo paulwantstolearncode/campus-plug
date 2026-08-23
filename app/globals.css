@@ -1,6 +1,7 @@
 @import "tailwindcss";
 
 :root {
+  /* Legacy tokens — kept for backward compat with existing pages */
   --background: #ffffff;
   --foreground: #0a0a0a;
   --gold: #d4af37;
@@ -11,9 +12,23 @@
   --gradient-start: #1a1a2e;
   --gradient-mid: #16213e;
   --gradient-end: #0f0f0f;
+
+  /* Legon Noticeboard design tokens */
+  --color-paper: #F8F8F8;
+  --color-surface: #FFFFFF;
+  --color-ink: #0F0F0F;
+  --color-ink-muted: #5B5B5B;
+  --color-rule: #DCD9D2;
+  --color-gold-signal: #D4AF37;
+  --color-gold-soft: #F4EBC9;
+  --color-whatsapp: #128C4A;
 }
 
 @theme inline {
+  --font-sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-serif: var(--font-serif), "DM Serif Display", Georgia, serif;
+  --font-mono: var(--font-mono), "IBM Plex Mono", ui-monospace, monospace;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-gold: var(--gold);
@@ -21,6 +36,16 @@
   --color-gold-dark: var(--gold-dark);
   --color-charcoal: var(--charcoal);
   --color-off-white: var(--off-white);
+
+  /* Legon Noticeboard tokens as Tailwind colors */
+  --color-paper: var(--color-paper);
+  --color-surface: var(--color-surface);
+  --color-ink: var(--color-ink);
+  --color-ink-muted: var(--color-ink-muted);
+  --color-rule: var(--color-rule);
+  --color-gold-signal: var(--color-gold-signal);
+  --color-gold-soft: var(--color-gold-soft);
+  --color-whatsapp: var(--color-whatsapp);
 }
 
 * {
@@ -28,9 +53,9 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-manrope), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -153,14 +178,7 @@ html {
   animation: shine 3s linear infinite;
 }
 
-/* Pause continuous decorative animations on touch devices.
-   iOS Safari keeps GPU-composited layers for infinitely-animating
-   ancestors (animated-gradient shift, floating blobs, shine sweep),
-   and that layer churn can swallow taps on child inputs — the
-   homepage search bar is the victim here. Stopping the churn lets
-   taps reach the input again. Desktop (hover-capable) keeps the
-   full animated hero; touch devices get the static-but-identical
-   gradient, blob positions, and button finish. */
+/* Pause continuous decorative animations on touch devices. */
 @media (hover: none) and (pointer: coarse) {
   .animated-gradient,
   .blob,
