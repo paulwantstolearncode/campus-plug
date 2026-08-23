@@ -97,6 +97,12 @@ There were two Vercel projects both named "campus-plug". The broken duplicate (`
 - `npm run build` — clean
 - For SQL files: `node .sqlcheck/check.js <file>`
 
+## Project Strategy & Roadmap
+
+### Strategic Decisions
+
+- **Monetization Pause**: All payment/commission features (Paystack MoMo, paid featured listings, seller subscriptions) are on hold until Campus Plug reaches 100+ active users. Current priority is 100% focused on user growth, seller onboarding, and WhatsApp transaction volume at UG Legon.
+
 ## Next steps
 
 1. (Done) Nav extracted to shared `app/components/NavBar.tsx`.
