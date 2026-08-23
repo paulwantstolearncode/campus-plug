@@ -30,8 +30,8 @@ Last updated: 2026-08-23
 ### Instant Request Empty Search CTA
 - Empty search results on `/services` now direct students to post on `/requests` (Wanted Board) instead of showing a dead end.
 
-### Legacy Location Backfill Tool
-- Admin page at `/admin/locations` with smart keyword auto-suggestions (`suggestLocation` in `lib/campusLocations.ts`) and bulk auto-assign capability. Fetches approved listings where `campus_location IS NULL` or empty, shows gold suggestion badges when title/description matches campus location keywords, and offers per-row save or one-click bulk auto-assign. Added `📍 Location Backfill` link to `/admin` dashboard header.
+### Admin Poster Generator
+- Admin page at `/admin/posters` with 3 poster templates (General Student Poster, Wanted Board Flyer, Seller Recruitment), A4/A5/Mobile Story formats, custom QR code file uploader with auto-generated fallback, editable headline/subheading/location tag, Legon Noticeboard design canvas, and `@media print` CSS for instant campus flyer printing. Fetches approved listings where `campus_location IS NULL` or empty, shows gold suggestion badges when title/description matches campus location keywords, and offers per-row save or one-click bulk auto-assign. Added `📍 Location Backfill` link to `/admin` dashboard header.
 
 ### PageSpeed & Image Optimization
 - Converted 100% of raw `<img>` tags across 9 files to Next.js `<Image />` with `remotePatterns` configured for Supabase Storage, Google Avatars, and Unsplash. Implemented responsive `sizes`, `fill` containers, WebP auto-formatting, and `priority` loading for above-the-fold cards. Zero `<img>` tags remain in the codebase.
