@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatPriceRange } from '@/lib/format'
@@ -181,10 +182,13 @@ export default function ListingCard({
       <div className="relative bg-surface rounded-xl overflow-hidden shadow-sm border border-rule hover:shadow-md transition-shadow duration-300">
         <Link href={href} className="relative block aspect-[4/3] md:aspect-[4/3] sm:aspect-square overflow-hidden bg-paper">
           {listing.image_url ? (
-            <img
+            <Image
               src={listing.image_url}
               alt={listing.title}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              priority={index !== undefined && index < 6}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-paper">

@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
@@ -229,10 +230,12 @@ export default function BookServicePage() {
                   {/* Service Image */}
                   <div className="relative aspect-square overflow-hidden bg-gray-100">
                     {service.image_url ? (
-                      <img
+                      <Image
                         src={service.image_url}
                         alt={service.title}
-                        className="w-full h-full object-cover"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 40vw"
+                        className="object-cover"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-charcoal via-gray-800 to-charcoal">

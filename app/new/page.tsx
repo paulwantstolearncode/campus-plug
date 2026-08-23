@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { formatPrice } from '@/lib/format'
 import { getCategoriesByType } from '@/lib/categories'
 import { CAMPUS_LOCATIONS } from '@/lib/campusLocations'
@@ -565,7 +566,7 @@ function NewListingContent() {
                 <div className="grid grid-cols-3 gap-3 mb-3">
                   {images.map((img, idx) => (
                     <div key={idx} className="relative group aspect-square">
-                      <img src={img.url} alt={'Photo ' + (idx + 1)} className="w-full h-full object-cover rounded-2xl" />
+                      <Image src={img.url} alt={'Photo ' + (idx + 1)} width={200} height={200} className="w-full h-full object-cover rounded-2xl" />
                       {idx === 0 && (
                         <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-charcoal/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
                           ⭐ Cover

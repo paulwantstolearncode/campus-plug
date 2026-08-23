@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { formatPrice } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
 import { isWithinEditWindow, formatDateTime } from '@/lib/sales'
@@ -552,7 +553,7 @@ export default function DashboardPage() {
               {listings.map((listing) => (
                 <div key={listing.id} className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100">
                   {listing.image_url ? (
-                    <img src={listing.image_url} alt={listing.title} className="w-full h-40 object-cover" />
+                    <Image src={listing.image_url} alt={listing.title} width={400} height={160} className="w-full h-40 object-cover" />
                   ) : (
                     <div className="w-full h-40 bg-gradient-to-br from-charcoal to-gray-800 flex items-center justify-center">
                       <span className="text-4xl opacity-40">{listing.listing_type === 'service' ? '💼' : '📦'}</span>

@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatName } from '@/lib/formatName'
@@ -540,7 +541,7 @@ export default function AdminPage() {
                   return (
                     <div key={listing.id} className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100">
                       {listing.image_url ? (
-                        <img src={listing.image_url} alt={listing.title} className="w-full h-48 object-cover" />
+                        <Image src={listing.image_url} alt={listing.title} width={400} height={192} className="w-full h-48 object-cover" />
                       ) : (
                         <div className="w-full h-48 bg-gradient-to-br from-charcoal to-gray-800 flex items-center justify-center">
                           <span className="text-5xl opacity-40">{listing.listing_type === 'service' ? '💼' : '📦'}</span>
@@ -726,8 +727,7 @@ export default function AdminPage() {
                         {/* Current selection preview */}
                         {listing ? (
                           <div className="flex items-center gap-3 mb-3 rounded-2xl border border-gray-100 bg-gray-50 p-2.5">
-                            {listing.image_url && (
-                              <img src={listing.image_url} alt={listing.title} className="w-14 h-14 rounded-xl object-cover shrink-0" />
+                            {listing.image_url && (                               <Image src={listing.image_url} alt={listing.title} width={56} height={56} className="w-14 h-14 rounded-xl object-cover shrink-0" />
                             )}
                             <div className="min-w-0">
                               <p className="font-bold text-charcoal text-sm truncate">{listing.title}</p>

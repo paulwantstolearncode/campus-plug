@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
+import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
@@ -399,11 +400,14 @@ export default function ListingDetailPage() {
                     }}
                   >
                     {photos.length > 0 ? (
-                      <img
+                      <Image
                         key={active}
                         src={photos[active]}
                         alt={listing.title + ' photo ' + (active + 1)}
-                        className="w-full h-full object-cover fade-up"
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover fade-up"
+                        priority
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-charcoal via-gray-800 to-charcoal">
@@ -450,7 +454,7 @@ export default function ListingDetailPage() {
                           onClick={() => setActive(idx)}
                           className={"relative shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition-all " + (idx === active ? 'border-gold shadow-lg' : 'border-transparent opacity-70 hover:opacity-100')}
                         >
-                          <img src={src} alt={'Thumbnail ' + (idx + 1)} className="w-full h-full object-cover" />
+                          <Image src={src} alt={'Thumbnail ' + (idx + 1)} fill sizes="64px" className="object-cover" />
                         </button>
                       ))}
                     </div>

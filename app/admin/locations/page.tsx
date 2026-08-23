@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { formatName } from '@/lib/formatName'
@@ -255,7 +256,7 @@ export default function AdminLocationsPage() {
                       {/* Thumbnail */}
                       <div className="w-full md:w-24 h-24 rounded-2xl overflow-hidden bg-gray-100 shrink-0">
                         {listing.image_url ? (
-                          <img src={listing.image_url} alt={listing.title} className="w-full h-full object-cover" />
+                          <Image src={listing.image_url} alt={listing.title} width={96} height={96} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-off-white">
                             <span className="text-3xl opacity-40">{listing.listing_type === 'service' ? '💼' : '📦'}</span>
