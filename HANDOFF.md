@@ -33,6 +33,9 @@ Last updated: 2026-08-23
 ### Legacy Location Backfill Tool
 - Admin page at `/admin/locations` with smart keyword auto-suggestions (`suggestLocation` in `lib/campusLocations.ts`) and bulk auto-assign capability. Fetches approved listings where `campus_location IS NULL` or empty, shows gold suggestion badges when title/description matches campus location keywords, and offers per-row save or one-click bulk auto-assign. Added `📍 Location Backfill` link to `/admin` dashboard header.
 
+### PageSpeed & Image Optimization
+- Converted 100% of raw `<img>` tags across 9 files to Next.js `<Image />` with `remotePatterns` configured for Supabase Storage, Google Avatars, and Unsplash. Implemented responsive `sizes`, `fill` containers, WebP auto-formatting, and `priority` loading for above-the-fold cards. Zero `<img>` tags remain in the codebase.
+
 ### Feedback system (a81a3cc)
 - `supabase/add_feedback.sql` — feedback table + RLS (public INSERT for anon+authenticated; admin-only SELECT/UPDATE/DELETE via `public.is_admin()`). Migration ran successfully in production; 4 policies verified; anonymous insert smoke test passed.
 - `lib/feedback.ts` — Supabase client helper for inserting feedback.
