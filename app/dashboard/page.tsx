@@ -465,7 +465,7 @@ export default function DashboardPage() {
       <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="blob absolute top-10 -left-20 w-96 h-96 bg-gold/30 rounded-full blur-3xl"></div>
-          <div className="blob absolute top-20 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" style={{ animationDelay: '5s' }}></div>
+          <div className="blob absolute top-20 right-0 w-96 h-96 bg-ochre/20 rounded-full blur-3xl" style={{ animationDelay: '5s' }}></div>
         </div>
         <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px' }}></div>
 

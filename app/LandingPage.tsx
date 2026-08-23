@@ -201,6 +201,7 @@ export default function LandingPage() {
 
   return (
     <main className="min-h-screen bg-white overflow-hidden">
+      <div className="grain" aria-hidden="true" />
       {/* Navigation */}
       <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
         scrolled ? 'bg-white/80 backdrop-blur-xl shadow-sm' : 'bg-transparent'
@@ -251,12 +252,12 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section with Animated Background */}
-      <section className="relative min-h-[70vh] flex items-center pt-20 pb-16 md:pb-24">
+      <section className="relative min-h-[70vh] flex items-center pt-20 pb-16 md:pb-24 bg-off-white">
         {/* Animated gradient blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="blob absolute top-20 -left-20 w-72 h-72 bg-gold/20 rounded-full blur-3xl"></div>
-          <div className="blob absolute top-40 right-0 w-96 h-96 bg-purple-300/20 rounded-full blur-3xl" style={{animationDelay: '5s'}}></div>
-          <div className="blob absolute bottom-0 left-1/3 w-80 h-80 bg-blue-300/20 rounded-full blur-3xl" style={{animationDelay: '10s'}}></div>
+          <div className="blob absolute top-40 right-0 w-96 h-96 bg-ochre/20 rounded-full blur-3xl" style={{animationDelay: '5s'}}></div>
+          <div className="blob absolute bottom-0 left-1/3 w-80 h-80 bg-gold/15 rounded-full blur-3xl" style={{animationDelay: '10s'}}></div>
         </div>
 
         {/* Grid pattern overlay */}
@@ -283,7 +284,7 @@ export default function LandingPage() {
 
             {/* Trust badge — replaces the old "Now live at University of Ghana" pill */}
             <div className="fade-up inline-flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 px-5 py-2.5 rounded-full border border-charcoal/15 bg-white/70 backdrop-blur text-charcoal mb-8 shadow-lg max-w-[95vw]">
-              <svg width="14" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <svg width="14" height="16" viewBox="0 0 24 24" fill="none" stroke="#23734e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 <path d="M9 12l2 2 4-4" />
               </svg>
@@ -368,7 +369,7 @@ export default function LandingPage() {
           <div
             className="absolute inset-0 opacity-40"
             style={{
-              backgroundImage: 'radial-gradient(circle, #d4af37 1px, transparent 1px)',
+              backgroundImage: 'radial-gradient(circle, #23734e 1px, transparent 1px)',
               backgroundSize: '30px 30px'
             }}
           ></div>

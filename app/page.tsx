@@ -173,6 +173,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-charcoal">
+      <div className="grain" aria-hidden="true" />
       <nav className={"fixed top-0 w-full z-50 transition-all duration-300 " + (scrolled ? "bg-charcoal/80 backdrop-blur-xl border-b border-white/10" : "bg-transparent")}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-4 sm:gap-8">
@@ -251,8 +252,8 @@ export default function Home() {
       <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden animated-gradient">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="blob absolute top-10 -left-20 w-96 h-96 bg-gold/30 rounded-full blur-3xl"></div>
-          <div className="blob absolute top-40 right-0 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-3xl" style={{animationDelay: '5s'}}></div>
-          <div className="blob absolute bottom-0 left-1/3 w-80 h-80 bg-blue-500/20 rounded-full blur-3xl" style={{animationDelay: '10s'}}></div>
+          <div className="blob absolute top-40 right-0 w-[500px] h-[500px] bg-gold-light/20 rounded-full blur-3xl" style={{animationDelay: '5s'}}></div>
+          <div className="blob absolute bottom-0 left-1/3 w-80 h-80 bg-ochre/15 rounded-full blur-3xl" style={{animationDelay: '10s'}}></div>
         </div>
         <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px'}}></div>
 
@@ -308,7 +309,7 @@ export default function Home() {
       </section>
 
       <section className="relative pb-24 md:pb-32 bg-off-white">
-        <div className="absolute inset-0 opacity-40" style={{backgroundImage: 'radial-gradient(circle, #d4af37 1px, transparent 1px)', backgroundSize: '30px 30px'}}></div>
+        <div className="absolute inset-0 opacity-40" style={{backgroundImage: 'radial-gradient(circle, #23734e 1px, transparent 1px)', backgroundSize: '30px 30px'}}></div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8">
           {listings.length === 0 ? (

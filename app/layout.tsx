@@ -3,16 +3,16 @@ import "./globals.css";
 import HelpButton from "./HelpButton";
 import FeedbackButton from "./components/FeedbackButton";
 import { Analytics } from "@vercel/analytics/react";
-import { Playfair_Display } from "next/font/google";
+import { DM_Serif_Display } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
 
-// Editorial serif accent — used ONLY for italic gold keywords (hero
+// Editorial serif accent — used ONLY for italic green keywords (hero
 // "guesswork", section headers). Self-hosted via next/font with
 // font-display: swap (default) so a font swap never causes CLS.
-const playfair = Playfair_Display({
+const dmSerif = DM_Serif_Display({
   subsets: ["latin"],
   style: ["normal", "italic"],
-  weight: ["400", "700"],
+  weight: ["400"],
   variable: "--font-serif-accent",
   display: "swap",
 });
@@ -56,7 +56,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={playfair.variable}>
+    <html lang="en" className={dmSerif.variable}>
       <body>
         {children}
         <HelpButton />

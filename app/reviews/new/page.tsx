@@ -228,7 +228,7 @@ function NewReviewInner() {
       <section className="relative pt-28 pb-16 md:pt-36 overflow-hidden animated-gradient">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="blob absolute top-10 -left-20 w-96 h-96 bg-gold/30 rounded-full blur-3xl"></div>
-          <div className="blob absolute top-20 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" style={{ animationDelay: '5s' }}></div>
+          <div className="blob absolute top-20 right-0 w-96 h-96 bg-ochre/20 rounded-full blur-3xl" style={{ animationDelay: '5s' }}></div>
         </div>
         <div className="relative max-w-2xl mx-auto px-4 sm:px-6">
           <div className="text-4xl mb-3">⭐</div>
