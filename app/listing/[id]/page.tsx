@@ -331,7 +331,7 @@ export default function ListingDetailPage() {
       <section className="relative pt-28 pb-10 md:pt-36 md:pb-14 overflow-hidden animated-gradient">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="blob absolute top-10 -left-20 w-96 h-96 bg-gold/30 rounded-full blur-3xl"></div>
-          <div className="blob absolute top-20 right-0 w-96 h-96 bg-ochre/20 rounded-full blur-3xl" style={{ animationDelay: '5s' }}></div>
+          <div className="blob absolute top-20 right-0 w-96 h-96 bg-green-500/20 rounded-full blur-3xl" style={{ animationDelay: '5s' }}></div>
         </div>
 
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6">

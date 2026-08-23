@@ -311,8 +311,8 @@ function LoginForm() {
       <div className="hidden md:flex md:w-1/2 lg:w-3/5 relative overflow-hidden animated-gradient">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="blob absolute top-20 -left-20 w-96 h-96 bg-gold/30 rounded-full blur-3xl"></div>
-          <div className="blob absolute bottom-20 right-0 w-96 h-96 bg-ochre/20 rounded-full blur-3xl" style={{animationDelay: '5s'}}></div>
-          <div className="blob absolute top-1/2 left-1/3 w-72 h-72 bg-gold-light/15 rounded-full blur-3xl" style={{animationDelay: '10s'}}></div>
+          <div className="blob absolute bottom-20 right-0 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" style={{animationDelay: '5s'}}></div>
+          <div className="blob absolute top-1/2 left-1/3 w-72 h-72 bg-blue-500/20 rounded-full blur-3xl" style={{animationDelay: '10s'}}></div>
         </div>
         <div className="absolute inset-0 opacity-[0.05]" style={{backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px'}}></div>
         <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16 text-white w-full">

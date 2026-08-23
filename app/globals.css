@@ -1,26 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=DM+Serif+Display:ital@0;1&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #f8f6f1;
-  --foreground: #2c241f;
+  --background: #ffffff;
+  --foreground: #0a0a0a;
   --gold: #d4af37;
   --gold-light: #e8c66d;
   --gold-dark: #b8941f;
-  --charcoal: #2c241f;
-  --off-white: #f8f6f1;
-  --ochre: #f0c47b;
-  --ochre-light: #f5e4c7;
-  --border-warm: #e0d8ce;
-  --muted-warm: #756961;
-  --gradient-start: #1e4732;
-  --gradient-mid: #23734e;
-  --gradient-end: #1d6242;
+  --charcoal: #0f0f0f;
+  --off-white: #fafafa;
+  --gradient-start: #1a1a2e;
+  --gradient-mid: #16213e;
+  --gradient-end: #0f0f0f;
 }
 
 @theme inline {
-  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-serif: "DM Serif Display", Georgia, serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-gold: var(--gold);
@@ -28,8 +21,6 @@
   --color-gold-dark: var(--gold-dark);
   --color-charcoal: var(--charcoal);
   --color-off-white: var(--off-white);
-  --color-ochre: var(--ochre);
-  --color-ochre-light: var(--ochre-light);
 }
 
 * {
@@ -39,7 +30,7 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -50,14 +41,14 @@ html {
   overflow-x: hidden;
 }
 
-/* Animated gradient background — warm greens */
+/* Animated gradient background */
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
 
 .animated-gradient {
-  background: linear-gradient(-45deg, #1e4732, #23734e, #1d6242, #2a5f43);
+  background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f0f0f, #1a1a2e);
   background-size: 400% 400%;
   animation: gradient-shift 15s ease infinite;
 }
@@ -95,49 +86,22 @@ html {
 .fade-up-delay-4 { animation-delay: 0.4s; opacity: 0; }
 .fade-up-delay-5 { animation-delay: 0.5s; opacity: 0; }
 
-/* Staggered card entrance — editorial feel */
-@media (prefers-reduced-motion: no-preference) {
-  .listing-card {
-    animation: card-in 460ms cubic-bezier(0.23, 1, 0.32, 1) both;
-  }
-  .listing-card:nth-child(2) { animation-delay: 50ms; }
-  .listing-card:nth-child(3) { animation-delay: 100ms; }
-  .listing-card:nth-child(4) { animation-delay: 150ms; }
-  .listing-card:nth-child(5) { animation-delay: 200ms; }
-  .listing-card:nth-child(6) { animation-delay: 250ms; }
-}
-
-@keyframes card-in {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 /* Glassmorphism */
 .glass {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .glass-light {
-  background: rgba(255, 253, 249, 0.7);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(224, 216, 206, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Grain texture overlay — warm paper feel */
-.grain {
-  pointer-events: none;
-  position: fixed;
-  z-index: 50;
-  inset: 0;
-  opacity: 0.035;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-}
-
-/* Custom scrollbar — warm tones */
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
@@ -158,10 +122,10 @@ html {
   color: var(--charcoal);
 }
 
-/* Editorial serif accent — DM Serif Display via next/font (--font-serif-accent).
+/* Editorial serif accent — Playfair Display via next/font (--font-serif-accent).
    Applied ONLY to italic gold keywords: hero "guesswork" + section headers. */
 .font-serif-accent {
-  font-family: var(--font-serif-accent), "DM Serif Display", Georgia, serif;
+  font-family: var(--font-serif-accent), "Playfair Display", Georgia, serif;
 }
 
 /* Gradient text */
@@ -189,7 +153,14 @@ html {
   animation: shine 3s linear infinite;
 }
 
-/* Pause continuous decorative animations on touch devices. */
+/* Pause continuous decorative animations on touch devices.
+   iOS Safari keeps GPU-composited layers for infinitely-animating
+   ancestors (animated-gradient shift, floating blobs, shine sweep),
+   and that layer churn can swallow taps on child inputs — the
+   homepage search bar is the victim here. Stopping the churn lets
+   taps reach the input again. Desktop (hover-capable) keeps the
+   full animated hero; touch devices get the static-but-identical
+   gradient, blob positions, and button finish. */
 @media (hover: none) and (pointer: coarse) {
   .animated-gradient,
   .blob,
