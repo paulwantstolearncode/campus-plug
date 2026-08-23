@@ -88,6 +88,7 @@ export default function DashboardPage() {
   const [flagReason, setFlagReason] = useState('')
   const [submittingReply, setSubmittingReply] = useState(false)
   const [submittingFlag, setSubmittingFlag] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
   const router = useRouter()
 
   // ── Reviews system ──────────────────────────────────────────────────────
@@ -221,6 +222,8 @@ export default function DashboardPage() {
           router.push('/login')
           return
         }
+
+        setUserId(user.id)
 
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
@@ -534,6 +537,37 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+
+          {/* YOUR PUBLIC STOREFRONT */}
+          {userId && (
+            <div className="bg-gradient-to-r from-gold/10 to-gold/5 rounded-3xl p-6 border border-gold/30 mb-8">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-gold-dark uppercase tracking-widest mb-1">Your Public Storefront</p>
+                  <p className="text-sm text-charcoal font-mono">campuspluggh.com/shop/{userId}</p>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText('https://campuspluggh.com/shop/' + userId)
+                      alert('Link copied!')
+                    }}
+                    className="bg-charcoal text-white px-4 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-colors"
+                  >
+                    📋 Copy Link
+                  </button>
+                  <a
+                    href={`https://wa.me/?text=${encodeURIComponent(`Check out my student shop on Campus Plug: https://campuspluggh.com/shop/${userId}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="bg-whatsapp text-white px-4 py-2.5 rounded-full text-sm font-semibold hover:opacity-90 transition-opacity"
+                  >
+                    📢 Share on WhatsApp
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* MY LISTINGS */}
           <div className="flex items-center justify-between mb-4">

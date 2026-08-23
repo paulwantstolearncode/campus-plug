@@ -237,6 +237,16 @@ export default function ListingCard({
             </div>
           )}
 
+          {!preview && (
+            <Link
+              href={'/shop/' + listing.seller_id}
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-1 text-xs text-gold-dark hover:underline font-semibold mb-2"
+            >
+              🏪 View seller&apos;s shop
+            </Link>
+          )}
+
           <div className="font-mono text-xs text-ink-muted mb-4">
             {rating?.review_count ? (
               <span>⭐ {Number(rating.average_rating).toFixed(1)} ({rating.review_count} reviews)</span>

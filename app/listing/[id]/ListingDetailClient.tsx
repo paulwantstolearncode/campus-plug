@@ -495,6 +495,13 @@ export default function ListingDetailClient() {
                     </div>
                   )}
 
+                  <Link
+                    href={'/shop/' + listing.seller_id}
+                    className="mt-4 flex items-center gap-1.5 text-sm text-gold-dark hover:underline font-semibold"
+                  >
+                    🏪 View {sellerName}&apos;s Full Shop →
+                  </Link>
+
                   {listing.seller?.whatsapp_number ? (
                     <a
                       href={"https://wa.me/" + listing.seller.whatsapp_number + "?text=" + contactMessage}
