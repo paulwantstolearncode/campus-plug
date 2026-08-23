@@ -30,6 +30,9 @@ Last updated: 2026-08-23
 ### Instant Request Empty Search CTA
 - Empty search results on `/services` now direct students to post on `/requests` (Wanted Board) instead of showing a dead end.
 
+### Legacy Location Backfill Tool
+- Admin page at `/admin/locations` with smart keyword auto-suggestions (`suggestLocation` in `lib/campusLocations.ts`) and bulk auto-assign capability. Fetches approved listings where `campus_location IS NULL` or empty, shows gold suggestion badges when title/description matches campus location keywords, and offers per-row save or one-click bulk auto-assign. Added `📍 Location Backfill` link to `/admin` dashboard header.
+
 ### Feedback system (a81a3cc)
 - `supabase/add_feedback.sql` — feedback table + RLS (public INSERT for anon+authenticated; admin-only SELECT/UPDATE/DELETE via `public.is_admin()`). Migration ran successfully in production; 4 policies verified; anonymous insert smoke test passed.
 - `lib/feedback.ts` — Supabase client helper for inserting feedback.
