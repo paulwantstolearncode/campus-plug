@@ -112,7 +112,7 @@ export default function ListingCard({
 
   return (
     <div className="group relative fade-up" style={delay ? { animationDelay: delay } : undefined}>
-      <div className="relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
+      <div className="relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-200/80">
         <Link href={href} className="relative block aspect-square overflow-hidden bg-gray-100">
           {listing.image_url ? (
             <img src={listing.image_url} alt={listing.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />

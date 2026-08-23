@@ -3,12 +3,18 @@ import "./globals.css";
 import HelpButton from "./HelpButton";
 import FeedbackButton from "./components/FeedbackButton";
 import { Analytics } from "@vercel/analytics/react";
-import { Playfair_Display } from "next/font/google";
+import { Playfair_Display, Manrope } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
 
 // Editorial serif accent — used ONLY for italic gold keywords (hero
 // "guesswork", section headers). Self-hosted via next/font with
 // font-display: swap (default) so a font swap never causes CLS.
+const manrope = Manrope({
+  subsets: ["latin"],
+  variable: "--font-manrope",
+  display: "swap",
+});
+
 const playfair = Playfair_Display({
   subsets: ["latin"],
   style: ["normal", "italic"],
@@ -56,7 +62,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={playfair.variable}>
+    <html lang="en" className={`${playfair.variable} ${manrope.variable}`}>
       <body>
         {children}
         <HelpButton />

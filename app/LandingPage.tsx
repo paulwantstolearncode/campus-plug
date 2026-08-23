@@ -218,6 +218,12 @@ export default function LandingPage() {
               <>
                 {/* TODO: Extract nav into shared component */}
                 <Link
+                  href="/requests"
+                  className="text-sm font-medium text-charcoal hover:text-gold transition-colors px-3 py-2"
+                >
+                  Wanted Board
+                </Link>
+                <Link
                   href="/favorites"
                   className="text-sm font-medium text-charcoal hover:text-gold transition-colors px-3 py-2"
                 >
@@ -297,10 +303,13 @@ export default function LandingPage() {
             </div>
 
             {/* Main headline */}
-            <h1 className="fade-up fade-up-delay-1 text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-charcoal leading-[0.95] tracking-tight mb-6">
+            <h1 className="fade-up fade-up-delay-1 text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-charcoal leading-[0.95] tracking-tight mb-4">
               Campus help, without<br />
               the <em className="font-serif-accent italic text-gold">guesswork</em>.
             </h1>
+            <p className="fade-up fade-up-delay-1 text-base sm:text-lg text-gold font-semibold tracking-wide mb-6">
+              Good finds. Better plug.
+            </p>
 
             <p className="fade-up fade-up-delay-2 text-lg sm:text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-10 px-4">
               Find a verified braider, tutor, cook or repairer on campus — then chat directly and agree your terms.
@@ -312,14 +321,14 @@ export default function LandingPage() {
                 href="/services"
                 className="w-full sm:w-auto group bg-charcoal text-white px-8 py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-105 shadow-xl shadow-charcoal/25 flex items-center justify-center gap-2"
               >
-                Explore the plug
+                Browse the board
                 <span className="group-hover:translate-x-1 transition-transform">→</span>
               </Link>
               <Link
                 href="/login"
                 className="w-full sm:w-auto glass-light text-charcoal px-8 py-4 rounded-full font-semibold hover:bg-white transition-all hover:scale-105 shadow-lg flex items-center justify-center gap-2 border border-gray-200"
               >
-                Start selling
+                Put it on the board
               </Link>
             </div>
 
@@ -376,7 +385,7 @@ export default function LandingPage() {
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12 md:mb-16">
               <div className="inline-flex items-center gap-2 bg-gold text-charcoal px-4 py-2 rounded-full text-sm font-semibold mb-3 shadow-lg">
-                FEATURED <span className="text-charcoal/50">/</span> 01
+                01 <span className="text-charcoal/50">/</span> FEATURED
               </div>
               <p className="text-sm italic text-gray-500 mb-3">This week on Campus Plug</p>
               <h2 className="text-4xl md:text-6xl font-bold text-charcoal leading-tight">
@@ -401,7 +410,7 @@ export default function LandingPage() {
                 href="/login"
                 className="group inline-flex items-center gap-2 bg-charcoal text-white px-8 py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-105 shadow-xl shadow-charcoal/25"
               >
-                See all listings
+                Browse the board
                 <span className="group-hover:translate-x-1 transition-transform">→</span>
               </Link>
             </div>
@@ -413,6 +422,9 @@ export default function LandingPage() {
       <section className="relative py-20 md:py-28 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 md:mb-16">
+            <div className="inline-flex items-center gap-2 text-gold text-sm font-semibold mb-3">
+              03 <span className="text-charcoal/25">/</span> HOW IT WORKS
+            </div>
             <h2 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight mb-3">
               How it <em className="font-serif-accent italic text-gold">works</em>
             </h2>
@@ -449,6 +461,9 @@ export default function LandingPage() {
         <section className="relative py-20 md:py-28 bg-off-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="text-center mb-12 md:mb-16">
+              <div className="inline-flex items-center gap-2 text-gold text-sm font-semibold mb-3">
+                02 <span className="text-charcoal/25">/</span> EXPLORE CATEGORIES
+              </div>
               <h2 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight mb-3">
                 Explore by <em className="font-serif-accent italic text-gold">category</em>
               </h2>
@@ -483,6 +498,9 @@ export default function LandingPage() {
       <section className="relative py-20 md:py-28 bg-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           <div className="text-center mb-12 md:mb-16">
+            <div className="inline-flex items-center gap-2 text-gold text-sm font-semibold mb-3">
+              04 <span className="text-charcoal/25">/</span> WANTED BOARD
+            </div>
             <h2 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight mb-3">
               Why Campus <em className="font-serif-accent italic text-gold">Plug</em>
             </h2>
@@ -507,6 +525,32 @@ export default function LandingPage() {
                 </p>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Wanted Board — Request a Plug */}
+      <section className="relative py-20 md:py-28 bg-off-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 text-gold text-sm font-semibold mb-3">
+              04 <span className="text-charcoal/25">/</span> WANTED BOARD
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight mb-4">
+              Need something <em className="font-serif-accent italic text-gold">specific</em>?
+            </h2>
+            <p className="text-lg md:text-xl text-gray-500 max-w-2xl mx-auto">
+              Put it on the board and sellers will pitch you directly on WhatsApp.
+            </p>
+          </div>
+          <div className="text-center">
+            <Link
+              href="/requests"
+              className="group inline-flex items-center gap-2 bg-gold text-charcoal px-8 py-4 rounded-full font-semibold hover:bg-gold-dark transition-all hover:scale-105 shadow-lg shadow-gold/25"
+            >
+              Put it on the board
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </Link>
           </div>
         </div>
       </section>
@@ -549,6 +593,9 @@ export default function LandingPage() {
             </p>
 
             <div className="flex gap-6 text-sm">
+              <Link href="/requests" className="text-white/60 hover:text-gold transition-colors">
+                Wanted Board
+              </Link>
               <Link href="/login" className="text-white/60 hover:text-gold transition-colors">
                 Login
               </Link>
