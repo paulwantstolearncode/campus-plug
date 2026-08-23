@@ -1,6 +1,6 @@
 # Handoff — Campus Plug
 
-Last updated: 2026-08-21
+Last updated: 2026-08-23
 
 ## Current state
 
@@ -20,6 +20,15 @@ Last updated: 2026-08-21
 - **WhatsApp seller numbers**: `/become-seller` page has editable "WhatsApp Number for Buyers" field with helper text "Buyers will message this number on WhatsApp to book your services" — pre-filled from profile, saved to `profiles.whatsapp_number`.
 - **Required Vercel env vars**: `MOOLRE_SECRET_KEY` (VASKEY), `MOOLRE_ACCOUNT_NO`, `MOOLRE_SENDER_ID`, `SUPABASE_SMS_WEBHOOK_SECRET`.
 - **Supabase config**: Enable Phone provider in Auth → Providers → Phone. Set SMS webhook URL to `https://campuspluggh.com/api/sms/send-otp`.
+
+### Shared NavBar component
+- Extracted `app/components/NavBar.tsx` — shared navigation component with user profile dropdown, dark/light variants, and mobile drawer. Replaces duplicated nav markup across LandingPage.tsx, page.tsx, and services/page.tsx.
+
+### Phase A.4 Location Filtering
+- Campus location filter chips added to `/services` page, allowing students to narrow listings by campus location.
+
+### Instant Request Empty Search CTA
+- Empty search results on `/services` now direct students to post on `/requests` (Wanted Board) instead of showing a dead end.
 
 ### Feedback system (a81a3cc)
 - `supabase/add_feedback.sql` — feedback table + RLS (public INSERT for anon+authenticated; admin-only SELECT/UPDATE/DELETE via `public.is_admin()`). Migration ran successfully in production; 4 policies verified; anonymous insert smoke test passed.
@@ -71,4 +80,4 @@ There were two Vercel projects both named "campus-plug". The broken duplicate (`
 
 ## Next steps
 
-1. Consider extracting the nav into a shared component (noted in 0de4660 — nav duplication debt between LandingPage.tsx and app/page.tsx).
+1. (Done) Nav extracted to shared `app/components/NavBar.tsx`.
