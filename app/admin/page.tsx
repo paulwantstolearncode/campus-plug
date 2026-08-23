@@ -414,6 +414,12 @@ export default function AdminPage() {
           >
             📍 Location Backfill
           </Link>
+          <Link
+            href="/admin/posters"
+            className="inline-flex items-center gap-2 bg-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/20 transition-colors"
+          >
+            🎨 Print Posters
+          </Link>
         </div>
       </section>
 

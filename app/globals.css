@@ -186,3 +186,31 @@ html {
     animation: none;
   }
 }
+
+/* ── Print styles for Poster Generator ─────────────────────────── */
+@media print {
+  body {
+    background: none !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  .no-print,
+  nav,
+  header,
+  footer,
+  .no-print ~ * {
+    display: none !important;
+  }
+
+  .poster-canvas {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 100vh;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    border: none;
+    page-break-inside: avoid;
+  }
+}
