@@ -40,12 +40,36 @@ const LOCATION_CHIPS = [
   'Delivery available',
 ]
 
+const SEARCH_PLACEHOLDERS = [
+  'Search: past questions, hair braiding, PS5, gas refill, phone repair...',
+  'Search: DCIT 201 tutoring, braiding, catering, laundry...',
+  'Search: wireless earbuds, laptop stand, generator rental...',
+  'Search: manicure, photography, graphic design, typing...',
+]
+
 export default function ServicesPage() {
   const [services, setServices] = useState<Service[]>([])
   const [loading, setLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [placeholderIdx, setPlaceholderIdx] = useState(0)
   const [categoryFilter, setCategoryFilter] = useState('')
   const [locationFilter, setLocationFilter] = useState('')
   const [sellerRatings, setSellerRatings] = useState<Record<string, SellerRating>>({})
+
+  // Rotating search placeholder
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setPlaceholderIdx((prev) => (prev + 1) % SEARCH_PLACEHOLDERS.length)
+    }, 3500)
+    return () => clearInterval(timer)
+  }, [])
+
+  // Read ?q= from URL on mount (so landing page search can link here)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const q = params.get('q')
+    if (q) setSearchQuery(q)
+  }, [])
 
   useEffect(() => {
     async function loadEverything() {
@@ -83,6 +107,11 @@ export default function ServicesPage() {
       } else if (s.service_location !== locationFilter) {
         return false
       }
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase()
+      const haystack = ((s.title || '') + ' ' + (s.description || '') + ' ' + (s.category || '')).toLowerCase()
+      if (!haystack.includes(q)) return false
     }
     return true
   })
@@ -154,6 +183,31 @@ export default function ServicesPage() {
                   {filteredServices.length} service{filteredServices.length !== 1 ? 's' : ''}
                 </p>
 
+                {/* Search input with rotating placeholder */}
+                <div className="mt-4 relative max-w-lg">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={SEARCH_PLACEHOLDERS[placeholderIdx]}
+                    className="w-full px-5 py-3 pr-12 rounded-full bg-white border-2 border-gray-200 text-charcoal text-sm font-medium placeholder:text-gray-400 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all shadow-sm"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-12 top-1/2 -translate-y-1/2 text-gray-400 hover:text-charcoal text-sm"
+                    >
+                      ✕
+                    </button>
+                  )}
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-charcoal text-white flex items-center justify-center">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8" />
+                      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                  </div>
+                </div>
+
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Category</span>
                   <select
@@ -211,18 +265,34 @@ export default function ServicesPage() {
                   <div className="relative">
                     <div className="text-6xl mb-4 opacity-60">🔍</div>
                     <h2 className="text-2xl md:text-3xl font-bold text-charcoal mb-3">
-                      Nothing matching your search on campus yet
+                      {searchQuery.trim()
+                        ? <>Nothing on the board for ‘{searchQuery}’ — yet.</>
+                        : 'Nothing matching your filters yet'
+                      }
                     </h2>
                     <p className="text-gray-500 mb-8 max-w-lg mx-auto leading-relaxed">
-                      Can&apos;t find what you&apos;re looking for? Put it on the Wanted Board and verified student sellers will pitch you directly.
+                      {searchQuery.trim()
+                        ? 'Be the first to offer it — or put it on the Wanted Board and verified student sellers will pitch you directly.'
+                        : 'Try different filters, or put it on the Wanted Board and verified student sellers will pitch you directly.'
+                      }
                     </p>
-                    <Link
-                      href="/requests"
-                      className="inline-flex items-center gap-2 bg-gold text-charcoal px-8 py-4 rounded-full font-semibold hover:bg-gold-dark transition-all hover:scale-105 shadow-lg shadow-gold/25 group"
-                    >
-                      Put it on the Wanted Board
-                      <span className="group-hover:translate-x-1 transition-transform">→</span>
-                    </Link>
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                      <Link
+                        href="/requests"
+                        className="inline-flex items-center justify-center gap-2 bg-gold text-charcoal px-8 py-4 rounded-full font-semibold hover:bg-gold-dark transition-all hover:scale-105 shadow-lg shadow-gold/25 group"
+                      >
+                        Post a Wanted request
+                        <span className="group-hover:translate-x-1 transition-transform">→</span>
+                      </Link>
+                      {(searchQuery.trim() || categoryFilter || locationFilter) && (
+                        <button
+                          onClick={() => { setSearchQuery(''); setCategoryFilter(''); setLocationFilter('') }}
+                          className="inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200 text-charcoal px-8 py-4 rounded-full font-semibold hover:border-gold transition-all text-sm"
+                        >
+                          Clear filters
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               ) : (

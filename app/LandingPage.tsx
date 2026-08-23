@@ -7,10 +7,62 @@ import { CATEGORIES } from '@/lib/categories'
 import FeedbackModal from '@/app/components/FeedbackModal'
 import type { User } from '@supabase/supabase-js'
 import NavBar from '@/app/components/NavBar'
+import { useRouter } from 'next/navigation'
 
 interface MarketplaceStats {
   sellerCount: number
   listingCount: number
+}
+
+const SEARCH_PLACEHOLDERS = [
+  'Search: past questions, hair braiding, PS5, gas refill, phone repair...',
+  'Search: DCIT 201 tutoring, braiding, catering, laundry...',
+  'Search: wireless earbuds, laptop stand, generator rental...',
+  'Search: manicure, photography, graphic design, typing...',
+]
+
+function RotatingSearchPlaceholder() {
+  const [index, setIndex] = useState(0)
+  const router = useRouter()
+  const [query, setQuery] = useState('')
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % SEARCH_PLACEHOLDERS.length)
+    }, 3500)
+    return () => clearInterval(timer)
+  }, [])
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (query.trim()) {
+      router.push('/services?q=' + encodeURIComponent(query.trim()))
+    } else {
+      router.push('/services')
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="relative">
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder={SEARCH_PLACEHOLDERS[index]}
+        className="w-full px-5 py-3.5 pr-12 rounded-full bg-white border-2 border-gray-200 text-charcoal text-sm font-medium placeholder:text-gray-400 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all shadow-lg"
+      />
+      <button
+        type="submit"
+        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-charcoal text-white flex items-center justify-center hover:bg-black transition-colors"
+        aria-label="Search"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+      </button>
+    </form>
+  )
 }
 
 export default function LandingPage() {
@@ -200,7 +252,7 @@ export default function LandingPage() {
       <NavBar />
 
       {/* Hero Section with Animated Background */}
-      <section className="relative min-h-[70vh] flex items-center pt-20 pb-16 md:pb-24">
+      <section className="relative min-h-[50vh] md:min-h-[70vh] flex items-center pt-20 pb-8 md:pb-24">
         {/* Animated gradient blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="blob absolute top-20 -left-20 w-72 h-72 bg-gold/20 rounded-full blur-3xl"></div>
@@ -254,9 +306,14 @@ export default function LandingPage() {
               Good finds. Better plug.
             </p>
 
-            <p className="fade-up fade-up-delay-2 text-lg sm:text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-10 px-4">
-              Find a verified braider, tutor, cook or repairer on campus — then chat directly and agree your terms.
+            <p className="fade-up fade-up-delay-2 text-lg sm:text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-6 px-4">
+              Buy & sell with verified UG students — from Pentagon to Night Market. No agents. No stress. Just WhatsApp.
             </p>
+
+            {/* Search-as-hero: prominent search on mobile */}
+            <div className="fade-up fade-up-delay-2 max-w-xl mx-auto mb-8 px-4">
+              <RotatingSearchPlaceholder />
+            </div>
 
             {/* CTA Buttons */}
             <div className="fade-up fade-up-delay-3 flex flex-col sm:flex-row gap-3 justify-center items-center px-4 mb-16">
@@ -276,7 +333,7 @@ export default function LandingPage() {
             </div>
 
             {/* Trust badges */}
-            <div className="fade-up fade-up-delay-4 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-gray-500">
+            <div className="fade-up fade-up-delay-3 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-gray-500 mb-8">
               <div className="flex items-center gap-2">
                 <div className="w-5 h-5 rounded-full bg-gold/10 flex items-center justify-center">
                   <span className="text-gold text-xs">✓</span>
@@ -563,6 +620,16 @@ export default function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Sticky mobile "Post yours" CTA */}
+      <div className="fixed bottom-4 right-4 md:hidden z-40">
+        <Link
+          href="/login"
+          className="flex items-center gap-2 bg-gold text-charcoal px-5 py-3 rounded-full font-bold text-sm shadow-xl shadow-gold/30 hover:bg-gold-dark transition-all hover:scale-105"
+        >
+          ＋ Post yours — free
+        </Link>
+      </div>
 
       <FeedbackModal key={feedbackOpen ? 'open' : 'closed'} isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
     </main>
