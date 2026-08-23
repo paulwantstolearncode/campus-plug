@@ -245,6 +245,12 @@ export default function ListingCard({
             )}
           </div>
 
+          {rating?.is_top_rated && (
+            <div className="inline-flex items-center gap-1.5 bg-gold/10 border border-gold/30 text-gold-dark px-2.5 py-1 rounded-full text-[11px] font-bold mb-4">
+              ⭐ Top Rated
+            </div>
+          )}
+
           <div className="flex gap-2 items-center">
             {preview ? (
               <Link

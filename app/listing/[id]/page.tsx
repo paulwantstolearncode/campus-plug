@@ -478,6 +478,23 @@ export default function ListingDetailPage() {
                     </div>
                   </div>
 
+                  {/* Rating & Top Rated badge */}
+                  {ratingInfo && ratingInfo.review_count > 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-100">
+                      <div className="flex items-center gap-2 mb-2">
+                        <StarRating rating={Number(ratingInfo.average_rating) || 0} size="sm" />
+                        <span className="text-sm font-bold text-charcoal">
+                          {Number(ratingInfo.average_rating).toFixed(1)} ({ratingInfo.review_count} reviews)
+                        </span>
+                      </div>
+                      {ratingInfo.is_top_rated && (
+                        <div className="inline-flex items-center gap-1.5 bg-gold/10 border border-gold/30 text-gold-dark px-3 py-1.5 rounded-full text-xs font-bold">
+                          ⭐ Top Rated Seller
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {listing.seller?.whatsapp_number ? (
                     <a
                       href={"https://wa.me/" + listing.seller.whatsapp_number + "?text=" + contactMessage}

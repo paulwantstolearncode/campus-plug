@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import HelpButton from "./HelpButton";
 import FeedbackButton from "./components/FeedbackButton";
+import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import { Analytics } from "@vercel/analytics/react";
 import { Playfair_Display, Manrope, DM_Serif_Display, IBM_Plex_Mono } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
@@ -82,6 +83,7 @@ export default function RootLayout({
         {children}
         <HelpButton />
         <FeedbackButton />
+        <PWAInstallPrompt />
         <Analytics />
       </body>
     </html>

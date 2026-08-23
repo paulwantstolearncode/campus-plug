@@ -50,6 +50,7 @@ interface Txn {
 }
 
 type TimeFilter = 'all' | 'month' | 'week' | 'custom'
+type StatusFilter = 'all' | 'completed' | 'pending' | 'cancelled'
 
 // Pure helper (module scope) so filtering never calls impure functions during
 // render. `now` and `monthStart` are snapshotted once via lazy state init.
@@ -82,6 +83,7 @@ export default function AdminSalesPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<TimeFilter>('all')
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
   const [{ now, monthStart }] = useState(() => {
@@ -190,7 +192,11 @@ export default function AdminSalesPage() {
     )
   }, [bookings, sales])
 
-  const filteredTxns = allTxns.filter((t) => inWindow(t.date, filter, customFrom, customTo, now, monthStart))
+  const filteredTxns = allTxns.filter((t) => {
+    if (!inWindow(t.date, filter, customFrom, customTo, now, monthStart)) return false
+    if (statusFilter !== 'all' && t.status !== statusFilter) return false
+    return true
+  })
 
   // Completed-only revenue sets. Refunded/cancelled stay visible in the
   // transactions table + CSV but are excluded from headline numbers.
@@ -258,9 +264,9 @@ export default function AdminSalesPage() {
   }
 
   function exportCsv() {
-    // CSV always exports ALL sales + bookings (not just the filtered view).
+    // CSV exports filtered transactions (respects both time and status filters).
     const header = ['Date', 'Type', 'Seller Name', 'Seller WhatsApp', 'Listing', 'Category', 'Amount', 'Status', 'Buyer Name', 'Notes']
-    const rows = allTxns.map((t) =>
+    const rows = filteredTxns.map((t) =>
       [t.date, t.type, t.sellerName, t.sellerWhatsapp, t.listingTitle, t.category, t.amount, statusLabel(t.status), t.buyer, t.notes].map(csvCell)
     )
     const csv = [header.map(csvCell).join(','), ...rows.map((r) => r.join(','))].join('\n')
@@ -350,7 +356,7 @@ export default function AdminSalesPage() {
           )}
 
           {/* Time filter */}
-          <div className="flex flex-wrap items-center gap-2 mb-8">
+          <div className="flex flex-wrap items-center gap-2 mb-4">
             {filterChip('all', 'All Time')}
             {filterChip('month', 'This Month')}
             {filterChip('week', 'This Week')}
@@ -372,6 +378,39 @@ export default function AdminSalesPage() {
                 />
               </div>
             )}
+          </div>
+
+          {/* Status filter */}
+          <div className="flex flex-wrap items-center gap-2 mb-8">
+            {(['all', 'completed', 'pending', 'cancelled'] as StatusFilter[]).map((status) => {
+              const count = status === 'all' ? allTxns.length : allTxns.filter((t) => t.status === status).length
+              const labels: Record<StatusFilter, string> = { all: 'All', completed: 'Completed', pending: 'Pending', cancelled: 'Cancelled' }
+              return (
+                <button
+                  key={status}
+                  onClick={() => setStatusFilter(status)}
+                  className={'px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap transition-all ' + (statusFilter === status ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200 hover:border-gray-400')}
+                >
+                  {labels[status]} ({count})
+                </button>
+              )
+            })}
+          </div>
+
+          {/* Transaction count breakdown */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100 text-center">
+              <div className="text-2xl font-bold text-green-600">{allTxns.filter((t) => t.status === 'completed').length}</div>
+              <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">Completed</div>
+            </div>
+            <div className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100 text-center">
+              <div className="text-2xl font-bold text-amber-600">{allTxns.filter((t) => t.status === 'pending').length}</div>
+              <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">Pending</div>
+            </div>
+            <div className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100 text-center">
+              <div className="text-2xl font-bold text-red-600">{allTxns.filter((t) => t.status === 'cancelled').length}</div>
+              <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">Cancelled</div>
+            </div>
           </div>
 
           {/* Overview */}
