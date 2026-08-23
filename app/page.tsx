@@ -309,7 +309,7 @@ export default function Home() {
       </section>
 
       <section className="relative pb-24 md:pb-32 bg-off-white">
-        <div className="absolute inset-0 opacity-40" style={{backgroundImage: 'radial-gradient(circle, #23734e 1px, transparent 1px)', backgroundSize: '30px 30px'}}></div>
+        <div className="absolute inset-0 opacity-40" style={{backgroundImage: 'radial-gradient(circle, #d4af37 1px, transparent 1px)', backgroundSize: '30px 30px'}}></div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8">
           {listings.length === 0 ? (

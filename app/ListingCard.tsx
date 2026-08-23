@@ -209,8 +209,8 @@ export default function ListingCard({
                 width="20"
                 height="20"
                 viewBox="0 0 24 24"
-                fill={isFavorited ? '#23734e' : 'none'}
-                stroke="#23734e"
+                fill={isFavorited ? '#d4af37' : 'none'}
+                stroke="#d4af37"
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"

@@ -284,7 +284,7 @@ export default function LandingPage() {
 
             {/* Trust badge — replaces the old "Now live at University of Ghana" pill */}
             <div className="fade-up inline-flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 px-5 py-2.5 rounded-full border border-charcoal/15 bg-white/70 backdrop-blur text-charcoal mb-8 shadow-lg max-w-[95vw]">
-              <svg width="14" height="16" viewBox="0 0 24 24" fill="none" stroke="#23734e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+              <svg width="14" height="16" viewBox="0 0 24 24" fill="none" stroke="#d4af37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 <path d="M9 12l2 2 4-4" />
               </svg>
@@ -369,7 +369,7 @@ export default function LandingPage() {
           <div
             className="absolute inset-0 opacity-40"
             style={{
-              backgroundImage: 'radial-gradient(circle, #23734e 1px, transparent 1px)',
+              backgroundImage: 'radial-gradient(circle, #d4af37 1px, transparent 1px)',
               backgroundSize: '30px 30px'
             }}
           ></div>

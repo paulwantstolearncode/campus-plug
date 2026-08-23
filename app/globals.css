@@ -4,9 +4,9 @@
 :root {
   --background: #f8f6f1;
   --foreground: #2c241f;
-  --gold: #23734e;
-  --gold-light: #2d9460;
-  --gold-dark: #1d6242;
+  --gold: #d4af37;
+  --gold-light: #e8c66d;
+  --gold-dark: #b8941f;
   --charcoal: #2c241f;
   --off-white: #f8f6f1;
   --ochre: #f0c47b;
@@ -145,28 +145,28 @@ html {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(35, 115, 78, 0.25);
+  background: rgba(212, 175, 55, 0.3);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(35, 115, 78, 0.45);
+  background: rgba(212, 175, 55, 0.5);
 }
 
 /* Selection */
 ::selection {
-  background: #23734e;
-  color: #ffffff;
+  background: var(--gold);
+  color: var(--charcoal);
 }
 
 /* Editorial serif accent — DM Serif Display via next/font (--font-serif-accent).
-   Applied ONLY to italic green keywords: hero "guesswork" + section headers. */
+   Applied ONLY to italic gold keywords: hero "guesswork" + section headers. */
 .font-serif-accent {
   font-family: var(--font-serif-accent), "DM Serif Display", Georgia, serif;
 }
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, #23734e 0%, #2d9460 50%, #23734e 100%);
+  background: linear-gradient(135deg, #d4af37 0%, #e8c66d 50%, #d4af37 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -181,9 +181,9 @@ html {
 .shine-button {
   background: linear-gradient(
     90deg,
-    #23734e 0%,
-    #2d9460 50%,
-    #23734e 100%
+    #d4af37 0%,
+    #f5e6a8 50%,
+    #d4af37 100%
   );
   background-size: 200% auto;
   animation: shine 3s linear infinite;
