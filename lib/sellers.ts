@@ -6,8 +6,8 @@ export interface SellerProfile {
   id: string
   full_name: string | null
   whatsapp_number: string | null
-  is_seller: boolean
   campus_location: string | null
+  avatar_url: string | null
 }
 
 export interface SellerWithListings extends SellerProfile {
@@ -34,8 +34,9 @@ export interface SellerWithListings extends SellerProfile {
 
 /**
  * Fetch seller profile + all approved listings + rating.
- * Accepts the profile UUID (standard) or, as a fallback for legacy/shared
- * links, a display-name slug. Server-side only (cookie-based Supabase client).
+ * Looks up strictly by profile id. If no profile row exists but approved
+ * listings do, a minimal fallback profile is constructed so the shop page
+ * still renders. Server-side only (cookie-based Supabase client).
  */
 export async function getSellerWithListings(
   sellerId: string
@@ -58,42 +59,50 @@ export async function getSellerWithListings(
     const trimmedId = typeof sellerId === 'string' ? sellerId.trim() : ''
     if (!trimmedId) return null
 
-    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-    let profileQuery = supabase
+    // Query strictly by id — no is_seller or seller_status filters.
+    // If the user has listings, they are a seller regardless of profile flags.
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, full_name, whatsapp_number, is_seller, campus_location')
-    profileQuery = UUID_RE.test(trimmedId)
-      ? profileQuery.eq('id', trimmedId)
-      : profileQuery.ilike('full_name', trimmedId)
+      .select('id, full_name, whatsapp_number, campus_location, avatar_url')
+      .eq('id', trimmedId)
+      .maybeSingle()
 
-    // Rows created before the is_seller default existed can have NULL there;
-    // treat NULL like TRUE so valid sellers are not rejected. Only explicit
-    // is_seller = false stays hidden.
-    const { data: profileRows, error: profileError } = await profileQuery
-      .or('is_seller.eq.true,is_seller.is.null')
-      .limit(1)
-
-    const profile = profileRows?.[0] ?? null
-    if (profileError || !profile) return null
+    if (profileError) {
+      console.error('Profile fetch error:', profileError)
+    }
 
     // Fetch approved listings
     const { data: listings } = await supabase
       .from('listings')
       .select('*, listing_images (id, image_url, display_order), listing_items (price)')
-      .eq('seller_id', sellerId)
+      .eq('seller_id', trimmedId)
       .eq('approval_status', 'approved')
       .order('created_at', { ascending: false })
+
+    const approvedListings = (listings || []) as SellerWithListings['listings']
+
+    // If no profile AND no listings, seller genuinely doesn't exist
+    if (!profile && approvedListings.length === 0) return null
 
     // Fetch rating
     const { data: rating } = await supabase
       .from('seller_ratings')
       .select('average_rating, review_count, is_top_rated')
-      .eq('seller_id', sellerId)
+      .eq('seller_id', trimmedId)
       .maybeSingle()
 
+    // Build a minimal profile if the row is missing (RLS, deleted account, etc.)
+    const fallbackProfile: SellerProfile = {
+      id: trimmedId,
+      full_name: null,
+      whatsapp_number: null,
+      campus_location: null,
+      avatar_url: null,
+    }
+
     return {
-      ...(profile as SellerProfile),
-      listings: (listings || []) as SellerWithListings['listings'],
+      ...(profile ?? fallbackProfile),
+      listings: approvedListings,
       rating: rating || null,
     }
   } catch (err) {
