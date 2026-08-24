@@ -21,6 +21,7 @@ export interface SellerWithListings extends SellerProfile {
     category: string | null
     campus_location: string | null
     approval_status: string
+    deleted_at: string | null
     seller_id: string
     listing_images: { id: string; image_url: string; display_order: number }[] | null
     listing_items: { price: number }[] | null
@@ -77,6 +78,7 @@ export async function getSellerWithListings(
       .select('*, listing_images (id, image_url, display_order), listing_items (price)')
       .eq('seller_id', trimmedId)
       .eq('approval_status', 'approved')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
 
     const approvedListings = (listings || []) as SellerWithListings['listings']

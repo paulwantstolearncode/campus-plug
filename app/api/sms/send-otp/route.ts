@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { supabase } from '@/lib/supabase'
 
 /**
  * POST /api/sms/send-otp
@@ -86,14 +87,60 @@ export async function POST(request: Request) {
 
   console.log('[SMS Proxy] Formatted phone:', formattedPhone)
 
-  // ── 4. Read Moolre environment variables ───────────────────────────────
+  // ── 4. Rate limiting ─────────────────────────────────────────────────
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || request.headers.get('x-real-ip')
+    || 'unknown'
+
+  try {
+    // IP: max 3 requests per 10 minutes
+    const ipKey = `ip:${ip}`
+    const { data: ipAllowed } = await supabase.rpc('check_sms_rate_limit', {
+      limit_key: ipKey,
+      max_hits: 3,
+      window_seconds: 600,
+    })
+
+    if (ipAllowed === false) {
+      console.warn(`[SMS Proxy] ⚠ Rate limited by IP: ${ip}`)
+      return NextResponse.json(
+        { error: 'Too many SMS requests. Try again later.' },
+        { status: 429 }
+      )
+    }
+
+    // Phone: max 5 requests per 10 minutes
+    const phoneKey = `phone:${formattedPhone}`
+    const { data: phoneAllowed } = await supabase.rpc('check_sms_rate_limit', {
+      limit_key: phoneKey,
+      max_hits: 5,
+      window_seconds: 600,
+    })
+
+    if (phoneAllowed === false) {
+      console.warn(`[SMS Proxy] ⚠ Rate limited by phone: ${formattedPhone}`)
+      return NextResponse.json(
+        { error: 'Too many SMS requests. Try again later.' },
+        { status: 429 }
+      )
+    }
+  } catch (err) {
+    // If rate-limit DB is unavailable, fail closed to prevent wallet drain
+    console.error('[SMS Proxy] ⚠ Rate limit check failed, blocking request:', err)
+    return NextResponse.json(
+      { error: 'SMS service temporarily unavailable. Please try again later.' },
+      { status: 503 }
+    )
+  }
+
+  // ── 5. Read Moolre env vars ────────────────────────────────────────────
   const vaskey = (process.env.MOOLRE_SECRET_KEY || '').trim()
   const senderId = (process.env.MOOLRE_SENDER_ID || 'CampusPlug').trim()
 
   console.log('[SMS Proxy] VASKEY:', vaskey.slice(0, 5) + '...')
   console.log('[SMS Proxy] Sender:', senderId)
 
-  // ── 5. Build Moolre payload — array format (CONFIRMED WORKING) ────────
+  // ── 6. Build Moolre payload — array format (CONFIRMED WORKING) ────────
   const moolrePayload = {
     senderid: senderId,
     type: 1,
@@ -108,7 +155,7 @@ export async function POST(request: Request) {
   console.log('[SMS Proxy] → Moolre:', MoolreEndpoint)
   console.log('[SMS Proxy] → Payload:', JSON.stringify(moolrePayload))
 
-  // ── 6. Send to Moolre ──────────────────────────────────────────────────
+  // ── 7. Send to Moolre ──────────────────────────────────────────────────
   let moolreRes: Response
   try {
     moolreRes = await fetch(MoolreEndpoint, {
@@ -124,7 +171,7 @@ export async function POST(request: Request) {
   const moolreText = await moolreRes.text()
   console.log('[SMS Proxy] ← HTTP', moolreRes.status, ':', moolreText)
 
-  // ── 7. Parse response ──────────────────────────────────────────────────
+  // ── 8. Parse response ──────────────────────────────────────────────────
   let moolreData: Record<string, unknown> = {}
   try { moolreData = JSON.parse(moolreText) } catch { /* non-JSON */ }
 
@@ -134,7 +181,7 @@ export async function POST(request: Request) {
     return NextResponse.json({}, { status: 200 })
   }
 
-  // ── 8. Error — return to Supabase ──────────────────────────────────────
+  // ── 9. Error — return to Supabase ──────────────────────────────────────
   const errorMsg = (moolreData.message as string) || moolreText || 'Moolre send failed'
   console.error('[SMS Proxy] ✗ Moolre error:', errorMsg)
   console.log('[SMS Proxy] ═══════════════════════════════════════════════')

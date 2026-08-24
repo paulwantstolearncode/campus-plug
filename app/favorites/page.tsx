@@ -53,6 +53,7 @@ export default function FavoritesPage() {
           .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)')
           .in('id', listingIds)
           .eq('approval_status', 'approved')
+          .is('deleted_at', null)
         
         if (listError) {
           console.error('Failed to load listings:', listError)

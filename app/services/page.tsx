@@ -79,6 +79,7 @@ export default function ServicesPage() {
           .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)')
           .eq('listing_type', 'service')
           .eq('approval_status', 'approved')
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
 
         if (error) {

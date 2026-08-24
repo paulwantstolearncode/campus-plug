@@ -106,6 +106,7 @@ export async function getUnassignedListings(): Promise<UnassignedListing[]> {
     .select('id, title, description, category, listing_type, image_url, campus_location, seller:profiles!seller_id (full_name)')
     .or('campus_location.is.null,campus_location.eq.')
     .eq('approval_status', 'approved')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   if (error) {

@@ -19,6 +19,7 @@ export interface ListingCardData {
   category: string | null
   campus_location: string | null
   approval_status: string
+  deleted_at: string | null
   seller_id: string
   seller: {
     full_name: string | null

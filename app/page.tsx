@@ -31,6 +31,7 @@ export default function Home() {
           .from('listings')
           .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)')
           .eq('approval_status', 'approved')
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
 
         if (error) {
@@ -83,11 +84,11 @@ export default function Home() {
         return
       }
 
-      // Scope the delete to the current user's own listing — defense in depth
-      // in case the RLS delete policy is ever misconfigured.
+      // Soft-delete: mark deleted_at instead of hard-deleting so historical
+      // data (sales, reviews) remains intact.
       const { error } = await supabase
         .from('listings')
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq('id', listingId)
         .eq('seller_id', user.id)
 

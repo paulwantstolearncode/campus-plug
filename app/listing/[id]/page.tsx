@@ -31,6 +31,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       .select('title, description, price, campus_location, category, image_url, images, listing_type')
       .eq('id', id)
       .eq('approval_status', 'approved')
+      .is('deleted_at', null)
       .single()
 
     if (!listing) {

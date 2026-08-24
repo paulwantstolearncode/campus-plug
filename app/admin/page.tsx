@@ -87,6 +87,7 @@ export default function AdminPage() {
         .from('listings')
         .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_images (id), listing_items (id)')
         .eq('approval_status', 'pending')
+        .is('deleted_at', null)
         .order('created_at', { ascending: false })
 
       if (listingsError) {
@@ -115,6 +116,7 @@ export default function AdminPage() {
         .from('listings')
         .select('id, title, price, listing_type, image_url, seller:profiles!seller_id (full_name)')
         .eq('approval_status', 'approved')
+        .is('deleted_at', null)
         .not('image_url', 'is', null)
         .neq('image_url', '')
         .order('created_at', { ascending: false })

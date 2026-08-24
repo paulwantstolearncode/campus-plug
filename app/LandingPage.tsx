@@ -120,6 +120,7 @@ export default function LandingPage() {
             .filter((s) =>
               s.listing &&
               s.listing.approval_status === 'approved' &&
+              !s.listing.deleted_at &&
               !!s.listing.image_url &&
               s.listing.image_url.trim() !== ''
             )
@@ -135,6 +136,7 @@ export default function LandingPage() {
             .from('listings')
             .select(select)
             .eq('approval_status', 'approved')
+            .is('deleted_at', null)
             .not('image_url', 'is', null)
             .neq('image_url', '')
             .order('created_at', { ascending: false })
@@ -148,6 +150,7 @@ export default function LandingPage() {
               .from('listings')
               .select(select)
               .eq('approval_status', 'approved')
+              .is('deleted_at', null)
               .not('image_url', 'is', null)
               .neq('image_url', '')
               .order('created_at', { ascending: false })
@@ -196,6 +199,7 @@ export default function LandingPage() {
           .from('listings')
           .select('category')
           .eq('approval_status', 'approved')
+          .is('deleted_at', null)
         if (!data) return
         const counts = new Map<string, number>()
         for (const row of data as { category: string | null }[]) {

@@ -20,6 +20,7 @@ export async function getPlugRequests(): Promise<PlugRequest[]> {
     .from('plug_requests')
     .select('*')
     .eq('status', 'open')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   if (error) {
