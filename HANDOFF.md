@@ -12,6 +12,11 @@ Last updated: 2026-08-23
 
 ## Recently shipped
 
+### Backend Hardening (6b2147d)
+- **Soft deletes** for `listings` and `plug_requests` tables — new `deleted_at` timestamptz column with partial indexes on `deleted_at IS NULL`. Seller delete action in `app/page.tsx` now sets `deleted_at = now()` instead of hard-deleting, preserving historical sales, reviews, and orders. All 10 feed query paths (landing, services, favorites, shop, admin, requests, categories) filter out soft-deleted rows with `.is('deleted_at', null)`.
+- **SMS rate limiting** on `/api/sms/send-otp` — DB-persisted via `sms_rate_limits` table and `check_sms_rate_limit()` SECURITY DEFINER function. Limits: 3 requests / 10 minutes per IP, 5 requests / 10 minutes per phone number. Returns HTTP 429 on rate limit. Fail-closed design: if rate-limit DB is unavailable, returns 503 to prevent wallet drain.
+- **SQL migrations**: `supabase/add_soft_deletes.sql` (7 statements) + `supabase/add_sms_rate_limits.sql` (12 statements) — both executed in Supabase.
+
 ### Phone Auth System — Moolre SMS OTP (be4c714 → cb0ab96)
 - **Moolre SMS proxy**: `app/api/sms/send-otp/route.ts` — Next.js webhook API at `/api/sms/send-otp` using `X-API-VASKEY` header (from `MOOLRE_SECRET_KEY`) and confirmed body shape: `{ senderid, type: 1, messages: [{ recipient, message }] }`. Flat format `{ recipient }` at top level fails ASMS08 — only the `messages[]` array with `recipient` inside each item succeeds (SMS01). Phone formatted to Ghana local `0XXXXXXXXX`.
 - **Hardened profiles trigger**: `supabase/harden_profiles_trigger_for_phone.sql` — adds `phone` column to profiles, gracefully handles phone-only users (null email/metadata), copies `auth.users.phone` → `profiles.phone`, sets `full_name` to `Student_[last4]` fallback. Idempotent (DROP + CREATE).
