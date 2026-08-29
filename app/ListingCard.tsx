@@ -189,6 +189,8 @@ export default function ListingCard({
               alt={listing.title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+              placeholder="blur"
+              blurDataURL="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMjAwIj48cmVjdCBmaWxsPSIjZWZlY2U0IiB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZTRlMWQ4IiBmb250LXNpemU9IjQ4Ij7wn5OEPC90ZXh0Pjwvc3ZnPg=="
               className="object-cover group-hover:scale-[1.04] transition-transform duration-700 ease-out"
               priority={index !== undefined && index < 6}
             />

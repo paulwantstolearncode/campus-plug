@@ -10,6 +10,7 @@ import { CAMPUS_LOCATIONS, ALL_LOCATIONS } from '@/lib/campusLocations'
 import StarRating from '@/app/StarRating'
 import { getSellerRatings, type SellerRating } from '@/lib/reviews'
 import NavBar from '@/app/components/NavBar'
+import { ListingCardSkeleton } from '@/app/components/Skeleton'
 
 interface Service {
   id: string
@@ -131,12 +132,25 @@ export default function ServicesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen animated-gradient">
-        <div className="text-center">
-          <div className="text-4xl mb-2 animate-pulse">🔌</div>
-          <p className="text-white/70">Loading services...</p>
-        </div>
-      </div>
+      <main className="min-h-screen bg-charcoal">
+        <NavBar />
+        <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden animated-gradient">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="h-4 bg-white/10 rounded-full w-32 mb-4 animate-pulse" />
+            <div className="h-12 bg-white/10 rounded-xl w-2/3 mb-4 animate-pulse" />
+            <div className="h-5 bg-white/10 rounded-lg w-1/2 animate-pulse" />
+          </div>
+        </section>
+        <section className="relative pb-24 bg-off-white -mt-4">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <ListingCardSkeleton key={i} />
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
     )
   }
 

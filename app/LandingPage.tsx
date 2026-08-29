@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import ListingCard, { type ListingCardData } from '@/app/ListingCard'
@@ -401,8 +402,7 @@ export default function LandingPage() {
                       <Link href="/services" className="block">
                         <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-white/5">
                           {liveListings[0].image_url ? (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img src={liveListings[0].image_url} alt={liveListings[0].title} className="w-full h-full object-cover" />
+                            <Image src={liveListings[0].image_url} alt={liveListings[0].title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" priority />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-4xl opacity-30">🔌</div>
                           )}
@@ -472,22 +472,20 @@ export default function LandingPage() {
       {banners.length > 0 && (
         <section className="relative py-8 md:py-12 bg-paper">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-4">
-            {banners.map((banner) => (
-              <a
-                key={banner.id}
-                href={banner.link_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block rounded-2xl overflow-hidden transition-all hover:scale-[1.01] shadow-lg"
-                style={{ backgroundColor: banner.bg_color, color: banner.text_color }}
-              >
-                <div className="flex items-center gap-4 p-5 md:p-6">
-                  {banner.image_url && (
-                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden shrink-0 bg-white/10">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
-                    </div>
-                  )}
+            {banners.map((banner) => (                    <a
+                      key={banner.id}
+                      href={banner.link_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block rounded-2xl overflow-hidden transition-all hover:scale-[1.01] shadow-lg"
+                      style={{ backgroundColor: banner.bg_color, color: banner.text_color }}
+                    >
+                      <div className="flex items-center gap-4 p-5 md:p-6">
+                        {banner.image_url && (
+                          <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden shrink-0 bg-white/10">
+                            <Image src={banner.image_url} alt={banner.title} fill sizes="80px" className="object-cover" />
+                          </div>
+                        )}
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-sm md:text-base">{banner.title}</p>
                     {banner.subtitle && (
