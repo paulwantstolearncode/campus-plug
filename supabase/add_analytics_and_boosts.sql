@@ -1,18 +1,40 @@
 -- ═══════════════════════════════════════════════════════════════════
--- MONETIZATION INFRASTRUCTURE
--- Analytics events, listing counters, boost system, banner ads
+-- MONETIZATION INFRASTRUCTURE (IDEMPOTENT)
+-- Safe to run multiple times — uses ADD COLUMN IF NOT EXISTS.
 -- ═══════════════════════════════════════════════════════════════════
 
 -- ── 1. Analytics events table ─────────────────────────────────────
--- Tracks listing views and WhatsApp clicks for seller analytics + conversion.
+-- Create the table only if it doesn't exist at all.
 CREATE TABLE IF NOT EXISTS public.analytics_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  event_type TEXT NOT NULL CHECK (event_type IN ('listing_view', 'whatsapp_click')),
+  event_type TEXT NOT NULL DEFAULT 'listing_view',
   listing_id UUID NOT NULL REFERENCES public.listings(id) ON DELETE CASCADE,
   user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   metadata JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- If the table already existed (e.g. from a prior partial run), ensure
+-- every column is present. ADD COLUMN IF NOT EXISTS is safe on existing cols.
+ALTER TABLE public.analytics_events
+  ADD COLUMN IF NOT EXISTS id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  ADD COLUMN IF NOT EXISTS event_type TEXT NOT NULL DEFAULT 'listing_view',
+  ADD COLUMN IF NOT EXISTS listing_id UUID NOT NULL REFERENCES public.listings(id) ON DELETE CASCADE,
+  ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ NOT NULL DEFAULT now();
+
+-- Add the CHECK constraint only if it doesn't already exist.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'analytics_events_event_type_check'
+  ) THEN
+    ALTER TABLE public.analytics_events
+      ADD CONSTRAINT analytics_events_event_type_check
+      CHECK (event_type IN ('listing_view', 'whatsapp_click'));
+  END IF;
+END $$;
 
 ALTER TABLE public.analytics_events ENABLE ROW LEVEL SECURITY;
 
@@ -53,8 +75,6 @@ CREATE INDEX IF NOT EXISTS idx_analytics_events_type_listing
   ON public.analytics_events (event_type, listing_id);
 
 -- ── 2. Listing counters (denormalized for fast reads) ─────────────
--- view_count and whatsapp_click_count on the listings table itself.
--- Updated by SECURITY DEFINER functions to avoid RLS overhead on writes.
 
 ALTER TABLE public.listings
   ADD COLUMN IF NOT EXISTS view_count INTEGER NOT NULL DEFAULT 0,
@@ -84,8 +104,6 @@ GRANT EXECUTE ON FUNCTION public.increment_listing_counter(UUID, TEXT) TO anon;
 GRANT EXECUTE ON FUNCTION public.increment_listing_counter(UUID, TEXT) TO authenticated;
 
 -- ── 3. Boost system ──────────────────────────────────────────────
--- boosted_until: when set, the listing appears above others in search.
--- NULL or past = not boosted.
 
 ALTER TABLE public.listings
   ADD COLUMN IF NOT EXISTS boosted_until TIMESTAMPTZ;
@@ -96,7 +114,7 @@ CREATE INDEX IF NOT EXISTS idx_listings_boosted
   WHERE approval_status = 'approved' AND deleted_at IS NULL;
 
 -- ── 4. Banner ads table ──────────────────────────────────────────
--- Admin-configurable banner ads on the landing page.
+
 CREATE TABLE IF NOT EXISTS public.banner_ads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   title TEXT NOT NULL,
@@ -113,7 +131,6 @@ CREATE TABLE IF NOT EXISTS public.banner_ads (
 
 ALTER TABLE public.banner_ads ENABLE ROW LEVEL SECURITY;
 
--- Anyone can read active, non-expired banners (landing page needs them).
 DROP POLICY IF EXISTS "Anyone can view active banner ads" ON public.banner_ads;
 CREATE POLICY "Anyone can view active banner ads"
   ON public.banner_ads FOR SELECT
@@ -122,7 +139,6 @@ CREATE POLICY "Anyone can view active banner ads"
     AND (expires_at IS NULL OR expires_at > now())
   );
 
--- Only admins can manage banners.
 DROP POLICY IF EXISTS "Admins can manage banner ads" ON public.banner_ads;
 CREATE POLICY "Admins can manage banner ads"
   ON public.banner_ads FOR ALL
@@ -130,5 +146,5 @@ CREATE POLICY "Admins can manage banner ads"
   USING (public.is_admin());
 
 -- ═══════════════════════════════════════════════════════════════════
--- DONE. Now push this code and deploy.
+-- DONE. Safe to re-run if any step failed partway.
 -- ═══════════════════════════════════════════════════════════════════
