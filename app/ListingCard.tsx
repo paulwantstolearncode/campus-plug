@@ -55,8 +55,8 @@ function HeartIcon({ filled }: { filled: boolean }) {
       width="18"
       height="18"
       viewBox="0 0 24 24"
-      fill={filled ? '#d4af37' : 'none'}
-      stroke="#d4af37"
+      fill={filled ? '#c9a227' : 'none'}
+      stroke="#c9a227"
       strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
@@ -180,30 +180,41 @@ export default function ListingCard({
 
   return (
     <div className="group relative fade-up" style={delay ? { animationDelay: delay } : undefined}>
-      <div className="relative bg-surface rounded-xl overflow-hidden shadow-sm border border-rule hover:shadow-md transition-shadow duration-300">
-        <Link href={href} className="relative block aspect-[4/3] md:aspect-[4/3] sm:aspect-square overflow-hidden bg-paper">
+      <div className="card-lift relative bg-surface rounded-2xl overflow-hidden hairline">
+        <Link href={href} className="relative block aspect-[4/3] overflow-hidden bg-paper-deep">
           {listing.image_url ? (
             <Image
               src={listing.image_url}
               alt={listing.title}
               fill
               sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-              className="object-cover group-hover:scale-105 transition-transform duration-500"
+              className="object-cover group-hover:scale-[1.04] transition-transform duration-700 ease-out"
               priority={index !== undefined && index < 6}
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-paper">
-              <span className="text-6xl opacity-30">{cat.emoji}</span>
+            <div className="w-full h-full flex items-center justify-center bg-paper-deep">
+              <span className="text-6xl opacity-25">{cat.emoji}</span>
             </div>
           )}
 
-          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wide text-ink">
-            {listing.listing_type === 'service' ? 'SERVICE' : 'PRODUCT'}
+          {/* Soft gradient scrim for badge legibility */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/25 via-transparent to-black/5 pointer-events-none" />
+
+          {/* Type badge — top-left */}
+          <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider text-ink shadow-sm">
+            {listing.listing_type === 'service' ? 'Service' : 'Product'}
           </div>
 
-          <div className="absolute top-3 right-3 bg-gold-soft text-ink font-mono font-bold px-3 py-1 rounded-md text-sm shadow-sm">
+          {/* Price pill — top-right, gold signal */}
+          <div className="absolute top-3 right-3 bg-gold-signal text-ink font-mono font-bold px-3 py-1 rounded-lg text-sm shadow-md shadow-gold-glow">
             {priceLabel}
           </div>
+
+          {rating?.is_top_rated && (
+            <div className="absolute bottom-3 left-3 bg-gold-signal text-ink px-2.5 py-1 rounded-lg text-[11px] font-bold shadow-md flex items-center gap-1">
+              ⭐ Top Rated
+            </div>
+          )}
 
           {toast && (
             <div className="absolute top-14 right-3 bg-ink text-white px-4 py-3 rounded-xl shadow-xl z-20 flex items-center gap-3 animate-fade-in">
@@ -214,7 +225,7 @@ export default function ListingCard({
                     toast.action!.onClick()
                     setToast(null)
                   }}
-                  className="text-gold font-semibold text-sm hover:text-gold-dark transition-colors"
+                  className="text-gold-vivid font-semibold text-sm hover:text-gold-light transition-colors"
                 >
                   {toast.action.label}
                 </button>
@@ -224,16 +235,16 @@ export default function ListingCard({
         </Link>
 
         <div className="p-4">
-          <Link href={href} className="block mb-2">
-            <h3 className="font-bold text-ink text-base md:text-lg line-clamp-2 min-h-[2.75rem] hover:text-gold-dark transition-colors leading-snug">
+          <Link href={href} className="block mb-1.5">
+            <h3 className="font-semibold text-ink text-base md:text-lg line-clamp-2 min-h-[2.75rem] hover:text-gold-dark transition-colors leading-snug">
               {listing.title}
             </h3>
           </Link>
 
-          <p className="text-xs text-ink-muted mb-2">{cat.label}</p>
+          <p className="text-xs text-ink-muted mb-1.5">{cat.label}</p>
 
           {listing.campus_location && (
-            <div className="font-mono text-xs text-ink-muted mb-2">
+            <div className="font-mono text-xs text-ink-muted mb-1.5">
               📍 {listing.campus_location}
             </div>
           )}
@@ -248,7 +259,7 @@ export default function ListingCard({
             </Link>
           )}
 
-          <div className="font-mono text-xs text-ink-muted mb-4">
+          <div className="font-mono text-xs text-ink-muted mb-3">
             {rating?.review_count ? (
               <span>⭐ {Number(rating.average_rating).toFixed(1)} ({rating.review_count} reviews)</span>
             ) : (
@@ -256,17 +267,11 @@ export default function ListingCard({
             )}
           </div>
 
-          {rating?.is_top_rated && (
-            <div className="inline-flex items-center gap-1.5 bg-gold/10 border border-gold/30 text-gold-dark px-2.5 py-1 rounded-full text-[11px] font-bold mb-4">
-              ⭐ Top Rated
-            </div>
-          )}
-
           <div className="flex gap-2 items-center">
             {preview ? (
               <Link
                 href="/login"
-                className="flex-1 flex items-center justify-center gap-2 bg-whatsapp text-white py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
+                className="flex-1 flex items-center justify-center gap-2 bg-whatsapp text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-whatsapp-bright transition-colors"
               >
                 <WhatsAppIcon className="shrink-0" />
                 Message on WhatsApp
@@ -275,13 +280,13 @@ export default function ListingCard({
               <>
                 <Link
                   href={'/new?edit=' + listing.id}
-                  className="flex-1 flex items-center justify-center gap-2 bg-ink text-white py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
+                  className="flex-1 flex items-center justify-center gap-2 bg-ink text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-ink-soft transition-colors"
                 >
                   Edit
                 </Link>
                 <button
                   onClick={() => onDelete?.(listing.id, listing.title)}
-                  className="w-10 h-10 flex items-center justify-center bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shrink-0"
+                  className="w-10 h-10 flex items-center justify-center bg-red-500 text-white rounded-xl hover:bg-red-600 transition-colors shrink-0"
                   title="Delete listing"
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
@@ -294,7 +299,7 @@ export default function ListingCard({
                     href={whatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex-1 flex items-center justify-center gap-2 bg-whatsapp text-white py-2.5 rounded-lg font-semibold text-sm hover:opacity-90 transition-opacity"
+                    className="flex-1 flex items-center justify-center gap-2 bg-whatsapp text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-whatsapp-bright transition-colors"
                   >
                     <WhatsAppIcon className="shrink-0" />
                     Message on WhatsApp
@@ -306,7 +311,7 @@ export default function ListingCard({
             {!preview && !isOwner && (
               <button
                 onClick={handleFavoriteClick}
-                className="w-10 h-10 flex items-center justify-center border border-rule rounded-lg hover:border-gold transition-colors shrink-0"
+                className="w-10 h-10 flex items-center justify-center border border-rule rounded-xl hover:border-gold hover:bg-gold-soft/40 transition-colors shrink-0"
                 title={isFavorited ? 'Unsave' : 'Save'}
               >
                 <HeartIcon filled={isFavorited} />

@@ -4,23 +4,32 @@ import HelpButton from "./HelpButton";
 import FeedbackButton from "./components/FeedbackButton";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import { Analytics } from "@vercel/analytics/react";
-import { Playfair_Display, Manrope, DM_Serif_Display, IBM_Plex_Mono } from "next/font/google";
+import { Space_Grotesk, Plus_Jakarta_Sans, Instrument_Serif, IBM_Plex_Mono } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
 
-// Editorial serif accent — used ONLY for italic gold keywords (hero
-// "guesswork", section headers). Self-hosted via next/font with
-// font-display: swap (default) so a font swap never causes CLS.
-const manrope = Manrope({
+// ── Design-system type stack ──────────────────────────────────────
+// Space Grotesk  → display headings (geometric, confident editorial voice)
+// Plus Jakarta   → body/UI copy (clean, modern, highly legible)
+// Instrument Serif → italic keyword accents ("guesswork", "plug")
+// IBM Plex Mono  → price pills + meta labels (technical counterpoint)
+// All self-hosted via next/font with font-display: swap — never causes CLS.
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
   display: "swap",
 });
 
-const dmSerif = DM_Serif_Display({
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-display",
+  display: "swap",
+});
+
+const instrument = Instrument_Serif({
   subsets: ["latin"],
   style: ["normal", "italic"],
   weight: ["400"],
-  variable: "--font-serif",
+  variable: "--font-serif-accent",
   display: "swap",
 });
 
@@ -28,14 +37,6 @@ const ibmPlexMono = IBM_Plex_Mono({
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   variable: "--font-mono",
-  display: "swap",
-});
-
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  weight: ["400", "700"],
-  variable: "--font-serif-accent",
   display: "swap",
 });
 
@@ -78,7 +79,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${playfair.variable} ${manrope.variable} ${dmSerif.variable} ${ibmPlexMono.variable}`}>
+    <html lang="en" className={`${jakarta.variable} ${spaceGrotesk.variable} ${instrument.variable} ${ibmPlexMono.variable}`}>
       <body>
         {children}
         <HelpButton />

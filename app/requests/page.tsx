@@ -204,45 +204,45 @@ export default function RequestsPage() {
                 const isOwner = user?.id === req.user_id
 
                 return (
-                  <div key={req.id} className="bg-white rounded-3xl p-6 shadow-sm border border-gray-200/80 hover:shadow-lg transition-all duration-300 flex flex-col">
+                  <div key={req.id} className="card-lift bg-surface rounded-2xl p-6 hairline flex flex-col">
                     <div className="flex items-start justify-between gap-2 mb-3">
-                      <h3 className="font-bold text-charcoal text-lg leading-snug">{req.title}</h3>
+                      <h3 className="font-bold text-ink text-lg leading-snug">{req.title}</h3>
                       {req.budget && (
-                        <span className="shrink-0 bg-gold/10 text-gold-dark px-3 py-1 rounded-full text-sm font-bold">
+                        <span className="shrink-0 bg-gold-soft text-gold-dark px-3 py-1 rounded-lg font-mono text-sm font-bold">
                           GH₵ {req.budget.toLocaleString()}
                         </span>
                       )}
                     </div>
 
                     {req.description && (
-                      <p className="text-sm text-gray-600 leading-relaxed mb-4 line-clamp-3">{req.description}</p>
+                      <p className="text-sm text-ink-muted leading-relaxed mb-4 line-clamp-3">{req.description}</p>
                     )}
 
                     <div className="flex flex-wrap gap-2 mb-4 mt-auto">
                       {cat && (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-off-white text-gray-700">
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-paper-deep text-ink-muted">
                           {cat.emoji} {cat.label}
                         </span>
                       )}
                       {req.campus_location && (
-                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full bg-off-white text-gray-700">
+                        <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-lg bg-paper-deep text-ink-muted">
                           📍 {req.campus_location}
                         </span>
                       )}
-                      <span className="text-xs text-gray-400">{formatDate(req.created_at)}</span>
+                      <span className="text-xs text-ink-muted/70 font-mono">{formatDate(req.created_at)}</span>
                     </div>
 
                     <div className="flex gap-2">
                       <button
                         onClick={() => handlePitch(req)}
-                        className="flex-1 bg-green-500 text-white py-2.5 rounded-full font-semibold text-sm hover:bg-green-600 transition-all hover:scale-[1.02] flex items-center justify-center gap-1.5"
+                        className="flex-1 bg-whatsapp text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-whatsapp-bright transition-colors flex items-center justify-center gap-1.5"
                       >
                         💬 Pitch on WhatsApp
                       </button>
                       {isOwner && (
                         <button
                           onClick={() => handleClose(req.id)}
-                          className="px-4 py-2.5 rounded-full text-sm font-semibold border border-gray-200 text-gray-600 hover:border-gold hover:text-gold transition-colors"
+                          className="px-4 py-2.5 rounded-xl text-sm font-semibold border border-rule text-ink-muted hover:border-gold hover:text-gold-dark transition-colors"
                           title="Mark as fulfilled"
                         >
                           ✓

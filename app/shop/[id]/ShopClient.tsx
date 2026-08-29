@@ -61,20 +61,29 @@ export default function ShopClient({ seller }: ShopClientProps) {
         </div>
       </nav>
 
-      {/* Seller Banner */}
-      <section className="relative pt-28 pb-12 md:pt-36 md:pb-16 bg-white border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      {/* Seller Banner — premium storefront header */}
+      <section className="relative pt-28 pb-12 md:pt-36 md:pb-16 overflow-hidden bg-ink text-white">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="blob absolute -top-20 right-0 w-96 h-96 bg-gold/15 rounded-full blur-3xl"></div>
+          <div className="blob absolute bottom-0 left-1/4 w-72 h-72 bg-gold/10 rounded-full blur-3xl" style={{ animationDelay: '6s' }}></div>
+        </div>
+        <div
+          className="absolute inset-0 opacity-[0.05]"
+          style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.4) 1px, transparent 1px)', backgroundSize: '56px 56px' }}
+        ></div>
+
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             {/* Avatar */}
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center text-3xl font-bold text-gold-dark shrink-0 border-2 border-gold/20">
+            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-gold-vivid/30 to-gold/5 flex items-center justify-center text-3xl font-bold text-gold-vivid shrink-0 border border-gold/30 shadow-glow">
               {displayName.charAt(0).toUpperCase()}
             </div>
 
             {/* Info */}
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h1 className="text-2xl md:text-3xl font-bold text-charcoal">{displayName}</h1>
-                <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold">
+                <h1 className="text-2xl md:text-3xl font-bold text-white">{displayName}</h1>
+                <span className="inline-flex items-center gap-1 bg-green-500/15 text-green-300 px-2.5 py-1 rounded-full text-xs font-bold border border-green-500/30">
                   ✓ Verified Student Seller
                 </span>
               </div>
@@ -83,11 +92,11 @@ export default function ShopClient({ seller }: ShopClientProps) {
               {seller.rating && seller.rating.review_count > 0 && (
                 <div className="flex items-center gap-2 mt-2">
                   <StarRating rating={Number(seller.rating.average_rating) || 0} size="sm" />
-                  <span className="text-sm font-bold text-charcoal">
+                  <span className="text-sm font-bold text-white">
                     {Number(seller.rating.average_rating).toFixed(1)} ({seller.rating.review_count} reviews)
                   </span>
                   {seller.rating.is_top_rated && (
-                    <span className="inline-flex items-center gap-1 bg-gold/10 border border-gold/30 text-gold-dark px-2.5 py-1 rounded-full text-xs font-bold">
+                    <span className="inline-flex items-center gap-1 bg-gold/15 border border-gold/40 text-gold-vivid px-2.5 py-1 rounded-full text-xs font-bold">
                       ⭐ Top Rated
                     </span>
                   )}
@@ -96,11 +105,11 @@ export default function ShopClient({ seller }: ShopClientProps) {
 
               {/* Location */}
               {seller.campus_location && (
-                <p className="text-sm text-gray-500 mt-2">📍 {seller.campus_location}</p>
+                <p className="text-sm text-white/60 mt-2">📍 {seller.campus_location}</p>
               )}
 
               {/* Stats */}
-              <p className="text-xs text-gray-400 mt-2">
+              <p className="text-xs text-white/40 font-mono mt-2">
                 {seller.listings.length} approved listing{seller.listings.length !== 1 ? 's' : ''}
               </p>
             </div>
@@ -112,14 +121,14 @@ export default function ShopClient({ seller }: ShopClientProps) {
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 bg-whatsapp text-white px-6 py-3 rounded-full font-semibold text-sm hover:opacity-90 transition-opacity"
+                  className="flex items-center justify-center gap-2 bg-whatsapp text-white px-6 py-3 rounded-full font-semibold text-sm hover:bg-whatsapp-bright transition-colors"
                 >
                   💬 Message {displayName} on WhatsApp
                 </a>
               )}
               <button
                 onClick={handleShare}
-                className="flex items-center justify-center gap-2 bg-charcoal text-white px-6 py-3 rounded-full font-semibold text-sm hover:bg-black transition-colors"
+                className="flex items-center justify-center gap-2 glass text-white px-6 py-3 rounded-full font-semibold text-sm hover:bg-white/10 transition-colors border border-white/15"
               >
                 📢 Share Shop on WhatsApp
               </button>

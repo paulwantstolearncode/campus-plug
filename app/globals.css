@@ -1,33 +1,44 @@
 @import "tailwindcss";
 
 :root {
-  /* Legacy tokens — kept for backward compat with existing pages */
-  --background: #ffffff;
-  --foreground: #0a0a0a;
-  --gold: #d4af37;
+  /* ── Legacy tokens (kept for backward compat with existing pages) ── */
+  --background: #f6f5f1;
+  --foreground: #0a0a0c;
+  --gold: #c9a227;
   --gold-light: #e8c66d;
-  --gold-dark: #b8941f;
-  --charcoal: #0f0f0f;
-  --off-white: #fafafa;
-  --gradient-start: #1a1a2e;
-  --gradient-mid: #16213e;
-  --gradient-end: #0f0f0f;
+  --gold-dark: #a8841a;
+  --charcoal: #0a0a0c;
+  --off-white: #f6f5f1;
 
-  /* Legon Noticeboard design tokens */
-  --color-paper: #F8F8F8;
-  --color-surface: #FFFFFF;
-  --color-ink: #0F0F0F;
-  --color-ink-muted: #5B5B5B;
-  --color-rule: #DCD9D2;
-  --color-gold-signal: #D4AF37;
-  --color-gold-soft: #F4EBC9;
-  --color-whatsapp: #128C4A;
+  /* ── Campus Plug design system · "Warm paper × obsidian × gold signal" ──
+     A refined editorial palette: warm bone paper, deep obsidian ink, and a
+     metallic gold "signal" that reads premium on both light and dark. */
+  --color-paper: #f6f5f1;          /* warm bone paper */
+  --color-paper-deep: #efece4;     /* slightly deeper paper for wells */
+  --color-surface: #ffffff;
+  --color-ink: #0a0a0c;            /* obsidian */
+  --color-ink-soft: #17171c;       /* raised obsidian surface */
+  --color-ink-muted: #6b6a66;      /* warm graphite */
+  --color-rule: #e4e1d8;           /* hairline rule */
+  --color-gold-signal: #c9a227;    /* metallic gold */
+  --color-gold-vivid: #e8b93b;     /* bright gold for hover/CTAs */
+  --color-gold-soft: #f3ecd6;      /* soft gold wash */
+  --color-gold-glow: rgba(201, 162, 39, 0.45);
+  --color-whatsapp: #128c4a;       /* WhatsApp green (conversion signal) */
+  --color-whatsapp-bright: #25d366;
+
+  /* Gradient stops (legacy animated hero) */
+  --gradient-start: #0a0a0c;
+  --gradient-mid: #14141a;
+  --gradient-end: #0a0a0c;
 }
 
 @theme inline {
   --font-sans: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-serif: var(--font-serif), "DM Serif Display", Georgia, serif;
+  --font-display: var(--font-display), var(--font-sans), sans-serif;
+  --font-serif: var(--font-serif), "Instrument Serif", Georgia, serif;
   --font-mono: var(--font-mono), "IBM Plex Mono", ui-monospace, monospace;
+  --font-serif-accent: var(--font-serif-accent), "Instrument Serif", Georgia, serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -37,15 +48,24 @@
   --color-charcoal: var(--charcoal);
   --color-off-white: var(--off-white);
 
-  /* Legon Noticeboard tokens as Tailwind colors */
+  /* Design-system tokens as Tailwind colors */
   --color-paper: var(--color-paper);
+  --color-paper-deep: var(--color-paper-deep);
   --color-surface: var(--color-surface);
   --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
   --color-ink-muted: var(--color-ink-muted);
   --color-rule: var(--color-rule);
   --color-gold-signal: var(--color-gold-signal);
+  --color-gold-vivid: var(--color-gold-vivid);
   --color-gold-soft: var(--color-gold-soft);
   --color-whatsapp: var(--color-whatsapp);
+  --color-whatsapp-bright: var(--color-whatsapp-bright);
+
+  /* Refined elevation shadows */
+  --shadow-lift: 0 1px 2px rgba(10,10,12,0.04), 0 8px 24px -12px rgba(10,10,12,0.14);
+  --shadow-card: 0 1px 2px rgba(10,10,12,0.05), 0 16px 40px -20px rgba(10,10,12,0.22);
+  --shadow-glow: 0 0 0 1px rgba(201,162,39,0.18), 0 12px 40px -12px rgba(201,162,39,0.35);
 }
 
 * {
@@ -58,7 +78,15 @@ body {
   font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
+}
+
+/* Display type for headings — Space Grotesk gives that confident, geometric
+   editorial voice while body copy stays in Plus Jakarta Sans. */
+h1, h2, h3, h4 {
+  font-family: var(--font-display), var(--font-sans), sans-serif;
+  letter-spacing: -0.02em;
 }
 
 html {
@@ -66,43 +94,36 @@ html {
   overflow-x: hidden;
 }
 
-/* Animated gradient background */
+/* ── Motion ─────────────────────────────────────────────────────── */
+
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
 }
 
 .animated-gradient {
-  background: linear-gradient(-45deg, #1a1a2e, #16213e, #0f0f0f, #1a1a2e);
+  background: linear-gradient(-45deg, #0a0a0c, #14141a, #0a0a0c, #17120a);
   background-size: 400% 400%;
-  animation: gradient-shift 15s ease infinite;
+  animation: gradient-shift 18s ease infinite;
 }
 
-/* Floating blob animation */
 @keyframes float {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -30px) scale(1.1); }
-  66% { transform: translate(-20px, 20px) scale(0.9); }
+  33% { transform: translate(30px, -30px) scale(1.08); }
+  66% { transform: translate(-20px, 20px) scale(0.94); }
 }
 
 .blob {
-  animation: float 20s ease-in-out infinite;
+  animation: float 22s ease-in-out infinite;
 }
 
-/* Fade in animation */
 @keyframes fade-up {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .fade-up {
-  animation: fade-up 0.8s ease-out forwards;
+  animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .fade-up-delay-1 { animation-delay: 0.1s; opacity: 0; }
@@ -111,98 +132,122 @@ html {
 .fade-up-delay-4 { animation-delay: 0.4s; opacity: 0; }
 .fade-up-delay-5 { animation-delay: 0.5s; opacity: 0; }
 
-/* Glassmorphism */
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out forwards;
+}
+
+/* ── Surfaces & glass ───────────────────────────────────────────── */
+
 .glass {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .glass-light {
-  background: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.72);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: rgba(212, 175, 55, 0.3);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(212, 175, 55, 0.5);
+/* Frosted obsidian card for floating hero elements */
+.glass-dark {
+  background: rgba(10, 10, 12, 0.55);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Selection */
-::selection {
-  background: var(--gold);
-  color: var(--charcoal);
+/* Hairline glowing border — the "expensive product" surface treatment. */
+.hairline {
+  border: 1px solid var(--color-rule);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
-/* Editorial serif accent — Playfair Display via next/font (--font-serif-accent).
-   Applied ONLY to italic gold keywords: hero "guesswork" + section headers. */
+.hairline-glow {
+  border: 1px solid rgba(201, 162, 39, 0.22);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    0 0 0 1px rgba(201, 162, 39, 0.06),
+    0 18px 48px -24px rgba(201, 162, 39, 0.28);
+}
+
+/* Card hover-lift */
+.card-lift {
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+}
+.card-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card);
+}
+
+/* ── Typography accents ─────────────────────────────────────────── */
+
+/* Editorial italic serif accent — applied to gold keyword spans. */
 .font-serif-accent {
-  font-family: var(--font-serif-accent), "Playfair Display", Georgia, serif;
+  font-family: var(--font-serif-accent), "Instrument Serif", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
 }
 
-/* Gradient text */
+/* Gradient gold text */
 .gradient-text {
-  background: linear-gradient(135deg, #d4af37 0%, #e8c66d 50%, #d4af37 100%);
+  background: linear-gradient(120deg, #e8b93b 0%, #c9a227 45%, #f0d27a 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* Shine effect on buttons */
+/* Eyebrow label — mono meta tag used above section headings */
+.eyebrow {
+  font-family: var(--font-mono), monospace;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────── */
+
 @keyframes shine {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
 }
 
 .shine-button {
-  background: linear-gradient(
-    90deg,
-    #d4af37 0%,
-    #f5e6a8 50%,
-    #d4af37 100%
-  );
+  background: linear-gradient(90deg, #c9a227 0%, #f5e6a8 50%, #c9a227 100%);
   background-size: 200% auto;
   animation: shine 3s linear infinite;
 }
 
-/* Pause continuous decorative animations on touch devices. */
-@media (hover: none) and (pointer: coarse) {
-  .animated-gradient,
-  .blob,
-  .shine-button {
-    animation: none;
-  }
+/* ── Scrollbar / selection ──────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(201, 162, 39, 0.3); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(201, 162, 39, 0.5); }
+
+::selection {
+  background: var(--gold);
+  color: var(--charcoal);
 }
 
-/* ── Print styles for Poster Generator ─────────────────────────── */
+/* Pause continuous decorative animations on touch devices. */
+@media (hover: none) and (pointer: coarse) {
+  .animated-gradient, .blob, .shine-button { animation: none; }
+}
+
+/* ── Print styles for Poster Generator ──────────────────────────── */
 @media print {
-  body {
-    background: none !important;
-    margin: 0;
-    padding: 0;
-  }
-
-  .no-print,
-  nav,
-  header,
-  footer,
-  .no-print ~ * {
-    display: none !important;
-  }
-
+  body { background: none !important; margin: 0; padding: 0; }
+  .no-print, nav, header, footer, .no-print ~ * { display: none !important; }
   .poster-canvas {
     width: 100% !important;
     height: auto !important;
