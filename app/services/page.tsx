@@ -74,20 +74,32 @@ export default function ServicesPage() {
   useEffect(() => {
     async function loadEverything() {
       try {
-        const { data, error } = await supabase
-          .from('listings')
-          .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)')
-          .eq('listing_type', 'service')
-          .eq('approval_status', 'approved')
-          .is('deleted_at', null)
-          .order('created_at', { ascending: false })
+        const select = '*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)'
+        const baseQuery = (q: ReturnType<typeof supabase.from>) =>
+          q.select(select)
+            .eq('listing_type', 'service')
+            .eq('approval_status', 'approved')
+            .is('deleted_at', null)
+
+        // 1) Boosted listings first (paid placement).
+        const { data: boosted } = await baseQuery(
+          supabase.from('listings')
+        ).gt('boosted_until', new Date().toISOString())
+          .order('boosted_until', { ascending: false })
+
+        // 2) Regular listings (newest first), excluding already-boosted IDs.
+        const boostedIds = new Set((boosted || []).map((l: { id: string }) => l.id))
+        const { data: regular, error } = await baseQuery(
+          supabase.from('listings')
+        ).order('created_at', { ascending: false })
 
         if (error) {
           console.error('Failed to load services:', error)
-        } else if (data) {
-          const typed = data as unknown as Service[]
-          setServices(typed)
-          const ratings = await getSellerRatings(typed.map((s) => s.seller_id))
+        } else if (regular) {
+          // Merge: boosted first, then the rest (skip duplicates).
+          const merged = [...(boosted || []), ...(regular || []).filter((l: { id: string }) => !boostedIds.has(l.id))] as unknown as Service[]
+          setServices(merged)
+          const ratings = await getSellerRatings(merged.map((s) => s.seller_id))
           setSellerRatings(ratings)
         }
       } catch (err) {

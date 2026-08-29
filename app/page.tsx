@@ -25,26 +25,27 @@ export default function Home() {
         const { data: { user } } = await supabase.auth.getUser()
         setUser(user)
 
-        // Fetch listings for EVERYONE — a profile lookup that fails (or a
-        // user with no profile row) must never blank out the marketplace.
-        const { data, error } = await supabase
-          .from('listings')
-          .select('*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)')
-          .eq('approval_status', 'approved')
-          .is('deleted_at', null)
+        // Fetch listings for EVERYONE — boosted first, then newest.
+        const select = '*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)'
+        const baseQuery = (q: ReturnType<typeof supabase.from>) =>
+          q.select(select)
+            .eq('approval_status', 'approved')
+            .is('deleted_at', null)
+
+        const { data: boosted } = await baseQuery(supabase.from('listings'))
+          .gt('boosted_until', new Date().toISOString())
+          .order('boosted_until', { ascending: false })
+
+        const boostedIds = new Set((boosted || []).map((l: { id: string }) => l.id))
+        const { data: regular, error } = await baseQuery(supabase.from('listings'))
           .order('created_at', { ascending: false })
 
         if (error) {
-          // First place to look when the feed is empty: this prints e.g. a
-          // missing-relation error if the listing_items migration hasn't been
-          // run, or an RLS denial for the current role.
           console.error('Failed to load listings:', error)
-        } else if (data) {
-          const typed = data as unknown as ListingCardData[]
-          setListings(typed)
-          // Seller star ratings + Top Rated badges (best-effort; the reviews
-          // system is additive — a failed fetch only means no badges).
-          const ratings = await getSellerRatings(typed.map((l) => l.seller_id))
+        } else if (regular) {
+          const merged = [...(boosted || []), ...(regular || []).filter((l: { id: string }) => !boostedIds.has(l.id))] as unknown as ListingCardData[]
+          setListings(merged)
+          const ratings = await getSellerRatings(merged.map((l) => l.seller_id))
           setSellerRatings(ratings)
         }
 

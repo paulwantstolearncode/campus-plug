@@ -128,23 +128,35 @@ export default function LandingPage() {
             .map((s) => s.listing as ListingCardData)
         }
 
-        // 2) Fill the remaining slots with the newest approved listings that
-        //    aren't already featured.
+        // 2) Fill the remaining slots with boosted listings first,
+        //    then the newest approved listings that aren't already featured.
         let combined = featured
         if (combined.length < 6) {
           const picked = combined.map((l) => l.id)
-          const fillQuery = supabase
-            .from('listings')
-            .select(select)
-            .eq('approval_status', 'approved')
-            .is('deleted_at', null)
-            .not('image_url', 'is', null)
-            .neq('image_url', '')
+          const baseFill = () => {
+            const q = supabase
+              .from('listings')
+              .select(select)
+              .eq('approval_status', 'approved')
+              .is('deleted_at', null)
+              .not('image_url', 'is', null)
+              .neq('image_url', '')
+            if (picked.length > 0) q.not('id', 'in', picked)
+            return q
+          }
+
+          // Boosted first, then regular.
+          const { data: boostedFill } = await baseFill()
+            .gt('boosted_until', new Date().toISOString())
+            .order('boosted_until', { ascending: false })
+            .limit(6)
+
+          const boostedRows = (boostedFill || []) as unknown as { id: string }[]
+          const boostedIds = new Set(boostedRows.map((l) => l.id))
+          const { data: regularFill, error: fillError } = await baseFill()
             .order('created_at', { ascending: false })
             .limit(6)
-          if (picked.length > 0) fillQuery.not('id', 'in', picked)
 
-          const { data: fillData, error: fillError } = await fillQuery
           if (fillError) {
             // Last resort: newest-6 with no exclusion (pre-featured behavior).
             const { data: fallback } = await supabase
@@ -157,8 +169,10 @@ export default function LandingPage() {
               .order('created_at', { ascending: false })
               .limit(6)
             if (fallback) combined = fallback as unknown as ListingCardData[]
-          } else if (fillData) {
-            combined = [...featured, ...(fillData as unknown as ListingCardData[])].slice(0, 6)
+          } else if (regularFill) {
+            const regularRows = (regularFill || []) as unknown as { id: string }[]
+            const merged = [...boostedRows, ...regularRows.filter((l) => !boostedIds.has(l.id))].slice(0, 6)
+            combined = [...featured, ...merged as unknown as ListingCardData[]].slice(0, 6)
           }
         }
 

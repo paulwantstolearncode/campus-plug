@@ -1,6 +1,6 @@
 # Handoff — Campus Plug
 
-Last updated: 2026-08-23
+Last updated: 2026-08-29
 
 ## Current state
 
@@ -11,6 +11,18 @@ Last updated: 2026-08-23
 - **Local preview**: port 56816 via `nohup npm run dev -- -p 56816`
 
 ## Recently shipped
+
+### Visual Redesign (3f8fb21)
+- **"Warm paper × obsidian × gold signal" design system** — new font stack (Space Grotesk display headings, Plus Jakarta Sans body, Instrument Serif italic gold accents, IBM Plex Mono prices/meta), gold shifted from #d4af37 to #c9a227 (metallic signal), card-lift hover effect with 3-tier shadow system (lift/card/glow), glass-dark/hairline/paper-deep surface treatments, editorial eyebrow labels, gradient gold text, and refined scrollbar/selection styles.
+- Files: globals.css, layout.tsx, LandingPage.tsx, ListingCard.tsx, requests/page.tsx, shop/[id]/ShopClient.tsx, listing/[id]/ListingDetailClient.tsx.
+- Branch: `feature/ui-redesign` merged to main.
+
+### Monetization Infrastructure (a00717d)
+- **Analytics system**: `analytics_events` table with RLS (public INSERT, admin read, seller read own). Denormalized `view_count` and `whatsapp_click_count` on listings, updated via `increment_listing_counter()` SECURITY DEFINER function. View tracking on listing detail page, click tracking on WhatsApp buttons in ListingCard and ListingDetail.
+- **Seller analytics dashboard**: New section on `/dashboard` showing total views, WhatsApp clicks, conversion rate (clicks/views %), and per-listing breakdown with views, clicks, and CVR.
+- **Boost system**: `boosted_until` column on listings. "Boost this listing (7 days)" button on each approved listing in seller dashboard. Boosted listings sorted first in all feed queries (services, landing page fill, homepage).
+- **Banner ads**: `banner_ads` table with RLS (public read active, admin CRUD). Admin management page at `/admin/banners` with create/edit/delete, color picker, slot ordering, expiry, and live preview. Landing page renders banner slots between hero and content sections.
+- **SQL migration**: `supabase/add_analytics_and_boosts.sql` — idempotent, safe to re-run. Creates analytics_events, banner_ads tables, listing counters, boosted_until column, and increment_listing_counter function.
 
 ### Backend Hardening (6b2147d)
 - **Soft deletes** for `listings` and `plug_requests` tables — new `deleted_at` timestamptz column with partial indexes on `deleted_at IS NULL`. Seller delete action in `app/page.tsx` now sets `deleted_at = now()` instead of hard-deleting, preserving historical sales, reviews, and orders. All 10 feed query paths (landing, services, favorites, shop, admin, requests, categories) filter out soft-deleted rows with `.is('deleted_at', null)`.
@@ -106,7 +118,13 @@ There were two Vercel projects both named "campus-plug". The broken duplicate (`
 
 ### Strategic Decisions
 
-- **Monetization Pause**: All payment/commission features (Paystack MoMo, paid featured listings, seller subscriptions) are on hold until Campus Plug reaches 100+ active users. Current priority is 100% focused on user growth, seller onboarding, and WhatsApp transaction volume at UG Legon.
+- **Monetization Active**: Revenue streams now in place:
+  1. **Featured listings** (admin-curated slots on landing page) — already working via `/admin` featured tab.
+  2. **Boosted search placement** — sellers can boost listings for 7 days from `/dashboard`. Boosted listings sort first in all feeds.
+  3. **Banner ads** — local businesses can advertise on the landing page via `/admin/banners`. Admin CRUD with expiry and color customization.
+  4. **Seller analytics** — view/click/conversion data visible on `/dashboard`. Foundation for paid analytics tier.
+  - All monetization is attention-based (not transaction-based), matching the WhatsApp-off-platform payment model.
+  - Next: outreach to 3-5 local businesses near campus for banner ad trials.
 
 ## Next steps
 
