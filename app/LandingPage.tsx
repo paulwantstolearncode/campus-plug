@@ -71,6 +71,7 @@ export default function LandingPage() {
   const [categoryCounts, setCategoryCounts] = useState<Map<string, number>>(new Map())
   const [user, setUser] = useState<User | null>(null)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [banners, setBanners] = useState<{ id: string; title: string; subtitle: string | null; image_url: string | null; link_url: string; bg_color: string; text_color: string }[]>([])
 
   useEffect(() => {
     // Check auth status
@@ -216,6 +217,23 @@ export default function LandingPage() {
     loadLive()
     loadStats()
     loadCategoryCounts()
+
+    // Banner ads — active, non-expired, newest first.
+    async function loadBanners() {
+      try {
+        const { data } = await supabase
+          .from('banner_ads')
+          .select('id, title, subtitle, image_url, link_url, bg_color, text_color')
+          .eq('is_active', true)
+          .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
+          .order('slot', { ascending: true })
+          .limit(3)
+        if (data) setBanners(data)
+      } catch {
+        // Banner table may not exist yet — decorative, don't break.
+      }
+    }
+    loadBanners()
   }, [])
 
   // Categories with at least one live approved listing, in canonical order.
@@ -435,6 +453,40 @@ export default function LandingPage() {
         {/* Bottom fade into paper */}
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-paper to-transparent pointer-events-none" />
       </section>
+
+      {/* BANNER ADS — admin-configurable sponsored slots */}
+      {banners.length > 0 && (
+        <section className="relative py-8 md:py-12 bg-paper">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-4">
+            {banners.map((banner) => (
+              <a
+                key={banner.id}
+                href={banner.link_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-2xl overflow-hidden transition-all hover:scale-[1.01] shadow-lg"
+                style={{ backgroundColor: banner.bg_color, color: banner.text_color }}
+              >
+                <div className="flex items-center gap-4 p-5 md:p-6">
+                  {banner.image_url && (
+                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-xl overflow-hidden shrink-0 bg-white/10">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-sm md:text-base">{banner.title}</p>
+                    {banner.subtitle && (
+                      <p className="text-xs md:text-sm opacity-70 mt-0.5 line-clamp-1">{banner.subtitle}</p>
+                    )}
+                  </div>
+                  <span className="text-xs font-bold opacity-60 shrink-0">Ad →</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* What is Campus Plug? — plain-English explainer for crawlers and new visitors */}
       <section className="relative py-16 md:py-24 bg-paper">

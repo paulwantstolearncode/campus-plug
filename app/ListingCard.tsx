@@ -8,6 +8,7 @@ import { formatName } from '@/lib/formatName'
 import { getCategoryDisplay } from '@/lib/categories'
 import type { SellerRating } from '@/lib/reviews'
 import { supabase } from '@/lib/supabase'
+import { logAnalyticsEvent } from '@/lib/analytics'
 
 export interface ListingCardData {
   id: string
@@ -299,6 +300,7 @@ export default function ListingCard({
                     href={whatsappUrl}
                     target="_blank"
                     rel="noopener noreferrer"
+                    onClick={() => logAnalyticsEvent('whatsapp_click', listing.id, { source: 'listing_card' })}
                     className="flex-1 flex items-center justify-center gap-2 bg-whatsapp text-white py-2.5 rounded-xl font-semibold text-sm hover:bg-whatsapp-bright transition-colors"
                   >
                     <WhatsAppIcon className="shrink-0" />

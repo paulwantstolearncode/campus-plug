@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
+import { logAnalyticsEvent } from '@/lib/analytics'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { formatPrice, formatPriceRange, getPriceRange } from '@/lib/format'
@@ -232,6 +233,8 @@ export default function ListingDetailClient() {
 
         setActive(0)
         setListing(typed)
+        // Log a listing view event (fire-and-forget).
+        logAnalyticsEvent('listing_view', typed.id, { source: 'listing_detail' })
         // Reviews + the buyer's review entry point load separately — a
         // failure here must never block the listing itself.
         loadReviews(typed.seller_id)
@@ -527,6 +530,7 @@ export default function ListingDetailClient() {
                         href={"https://wa.me/" + listing.seller.whatsapp_number + "?text=" + contactMessage}
                         target="_blank"
                         rel="noopener noreferrer"
+                        onClick={() => listingId && logAnalyticsEvent('whatsapp_click', listingId, { source: 'listing_detail' })}
                         className="mt-3 flex items-center justify-center gap-2 w-full bg-green-500 text-white py-3.5 rounded-full font-semibold hover:bg-green-600 transition-colors text-sm"
                       >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="white">

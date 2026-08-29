@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { getSellerAnalytics, type ListingAnalytics } from '@/lib/analytics'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -89,6 +90,8 @@ export default function DashboardPage() {
   const [submittingReply, setSubmittingReply] = useState(false)
   const [submittingFlag, setSubmittingFlag] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [analytics, setAnalytics] = useState<ListingAnalytics[]>([])
+  const [boostingId, setBoostingId] = useState<string | null>(null)
   const router = useRouter()
 
   // ── Reviews system ──────────────────────────────────────────────────────
@@ -291,6 +294,10 @@ export default function DashboardPage() {
 
         // Reviews about me + my review records (additive, failure-tolerant).
         await loadReviewData(user.id)
+
+        // Seller analytics (views, clicks, conversion) — additive, failure-tolerant.
+        const sellerAnalytics = await getSellerAnalytics(user.id)
+        setAnalytics(sellerAnalytics)
       } catch (err) {
         console.error('Dashboard load failed:', err)
         setError('Something went wrong. Please try again.')
@@ -569,6 +576,62 @@ export default function DashboardPage() {
             </div>
           )}
 
+          {/* LISTING ANALYTICS */}
+          {analytics.length > 0 && (
+            <div className="mb-10">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-xl">📊</span>
+                <h2 className="text-2xl font-bold text-charcoal">Listing Analytics</h2>
+                <span className="text-xs text-gray-400 font-normal">(views & WhatsApp clicks)</span>
+              </div>
+
+              {/* Summary stats */}
+              <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
+                  <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Total Views</div>
+                  <div className="text-2xl font-bold text-charcoal mt-1">{analytics.reduce((s, a) => s + a.views, 0).toLocaleString()}</div>
+                </div>
+                <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
+                  <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">WhatsApp Clicks</div>
+                  <div className="text-2xl font-bold text-whatsapp mt-1">{analytics.reduce((s, a) => s + a.clicks, 0).toLocaleString()}</div>
+                </div>
+                <div className="bg-white rounded-2xl p-4 shadow-lg border border-gold/30">
+                  <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Conversion Rate</div>
+                  <div className="text-2xl font-bold text-gold-dark mt-1">
+                    {analytics.reduce((s, a) => s + a.views, 0) > 0
+                      ? ((analytics.reduce((s, a) => s + a.clicks, 0) / analytics.reduce((s, a) => s + a.views, 0)) * 100).toFixed(1)
+                      : '0.0'}%
+                  </div>
+                </div>
+              </div>
+
+              {/* Per-listing breakdown */}
+              <div className="bg-white rounded-3xl shadow-lg border border-gray-100 divide-y divide-gray-100">
+                {analytics.slice(0, 10).map((item) => (
+                  <div key={item.id} className="flex items-center gap-4 px-5 py-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-charcoal text-sm truncate">{item.title}</p>
+                    </div>
+                    <div className="flex items-center gap-5 text-xs">
+                      <div className="text-right">
+                        <div className="font-bold text-charcoal">{item.views}</div>
+                        <div className="text-gray-400">views</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-whatsapp">{item.clicks}</div>
+                        <div className="text-gray-400">clicks</div>
+                      </div>
+                      <div className="text-right w-14">
+                        <div className="font-bold text-gold-dark">{item.conversion}%</div>
+                        <div className="text-gray-400">CVR</div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* MY LISTINGS */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-charcoal">My Listings</h2>
@@ -604,6 +667,30 @@ export default function DashboardPage() {
                       <Link href={"/new?edit=" + listing.id} className="flex-1 flex items-center justify-center gap-1.5 bg-charcoal text-white py-2.5 rounded-full font-semibold hover:bg-black transition-colors text-sm">✏️ Edit</Link>
                       <Link href={"/listing/" + listing.id} className="flex-1 flex items-center justify-center bg-white text-charcoal py-2.5 rounded-full font-semibold border border-gray-200 hover:border-charcoal transition-colors text-sm">👁 View</Link>
                     </div>
+                    {listing.approval_status === 'approved' && (
+                      <button
+                        onClick={async () => {
+                          if (boostingId) return
+                          setBoostingId(listing.id)
+                          const boostDays = 7
+                          const boostedUntil = new Date(Date.now() + boostDays * 86400000).toISOString()
+                          const { error } = await supabase
+                            .from('listings')
+                            .update({ boosted_until: boostedUntil })
+                            .eq('id', listing.id)
+                          if (error) {
+                            alert('Could not boost listing: ' + error.message)
+                          } else {
+                            alert('🎉 Listing boosted for ' + boostDays + ' days! It will appear higher in search results.')
+                          }
+                          setBoostingId(null)
+                        }}
+                        disabled={!!boostingId}
+                        className="mt-2 w-full flex items-center justify-center gap-1.5 bg-gold/10 text-gold-dark py-2 rounded-full font-semibold text-xs border border-gold/30 hover:bg-gold/20 transition-colors disabled:opacity-50"
+                      >
+                        🚀 Boost this listing (7 days)
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

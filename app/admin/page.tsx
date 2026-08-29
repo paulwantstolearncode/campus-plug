@@ -422,6 +422,12 @@ export default function AdminPage() {
           >
             🎨 Print Posters
           </Link>
+          <Link
+            href="/admin/banners"
+            className="inline-flex items-center gap-2 bg-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/20 transition-colors"
+          >
+            📢 Banner Ads
+          </Link>
         </div>
       </section>
 
