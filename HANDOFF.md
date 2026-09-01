@@ -1,6 +1,6 @@
 # Handoff — Campus Plug
 
-Last updated: 2026-08-29
+Last updated: 2026-09-01
 
 ## Current state
 
@@ -11,6 +11,13 @@ Last updated: 2026-08-29
 - **Local preview**: port 56816 via `nohup npm run dev -- -p 56816`
 
 ## Recently shipped
+
+### PageSpeed & Skeleton Loaders (74373b9)
+- **Skeleton loaders** on 3 pages: `/services` (6 card skeletons), `/` homepage (6 card skeletons), `/dashboard` (4 stat + 3 listing skeletons). Replaces blank/spinner loading states with immediate visual layout.
+- **Blur placeholders** on listing cards — warm paper-colored SVG placeholder shows instantly while real image loads (no jarring pop-in).
+- **Raw `<img>` eliminated** — hero featured listing and banner ads in LandingPage converted to `next/image` with proper sizing and optimization. Zero raw `<img>` tags remain in public pages.
+- New `app/components/Skeleton.tsx` reusable component with shimmer animation.
+- Files: components/Skeleton.tsx, services/page.tsx, page.tsx, dashboard/page.tsx, LandingPage.tsx, ListingCard.tsx.
 
 ### Visual Redesign (3f8fb21)
 - **"Warm paper × obsidian × gold signal" design system** — new font stack (Space Grotesk display headings, Plus Jakarta Sans body, Instrument Serif italic gold accents, IBM Plex Mono prices/meta), gold shifted from #d4af37 to #c9a227 (metallic signal), card-lift hover effect with 3-tier shadow system (lift/card/glow), glass-dark/hairline/paper-deep surface treatments, editorial eyebrow labels, gradient gold text, and refined scrollbar/selection styles.
