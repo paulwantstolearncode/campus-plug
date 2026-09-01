@@ -1,4 +1,4 @@
-# Handoff — Campus Plug
+﻿# Handoff — Campus Plug
 
 Last updated: 2026-09-01
 
@@ -6,7 +6,7 @@ Last updated: 2026-09-01
 
 - **Repo**: github.com/paulwantstolearncode/campus-plug (origin/main)
 - **Live**: campuspluggh.com
-- **Latest commit**: 5863270 — validated funnel SQL files restored + HANDOFF update
+- **Latest commit**: 6ac4323 — validated funnel SQL files restored + HANDOFF update
 - **Working tree**: clean
 - **Local preview**: port 56816 via `nohup npm run dev -- -p 56816`
 
