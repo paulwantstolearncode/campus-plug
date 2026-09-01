@@ -81,6 +81,7 @@ export default function ServicesPage() {
             .eq('listing_type', 'service')
             .eq('approval_status', 'approved')
             .is('deleted_at', null)
+            .is('sold_at', null)
 
         // 1) Boosted listings first (paid placement).
         const { data: boosted } = await baseQuery(

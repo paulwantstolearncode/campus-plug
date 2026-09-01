@@ -27,7 +27,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const { data: listings, error } = await supabase
       .from("listings")
       .select("id, created_at")
-      .eq("approval_status", "approved");
+      .eq("approval_status", "approved")
+      .is("sold_at", null);
 
     if (error || !listings) return staticRoutes;
 

@@ -21,6 +21,8 @@ export interface ListingCardData {
   campus_location: string | null
   approval_status: string
   deleted_at: string | null
+  sold_at: string | null
+  last_activity_at: string | null
   seller_id: string
   seller: {
     full_name: string | null
@@ -212,6 +214,13 @@ export default function ListingCard({
           <div className="absolute top-3 right-3 bg-gold-signal text-ink font-mono font-bold px-3 py-1 rounded-lg text-sm shadow-md shadow-gold-glow">
             {priceLabel}
           </div>
+
+          {/* Sold badge — small, top-right below price */}
+          {listing.sold_at && (
+            <div className="absolute top-12 right-3 bg-red-500 text-white px-2 py-0.5 rounded-lg text-[10px] font-bold shadow-md z-10">
+              SOLD
+            </div>
+          )}
 
           {rating?.is_top_rated && (
             <div className="absolute bottom-3 left-3 bg-gold-signal text-ink px-2.5 py-1 rounded-lg text-[11px] font-bold shadow-md flex items-center gap-1">

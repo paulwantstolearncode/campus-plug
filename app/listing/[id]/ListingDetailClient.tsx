@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
-import { logAnalyticsEvent } from '@/lib/analytics'
+import { logAnalyticsEvent, logWhatsappOutcome, type WhatsappOutcome } from '@/lib/analytics'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
@@ -46,6 +46,9 @@ interface ListingData {
   service_duration: string | null
   service_location: string | null
   approval_status: string
+  created_at: string
+  sold_at: string | null
+  last_activity_at: string | null
   seller_id: string
   seller: {
     id: string
@@ -71,6 +74,9 @@ export default function ListingDetailClient() {
   const [isFavorited, setIsFavorited] = useState(false)
   const [showMessagePreview, setShowMessagePreview] = useState(false)
   const [toast, setToast] = useState<{ message: string } | null>(null)
+  // WhatsApp follow-up panel state
+  const [whatsappClicked, setWhatsappClicked] = useState(false)
+  const [outcomeDismissed, setOutcomeDismissed] = useState(false)
   const router = useRouter()
   const params = useParams()
   const rawId = params.id
@@ -91,7 +97,7 @@ export default function ListingDetailClient() {
     return () => clearTimeout(timer)
   }, [toast])
 
-  // Check auth status and favourite state on mount
+  // Check auth status, favourite state, and outcome localStorage on mount
   useEffect(() => {
     async function checkAuth() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -110,6 +116,12 @@ export default function ListingDetailClient() {
     }
     
     checkAuth()
+
+    // Check if user already dismissed the follow-up panel this session
+    if (listingId) {
+      const dismissed = localStorage.getItem('cp_outcome_' + listingId)
+      if (dismissed) setOutcomeDismissed(true)
+    }
   }, [listingId])
 
   // Reviews for this seller (public) + the current user's review entry point.
@@ -314,6 +326,33 @@ export default function ListingDetailClient() {
     })
   }
 
+  // WhatsApp follow-up panel handlers
+  const handleWhatsappClick = () => {
+    setWhatsappClicked(true)
+  }
+
+  const handleOutcome = (outcome: WhatsappOutcome) => {
+    if (listingId) {
+      logWhatsappOutcome(listingId, outcome)
+      localStorage.setItem('cp_outcome_' + listingId, '1')
+    }
+    setOutcomeDismissed(true)
+  }
+
+  const dismissOutcome = () => {
+    if (listingId) {
+      localStorage.setItem('cp_outcome_' + listingId, '1')
+    }
+    setOutcomeDismissed(true)
+  }
+
+  // Stale detection
+  const isStale = listing && (
+    !listing.last_activity_at 
+      ? (Date.now() - new Date(listing.created_at).getTime()) > 30 * 86400000
+      : (Date.now() - new Date(listing.last_activity_at).getTime()) > 30 * 86400000
+  )
+
   return (
     <main className="min-h-screen bg-charcoal">
 <NavBar back={{ href: backHref, label: 'Back to ' + (isService ? 'services' : 'marketplace') }} />
@@ -364,6 +403,16 @@ export default function ListingDetailClient() {
               <span>Based at {listing.campus_location}</span>
             </div>
           )}
+          {isStale && !listing.sold_at && (
+            <div className="mt-3 p-2.5 rounded-xl border border-amber-300/50 bg-amber-500/10 text-[11px] text-amber-200 leading-relaxed max-w-lg">
+              ⚠️ This listing hasn&apos;t been active in 30+ days — confirm it&apos;s still available with the seller.
+            </div>
+          )}
+          {listing.sold_at && (
+            <div className="mt-3 inline-flex items-center gap-1.5 bg-red-500/20 border border-red-400/40 text-red-300 px-3 py-1.5 rounded-full text-xs font-bold">
+              🏷️ Sold
+            </div>
+          )}
         </div>
       </section>
 
@@ -402,6 +451,13 @@ export default function ListingDetailClient() {
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-charcoal via-gray-800 to-charcoal">
                         <span className="text-8xl opacity-40">{isService ? '💼' : '📦'}</span>
+                      </div>
+                    )}
+
+                    {/* Sold badge overlay */}
+                    {listing.sold_at && (
+                      <div className="absolute top-3 right-3 bg-red-500 text-white px-2.5 py-1 rounded-lg text-xs font-bold shadow-lg z-10">
+                        SOLD
                       </div>
                     )}
 
@@ -516,7 +572,7 @@ export default function ListingDetailClient() {
                         href={"https://wa.me/" + listing.seller.whatsapp_number + "?text=" + contactMessage}
                         target="_blank"
                         rel="noopener noreferrer"
-                        onClick={() => listingId && logAnalyticsEvent('whatsapp_click', listingId, { source: 'listing_detail' })}
+                        onClick={() => { if (listingId) { logAnalyticsEvent('whatsapp_click', listingId, { source: 'listing_detail' }); handleWhatsappClick() } }}
                         className="mt-3 flex items-center justify-center gap-2 w-full bg-green-500 text-white py-3.5 rounded-full font-semibold hover:bg-green-600 transition-colors text-sm"
                       >
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
@@ -534,6 +590,33 @@ export default function ListingDetailClient() {
                       <div className="mt-4 p-3 rounded-xl border border-gray-200 bg-white text-[11px] text-gray-500 leading-relaxed">
                         🛡️ <span className="font-semibold text-gray-600">Safety First:</span> Meet in a public campus location (e.g. Balme Library, Night Market) · Inspect item/service before paying · Pay via MoMo or cash after meeting.
                       </div>
+
+                      {/* WhatsApp follow-up panel — in-flow, below safety strip */}
+                      {whatsappClicked && !outcomeDismissed && user && user.id !== listing.seller_id && (
+                        <div className="mt-4 p-4 rounded-2xl bg-paper-deep border border-rule animate-fade-in">
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-[13px] font-semibold text-ink">How did it go with the seller?</p>
+                            <button onClick={dismissOutcome} className="text-ink-muted hover:text-ink text-sm" aria-label="Dismiss">✕</button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button onClick={() => handleOutcome('sold')} className="flex items-center justify-center gap-1.5 bg-white border border-rule rounded-xl py-3 text-[13px] font-medium text-ink hover:border-gold hover:bg-gold-soft/30 transition-colors min-h-[44px]">
+                              ✅ It sold
+                            </button>
+                            <button onClick={() => handleOutcome('replied')} className="flex items-center justify-center gap-1.5 bg-white border border-rule rounded-xl py-3 text-[13px] font-medium text-ink hover:border-gold hover:bg-gold-soft/30 transition-colors min-h-[44px]">
+                              💬 Got a reply
+                            </button>
+                            <button onClick={() => handleOutcome('messaged')} className="flex items-center justify-center gap-1.5 bg-white border border-rule rounded-xl py-3 text-[13px] font-medium text-ink hover:border-gold hover:bg-gold-soft/30 transition-colors min-h-[44px]">
+                              ✉️ Messaged them
+                            </button>
+                            <button onClick={() => handleOutcome('no_response')} className="flex items-center justify-center gap-1.5 bg-white border border-rule rounded-xl py-3 text-[13px] font-medium text-ink hover:border-gold hover:bg-gold-soft/30 transition-colors min-h-[44px]">
+                              ❌ No response
+                            </button>
+                          </div>
+                          <button onClick={dismissOutcome} className="mt-2 w-full text-center text-[12px] text-ink-muted hover:text-ink py-1 transition-colors">
+                            Skip
+                          </button>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <p className="mt-5 text-xs text-gray-500 text-center">

@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
-import { getSellerAnalytics, type ListingAnalytics } from '@/lib/analytics'
+import { getSellerAnalytics, markListingSold, markListingAvailable, type ListingAnalytics } from '@/lib/analytics'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
@@ -29,6 +29,7 @@ interface MyListing {
   listing_type: string
   approval_status: string
   created_at: string
+  sold_at: string | null
 }
 
 interface MyBooking {
@@ -250,7 +251,7 @@ export default function DashboardPage() {
         // My listings, all statuses, newest first.
         const { data: listingData, error: listingError } = await supabase
           .from('listings')
-          .select('id, title, price, image_url, listing_type, approval_status, created_at')
+          .select('id, title, price, image_url, listing_type, approval_status, created_at, sold_at')
           .eq('seller_id', user.id)
           .order('created_at', { ascending: false })
 
@@ -341,6 +342,7 @@ export default function DashboardPage() {
 
   const approved = listings.filter(l => l.approval_status === 'approved').length
   const pending = listings.filter(l => l.approval_status === 'pending').length
+  const sold = listings.filter(l => l.sold_at).length
 
   const statusChip = (status: string) => {
     if (status === 'approved') {
@@ -507,7 +509,7 @@ export default function DashboardPage() {
               { label: 'Total listings', value: listings.length, icon: '📦' },
               { label: 'Approved', value: approved, icon: '✅' },
               { label: 'Pending review', value: pending, icon: '⏳' },
-              { label: 'Bookings received', value: bookings.length, icon: '📅' },
+              { label: 'Sold', value: sold, icon: '🏷️' },
             ].map((stat) => (
               <div key={stat.label} className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100">
                 <div className="text-2xl mb-2">{stat.icon}</div>
@@ -662,7 +664,7 @@ export default function DashboardPage() {
                       <Link href={"/new?edit=" + listing.id} className="flex-1 flex items-center justify-center gap-1.5 bg-charcoal text-white py-2.5 rounded-full font-semibold hover:bg-black transition-colors text-sm">✏️ Edit</Link>
                       <Link href={"/listing/" + listing.id} className="flex-1 flex items-center justify-center bg-white text-charcoal py-2.5 rounded-full font-semibold border border-gray-200 hover:border-charcoal transition-colors text-sm">👁 View</Link>
                     </div>
-                    {listing.approval_status === 'approved' && (
+                    {listing.approval_status === 'approved' && !listing.sold_at && (
                       <button
                         onClick={async () => {
                           if (boostingId) return
@@ -685,6 +687,38 @@ export default function DashboardPage() {
                       >
                         🚀 Boost this listing (7 days)
                       </button>
+                    )}
+                    {listing.approval_status === 'approved' && (
+                      listing.sold_at ? (
+                        <button
+                          onClick={async () => {
+                            try {
+                              await markListingAvailable(listing.id)
+                              setListings(prev => prev.map(l => l.id === listing.id ? { ...l, sold_at: null } : l))
+                            } catch (err) {
+                              alert('Could not update listing: ' + (err instanceof Error ? err.message : 'Unknown error'))
+                            }
+                          }}
+                          className="mt-2 w-full flex items-center justify-center gap-1.5 bg-green-50 text-green-700 py-2 rounded-full font-semibold text-xs border border-green-200 hover:bg-green-100 transition-colors"
+                        >
+                          ✅ Mark Available
+                        </button>
+                      ) : (
+                        <button
+                          onClick={async () => {
+                            if (!confirm('Mark this listing as sold?')) return
+                            try {
+                              await markListingSold(listing.id)
+                              setListings(prev => prev.map(l => l.id === listing.id ? { ...l, sold_at: new Date().toISOString() } : l))
+                            } catch (err) {
+                              alert('Could not update listing: ' + (err instanceof Error ? err.message : 'Unknown error'))
+                            }
+                          }}
+                          className="mt-2 w-full flex items-center justify-center gap-1.5 bg-red-50 text-red-600 py-2 rounded-full font-semibold text-xs border border-red-200 hover:bg-red-100 transition-colors"
+                        >
+                          🏷️ Mark as Sold
+                        </button>
+                      )
                     )}
                   </div>
                 </div>

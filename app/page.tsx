@@ -32,6 +32,7 @@ export default function Home() {
           q.select(select)
             .eq('approval_status', 'approved')
             .is('deleted_at', null)
+            .is('sold_at', null)
 
         const { data: boosted } = await baseQuery(supabase.from('listings'))
           .gt('boosted_until', new Date().toISOString())

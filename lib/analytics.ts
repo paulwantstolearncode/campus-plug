@@ -1,5 +1,41 @@
 import { supabase } from '@/lib/supabase'
 
+// ── WhatsApp outcome tracking ──────────────────────────────────────
+export type WhatsappOutcome = 'messaged' | 'replied' | 'sold' | 'no_response'
+
+/**
+ * Log a WhatsApp outcome (fire-and-forget). Calls the log_whatsapp_outcome RPC.
+ * Client passes only listingId + outcome — metadata is set server-side.
+ */
+export async function logWhatsappOutcome(listingId: string, outcome: WhatsappOutcome) {
+  try {
+    await supabase.rpc('log_whatsapp_outcome', {
+      p_listing_id: listingId,
+      p_outcome: outcome,
+    })
+  } catch (err) {
+    console.error('WhatsApp outcome log failed:', err)
+  }
+}
+
+// ── Sold listing helpers ───────────────────────────────────────────
+
+/** Mark a listing as sold (seller action). */
+export async function markListingSold(listingId: string) {
+  const { error } = await supabase.rpc('mark_listing_sold', {
+    p_listing_id: listingId,
+  })
+  if (error) throw error
+}
+
+/** Mark a listing as available again (undo sold). */
+export async function markListingAvailable(listingId: string) {
+  const { error } = await supabase.rpc('mark_listing_available', {
+    p_listing_id: listingId,
+  })
+  if (error) throw error
+}
+
 /**
  * Log an analytics event (listing view or WhatsApp click).
  * Fire-and-forget: never blocks the UI. Falls back to console.error on failure.
