@@ -6,11 +6,18 @@ Last updated: 2026-09-01
 
 - **Repo**: github.com/paulwantstolearncode/campus-plug (origin/main)
 - **Live**: campuspluggh.com
-- **Latest commit**: pending — Phone + Password auth + WhatsApp seller numbers
+- **Latest commit**: 5863270 — validated funnel SQL files restored + HANDOFF update
 - **Working tree**: clean
 - **Local preview**: port 56816 via `nohup npm run dev -- -p 56816`
 
 ## Recently shipped
+
+### WhatsApp Funnel Outcome Tracking + Sold Listings (dcfcc15)
+- **Post-WhatsApp outcomes**: new `whatsapp_outcome` analytics event type (extended CHECK constraint on `analytics_events`). Buyer follow-up panel on listing detail — "How did it go with the seller?" (sold / got a reply / messaged / no response / skip) — shown only after a WhatsApp click, never to the listing's own seller, persisted in localStorage (`cp_outcome_<listingId>`), zero layout shift (in-flow below the safety strip, ≥44px tap targets).
+- **Sold listings**: `listings.sold_at` + `listings.last_activity_at` columns. Seller dashboard "Mark as Sold" / "Mark Available" buttons with optimistic UI; SOLD badge on cards + detail; sold listings excluded from home feed, services feed, shop pages, and sitemap (`.is('sold_at', null)`); favorites/admin/dashboard still show sold items with badge.
+- **Staleness**: `listings.last_activity_at` auto-bumped by a trigger on `whatsapp_click` / `whatsapp_outcome` events; amber "hasn't been active in 30+ days" notice on detail page; `public.is_stale()` helper.
+- **RPCs (SECURITY DEFINER, owner/admin auth-checked)**: `log_whatsapp_outcome(listing_id, outcome)` (validates outcome whitelist), `mark_listing_sold(listing_id)`, `mark_listing_available(listing_id)`. GRANTs to anon + authenticated. Defensive RLS on listings: "Sellers can update own listings" + "Admins can update all listings".
+- **SQL**: `supabase/add_funnel_outcomes_and_staleness.sql` + `supabase/funnel_metrics_queries.sql` (7 read-only reference queries: weekly funnel, supply/demand, outcome mix, per-listing conversion, boosted vs non-boosted, stale listings, recorded sales). **Migration ALREADY APPLIED in Supabase** — repo file restored to the validated version after a prior agent rewrite introduced bugs (unauthenticated SECURITY DEFINER RPCs, IMMUTABLE volatility on `now()`-dependent function, missing CHECK constraint, metrics syntax error). Re-running the repo file is safe (idempotent) but not required.
 
 ### PageSpeed & Skeleton Loaders (74373b9)
 - **Skeleton loaders** on 3 pages: `/services` (6 card skeletons), `/` homepage (6 card skeletons), `/dashboard` (4 stat + 3 listing skeletons). Replaces blank/spinner loading states with immediate visual layout.
@@ -47,6 +54,9 @@ Last updated: 2026-09-01
 
 ### Shared NavBar component
 - Extracted `app/components/NavBar.tsx` — shared navigation component with user profile dropdown, dark/light variants, and mobile drawer. Replaces duplicated nav markup across LandingPage.tsx, page.tsx, and services/page.tsx.
+- **Full extraction (857b8e7)**: all 19 remaining pages migrated onto the shared NavBar — added `admin` / `dashboard` variants, `back` prop (visible on ALL viewports), `rightSlot` prop (privacy/terms login buttons, requests "Post a Request" button). Mobile preserved: no hamburger/drawer on migrated pages (`showHamburger = !back && !rightSlot`).
+- **Dead-code cleanup (4b25ae3)**: removed unused `isLight`, dead scroll state/effects (privacy, terms, requests), unused `useRouter`/`Link` imports, unused `userWhatsapp` state; fixed `/admin/banners` back link → `/admin` "Review Queue".
+- **IBM Plex Mono dropped (4bee45e)**: removed from next/font (PageSpeed win, ~40KB); `--font-mono` now uses the system monospace stack (`ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`) — also fixes a self-referencing CSS variable bug in the old declaration.
 
 ### Phase A.4 Location Filtering
 - Campus location filter chips added to `/services` page, allowing students to narrow listings by campus location.
@@ -135,4 +145,10 @@ There were two Vercel projects both named "campus-plug". The broken duplicate (`
 
 ## Next steps
 
-1. (Done) Nav extracted to shared `app/components/NavBar.tsx`.
+1. (Done) Nav extracted to shared `app/components/NavBar.tsx` — all pages migrated (857b8e7), dead code cleaned (4b25ae3).
+2. (Done) WhatsApp funnel outcome tracking + sold listings (dcfcc15) — SQL applied in Supabase; repo files validated.
+3. (Done) IBM Plex Mono dropped for PageSpeed (4bee45e).
+4. Outreach to 3-5 local businesses near campus for banner ad trials (kit prepared: `outreach/` one-pager, WhatsApp scripts, playbook).
+5. Add payment gate to boost button (MoMo) once sellers show demand — needs payment-provider decision (Paystack recommended).
+6. Run `funnel_metrics_queries.sql` weekly to build the funnel ritual (views → clicks → outcomes → sold).
+7. Mobile QA pass on the follow-up panel + sold badges (360px viewport) before the January semester push.

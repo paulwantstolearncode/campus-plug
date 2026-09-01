@@ -1,55 +1,120 @@
--- ============================================================
--- Funnel Metrics Queries
--- Campus Plug — Sep 2026
---
--- Reference queries for funnel analytics. Run in Supabase SQL Editor.
--- ============================================================
+-- ============================================================================
+-- Funnel & outcome metrics (READ-ONLY — run any time in the SQL editor)
+-- ----------------------------------------------------------------------------
+-- Run as admin/postgres in the Supabase SQL editor. No writes, no DDL — safe
+-- to run repeatedly. These answer:
+--   1. Weekly funnel: listing views -> WhatsApp clicks -> outcomes -> sold
+--   2. Weekly signups / listings created / approved (supply vs demand)
+--   3. What actually happens AFTER a WhatsApp click (outcome mix by source)
+--   4. Conversion by listing (clicks vs sold outcomes) — boost pricing input
+--   5. Boosted vs non-boosted performance — boost pricing input
+--   6. Stale listings (candidates for the "still available?" nudge)
+--   7. Recorded sales (bottom of the funnel, from the sales table)
+-- ============================================================================
 
--- WhatsApp click → outcome conversion funnel
-SELECT
-  outcome,
-  COUNT(*) as count
-FROM public.analytics_events
-WHERE event_type = 'whatsapp_outcome'
-  AND created_at > now() - interval '30 days'
-GROUP BY outcome
-ORDER BY count DESC;
+-- 1) Weekly funnel (last 12 weeks) -------------------------------------------
+select
+  date_trunc('week', created_at)::date as week,
+  count(*) filter (where event_type = 'listing_view')     as listing_views,
+  count(*) filter (where event_type = 'whatsapp_click')   as whatsapp_clicks,
+  count(*) filter (where event_type = 'whatsapp_outcome') as outcomes,
+  count(*) filter (
+    where event_type = 'whatsapp_outcome' and metadata->>'outcome' = 'sold'
+  ) as sold
+from public.analytics_events
+group by 1
+order by 1 desc
+limit 12;
 
--- Listings by sold status
-SELECT
-  CASE
-    WHEN sold_at IS NOT NULL THEN 'sold'
-    WHEN public.is_stale(last_activity_at OR created_at) THEN 'stale'
-    ELSE 'active'
-  END as status,
-  COUNT(*) as count
-FROM public.listings
-WHERE approval_status = 'approved'
-  AND deleted_at IS NULL
-GROUP BY status;
+-- 2) Weekly supply + demand (last 12 weeks) ----------------------------------
+with signups as (
+  select date_trunc('week', created_at)::date as week, count(*) as n
+  from auth.users
+  group by 1
+),
+listings_created as (
+  select date_trunc('week', created_at)::date as week, count(*) as n
+  from public.listings
+  group by 1
+),
+listings_approved as (
+  select date_trunc('week', created_at)::date as week, count(*) as n
+  from public.listings
+  where approval_status = 'approved'
+  group by 1
+)
+select
+  coalesce(s.week, l.week, a.week) as week,
+  coalesce(s.n, 0) as signups,
+  coalesce(l.n, 0) as listings_created,
+  coalesce(a.n, 0) as listings_approved
+from signups s
+full join listings_created l  on l.week = s.week
+full join listings_approved a on a.week = l.week
+order by 1 desc
+limit 12;
 
--- Seller funnel: views → clicks → outcomes
-SELECT
+-- 3) Outcome mix after WhatsApp clicks (last 30 days) -------------------------
+select
+  metadata->>'outcome' as outcome,
+  metadata->>'source'  as source,
+  count(*) as events
+from public.analytics_events
+where event_type = 'whatsapp_outcome'
+  and created_at > now() - interval '30 days'
+group by 1, 2
+order by 3 desc;
+
+-- 4) Conversion by listing: clicks vs sold outcomes (last 30 days) ------------
+select
   l.id,
   l.title,
-  l.view_count,
-  l.whatsapp_click_count,
-  l.sold_at,
-  l.last_activity_at,
-  CASE
-    WHEN l.view_count > 0
-    THEN ROUND((l.whatsapp_click_count::numeric / l.view_count) * 100, 1)
-    ELSE 0
-  END as click_rate_pct,
-  (SELECT COUNT(*)
-   FROM public.analytics_events ae
-   WHERE ae.listing_id = l.id
-     AND ae.event_type = 'whatsapp_outcome'
-     AND ae.metadata->>'outcome' = 'sold'
-  ) as sold_outcomes
-FROM public.listings l
-WHERE l.approval_status = 'approved'
-  AND l.deleted_at IS NULL
-  AND l.whatsapp_click_count > 0
-ORDER BY l.whatsapp_click_count DESC
-LIMIT 50;
+  l.category,
+  count(e.*) filter (where e.event_type = 'whatsapp_click') as clicks,
+  count(e.*) filter (
+    where e.event_type = 'whatsapp_outcome' and e.metadata->>'outcome' = 'sold'
+  ) as sold
+from public.listings l
+left join public.analytics_events e on e.listing_id = l.id
+where l.deleted_at is null
+group by l.id
+having count(e.*) filter (where e.event_type = 'whatsapp_click') > 0
+order by sold desc, clicks desc
+limit 25;
+
+-- 5) Boosted vs non-boosted (last 30 days of events) --------------------------
+-- Where boosted_until is NULL (legacy rows), treat as not boosted.
+select
+  case when l.boosted_until > now() then 'boosted' else 'not_boosted' end as boost_status,
+  count(distinct l.id) as listings,
+  count(e.*) filter (where e.event_type = 'listing_view')     as listing_views,
+  count(e.*) filter (where e.event_type = 'whatsapp_click')   as whatsapp_clicks,
+  count(e.*) filter (
+    where e.event_type = 'whatsapp_outcome' and e.metadata->>'outcome' = 'sold'
+  ) as sold
+from public.listings l
+left join public.analytics_events e
+  on e.listing_id = l.id and e.created_at > now() - interval '30 days'
+where l.deleted_at is null
+group by 1;
+
+-- 6) Stale listings (idle 30+ days, still live) -------------------------------
+select
+  id, title, category, created_at, last_activity_at,
+  view_count, whatsapp_click_count
+from public.listings
+where deleted_at is null
+  and sold_at is null
+  and last_activity_at < now() - interval '30 days'
+order by last_activity_at
+limit 50;
+
+-- 7) Recorded sales (closed deals, last 12 weeks) -----------------------------
+select
+  date_trunc('week', created_at)::date as week,
+  count(*) as sales,
+  sum(total_amount) as ghs_total
+from public.sales
+group by 1
+order by 1 desc
+limit 12;
