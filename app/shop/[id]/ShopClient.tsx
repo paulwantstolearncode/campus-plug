@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import Link from 'next/link'
+import NavBar from '@/app/components/NavBar'
 import ListingCard from '@/app/ListingCard'
 import StarRating from '@/app/StarRating'
 import type { SellerWithListings } from '@/lib/sellers'
@@ -46,20 +47,7 @@ export default function ShopClient({ seller }: ShopClientProps) {
   return (
     <main className="min-h-screen bg-off-white">
       {/* Nav */}
-      <nav className="fixed top-0 w-full z-50 bg-white/80 backdrop-blur-xl shadow-sm border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
-            <span className="text-lg sm:text-xl font-bold text-charcoal tracking-tight">Campus Plug</span>
-          </Link>
-          <Link
-            href="/services"
-            className="text-sm text-gray-500 hover:text-charcoal transition-colors flex items-center gap-1"
-          >
-            ← Browse all listings
-          </Link>
-        </div>
-      </nav>
+<NavBar variant="light" back={{ href: '/services', label: 'Browse all listings' }} />
 
       {/* Seller Banner — premium storefront header */}
       <section className="relative pt-28 pb-12 md:pt-36 md:pb-16 overflow-hidden bg-ink text-white">

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import NavBar from '@/app/components/NavBar'
 
 interface BannerAd {
   id: string
@@ -148,17 +149,7 @@ export default function BannerAdsPage() {
 
   return (
     <main className="min-h-screen bg-charcoal">
-      <nav className="fixed top-0 w-full z-50 bg-charcoal/80 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <Link href="/admin" className="flex items-center gap-2 group">
-            <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
-            <span className="text-lg sm:text-xl font-bold text-white tracking-tight">Admin</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-sm text-white/60 hover:text-white transition-colors">← Back to app</Link>
-          </div>
-        </div>
-      </nav>
+<NavBar variant="admin" back={{ href: '/', label: 'Back to app' }} />
 
       <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6">

@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import NavBar from '@/app/components/NavBar'
 import { useEffect, useState } from 'react'
 
 export default function PrivacyPage() {
@@ -14,33 +15,19 @@ export default function PrivacyPage() {
   return (
     <main className="min-h-screen bg-off-white">
       {/* Navigation — same as the landing page */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white/80 backdrop-blur-xl shadow-sm' : 'bg-transparent'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
-            <span className="text-lg sm:text-xl font-bold text-charcoal tracking-tight">
-              Campus Plug
-            </span>
-          </Link>
-
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Link
-              href="/login"
-              className="text-sm font-medium text-charcoal hover:text-gold transition-colors px-3 py-2"
-            >
+<NavBar
+        variant="light"
+        rightSlot={
+          <>
+            <Link href="/login" className="text-sm font-medium text-charcoal hover:text-gold transition-colors px-3 py-2">
               Log in
             </Link>
-            <Link
-              href="/login"
-              className="bg-charcoal text-white px-4 sm:px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-all hover:scale-105 shadow-lg shadow-charcoal/20"
-            >
+            <Link href="/login" className="bg-charcoal text-white px-4 sm:px-6 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-all hover:scale-105 shadow-lg shadow-charcoal/20">
               Get Started
             </Link>
-          </div>
-        </div>
-      </nav>
+          </>
+        }
+      />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-32 pb-20">
         <div className="bg-white rounded-3xl shadow-sm px-6 py-12 md:px-12 md:py-16">

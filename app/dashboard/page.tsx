@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { getSellerAnalytics, type ListingAnalytics } from '@/lib/analytics'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import NavBar from '@/app/components/NavBar'
 import Image from 'next/image'
 import { formatPrice } from '@/lib/format'
 import { StatCardSkeleton, DashboardListingSkeleton } from '@/app/components/Skeleton'
@@ -310,16 +311,6 @@ export default function DashboardPage() {
     loadDashboard()
   }, [router])
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut()
-    } catch (err) {
-      console.error('Logout failed:', err)
-    } finally {
-      window.location.reload()
-    }
-  }
-
   if (loading) {
     return (
       <main className="min-h-screen bg-charcoal">
@@ -475,21 +466,7 @@ export default function DashboardPage() {
   // lib/formatName.ts) which never prints a full email address.
   return (
     <main className="min-h-screen bg-charcoal">
-      <nav className="fixed top-0 w-full z-50 bg-charcoal/80 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
-            <span className="text-lg sm:text-xl font-bold text-white tracking-tight">Campus Plug</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-sm text-white/60 hover:text-white transition-colors flex items-center gap-1 group">
-              <span className="group-hover:-translate-x-1 transition-transform">←</span>
-              Back to app
-            </Link>
-            <button onClick={handleLogout} className="text-sm text-white/50 hover:text-white transition-colors">Logout</button>
-          </div>
-        </div>
-      </nav>
+<NavBar variant="dashboard" back={{ href: '/', label: 'Back to app' }} />
 
       <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">

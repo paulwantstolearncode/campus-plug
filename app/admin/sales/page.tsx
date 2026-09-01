@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import NavBar from '@/app/components/NavBar'
 import { formatPrice } from '@/lib/format'
 import { getCategoryLabel } from '@/lib/categories'
 import { formatDateTime } from '@/lib/sales'
@@ -317,18 +318,7 @@ export default function AdminSalesPage() {
 
   return (
     <main className="min-h-screen bg-charcoal">
-      <nav className="fixed top-0 w-full z-50 bg-charcoal/80 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
-            <span className="text-lg sm:text-xl font-bold text-white tracking-tight">Campus Plug Admin</span>
-          </Link>
-          <Link href="/admin" className="text-sm text-white/60 hover:text-white transition-colors flex items-center gap-1 group">
-            <span className="group-hover:-translate-x-1 transition-transform">←</span>
-            Review Queue
-          </Link>
-        </div>
-      </nav>
+<NavBar variant="admin" back={{ href: '/admin', label: 'Review Queue' }} />
 
       <section className="relative pt-32 pb-12 md:pt-36 md:pb-14 overflow-hidden animated-gradient">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">

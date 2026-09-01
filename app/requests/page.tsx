@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import NavBar from '@/app/components/NavBar'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { getPlugRequests, createPlugRequest, closePlugRequest, type PlugRequest } from '@/lib/plugRequests'
@@ -125,29 +126,18 @@ export default function RequestsPage() {
   return (
     <main className="min-h-screen bg-white overflow-hidden">
       {/* Navigation */}
-      <nav className={`fixed top-0 w-full z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white/80 backdrop-blur-xl shadow-sm' : 'bg-transparent'
-      }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
-            <span className="text-lg sm:text-xl font-bold text-charcoal tracking-tight">Campus Plug</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-sm font-medium text-gray-600 hover:text-gold transition-colors">
-              ← Back to marketplace
-            </Link>
-            {user && (
-              <button
-                onClick={() => setShowModal(true)}
-                className="bg-gold text-charcoal px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-gold-dark transition-all hover:scale-105 shadow-lg shadow-gold/20"
-              >
-                Post a Request
-              </button>
-            )}
-          </div>
-        </div>
-      </nav>
+<NavBar
+        variant="light"
+        back={{ href: '/', label: 'Back to marketplace' }}
+        rightSlot={user ? (
+          <button
+            onClick={() => setShowModal(true)}
+            className="bg-gold text-charcoal px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-gold-dark transition-all hover:scale-105 shadow-lg shadow-gold/20"
+          >
+            Post a Request
+          </button>
+        ) : undefined}
+      />
 
       {/* Header */}
       <section className="relative pt-28 pb-12 md:pt-36 md:pb-16">

@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import NavBar from '@/app/components/NavBar'
 import { formatName } from '@/lib/formatName'
 import StarRating from '@/app/StarRating'
 import {
@@ -381,15 +382,7 @@ export default function AdminPage() {
 
   return (
     <main className="min-h-screen bg-charcoal">
-      <nav className="fixed top-0 w-full z-50 bg-charcoal/80 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
-            <span className="text-lg sm:text-xl font-bold text-white tracking-tight">Campus Plug Admin</span>
-          </Link>
-          <Link href="/" className="text-sm text-white/60 hover:text-white transition-colors">← Back to app</Link>
-        </div>
-      </nav>
+<NavBar variant="admin" back={{ href: '/', label: 'Back to app' }} />
 
       <section className="pt-32 pb-12 animated-gradient">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-end justify-between gap-4">

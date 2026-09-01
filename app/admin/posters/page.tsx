@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import NavBar from '@/app/components/NavBar'
 
 type PosterType = 'general' | 'wanted' | 'seller'
 type PosterFormat = 'a4' | 'a5' | 'mobile'
@@ -133,15 +134,7 @@ export default function PosterGeneratorPage() {
   return (
     <main className="min-h-screen bg-charcoal">
       {/* ── Admin Nav (hidden on print) ── */}
-      <nav className="no-print fixed top-0 w-full z-50 bg-charcoal/80 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex justify-between items-center">
-          <Link href="/" className="flex items-center gap-2 group">
-            <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
-            <span className="text-lg sm:text-xl font-bold text-white tracking-tight">Campus Plug Admin</span>
-          </Link>
-          <Link href="/admin" className="text-sm text-white/60 hover:text-white transition-colors">← Admin Dashboard</Link>
-        </div>
-      </nav>
+<NavBar variant="admin" back={{ href: '/admin', label: 'Admin Dashboard' }} className="no-print" />
 
       {/* ── Controls Bar (hidden on print) ── */}
       <section className="no-print pt-28 pb-8 bg-charcoal/60">
