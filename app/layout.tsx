@@ -4,14 +4,13 @@ import HelpButton from "./HelpButton";
 import FeedbackButton from "./components/FeedbackButton";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
 import { Analytics } from "@vercel/analytics/react";
-import { Space_Grotesk, Plus_Jakarta_Sans, Instrument_Serif, IBM_Plex_Mono } from "next/font/google";
+import { Space_Grotesk, Plus_Jakarta_Sans, Instrument_Serif } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
 
 // ── Design-system type stack ──────────────────────────────────────
 // Space Grotesk  → display headings (geometric, confident editorial voice)
 // Plus Jakarta   → body/UI copy (clean, modern, highly legible)
 // Instrument Serif → italic keyword accents ("guesswork", "plug")
-// IBM Plex Mono  → price pills + meta labels (technical counterpoint)
 // All self-hosted via next/font with font-display: swap — never causes CLS.
 const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -33,12 +32,6 @@ const instrument = Instrument_Serif({
   display: "swap",
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-mono",
-  display: "swap",
-});
 
 // Explicit viewport export (Next.js App Router convention) — keeps the mobile
 // layout viewport pinned to device width and guards against any environment
@@ -79,7 +72,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${jakarta.variable} ${spaceGrotesk.variable} ${instrument.variable} ${ibmPlexMono.variable}`}>
+    <html lang="en" className={`${jakarta.variable} ${spaceGrotesk.variable} ${instrument.variable}`}>
       <body>
         {children}
         <HelpButton />
