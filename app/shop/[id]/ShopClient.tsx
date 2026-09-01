@@ -1,6 +1,5 @@
 'use client'
 import { useState } from 'react'
-import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
 import ListingCard from '@/app/ListingCard'
 import StarRating from '@/app/StarRating'

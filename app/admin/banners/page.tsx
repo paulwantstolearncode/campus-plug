@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
 
 interface BannerAd {
@@ -149,7 +148,7 @@ export default function BannerAdsPage() {
 
   return (
     <main className="min-h-screen bg-charcoal">
-<NavBar variant="admin" back={{ href: '/', label: 'Back to app' }} />
+<NavBar variant="admin" back={{ href: '/admin', label: 'Review Queue' }} />
 
       <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6">

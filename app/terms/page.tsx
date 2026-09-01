@@ -1,16 +1,8 @@
 'use client'
 import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
-import { useEffect, useState } from 'react'
 
 export default function TermsPage() {
-  const [scrolled, setScrolled] = useState(false)
-
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
 
   return (
     <main className="min-h-screen bg-off-white">

@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
-import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
 import Image from 'next/image'
 import { formatPrice } from '@/lib/format'

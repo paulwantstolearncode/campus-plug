@@ -2,7 +2,6 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
-import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { getPlugRequests, createPlugRequest, closePlugRequest, type PlugRequest } from '@/lib/plugRequests'
 import { CATEGORIES } from '@/lib/categories'
@@ -12,11 +11,8 @@ export default function RequestsPage() {
   const [requests, setRequests] = useState<PlugRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [user, setUser] = useState<{ id: string } | null>(null)
-  const [userWhatsapp, setUserWhatsapp] = useState('')
   const [showModal, setShowModal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
-  const [scrolled, setScrolled] = useState(false)
-  const router = useRouter()
 
   // Form state
   const [formTitle, setFormTitle] = useState('')
@@ -39,7 +35,6 @@ export default function RequestsPage() {
           .eq('id', user.id)
           .single()
         if (profile?.whatsapp_number) {
-          setUserWhatsapp(profile.whatsapp_number)
           setFormWhatsapp(profile.whatsapp_number)
         }
       }
@@ -50,10 +45,6 @@ export default function RequestsPage() {
     }
 
     init()
-
-    const handleScroll = () => setScrolled(window.scrollY > 20)
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -3,7 +3,6 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
-import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
 import { formatName } from '@/lib/formatName'
 

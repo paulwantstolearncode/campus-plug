@@ -52,6 +52,7 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
   }, [])
 
   // Close dropdown on outside click
+
   useEffect(() => {
     if (!dropdownOpen) return
     function handleClick(e: MouseEvent) {
@@ -76,7 +77,6 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
   }
 
   const isDark = variant === 'dark' || variant === 'admin' || variant === 'dashboard'
-  const isLight = variant === 'light'
   const isActive = (path: string) => pathname === path
   const showBack = !!back
   const showHamburger = !showBack && !rightSlot
