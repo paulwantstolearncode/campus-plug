@@ -177,7 +177,7 @@ export default function ListingCard({
 
   const whatsappUrl = listing.seller?.whatsapp_number
     ? 'https://wa.me/' + listing.seller.whatsapp_number + '?text=' + encodeURIComponent(
-        'Hi! I\'m interested in your "' + listing.title + '" listing on Campus Plug 🔌'
+        'Hi ' + (listing.seller?.full_name ? formatName(listing.seller.full_name) : 'there') + '! I saw your listing for "' + listing.title + '" (' + priceLabel + ') on Campus Plug: https://campuspluggh.com/listing/' + listing.id + '. Is this still available?'
       )
     : null
 

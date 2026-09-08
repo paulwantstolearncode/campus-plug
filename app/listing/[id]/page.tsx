@@ -41,44 +41,38 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       }
     }
 
-    const ogParams = new URLSearchParams({
-      title: listing.title || 'Campus Plug Listing',
-      price: listing.price ? String(listing.price) : '',
-      location: listing.campus_location || '',
-      category: listing.category || listing.listing_type || '',
-      image: listing.image_url || (listing.images && listing.images[0]) || '',
-    })
-
-    const ogUrl = `${SITE_URL}/api/og?${ogParams.toString()}`
-
-    const description = listing.description
-      ? listing.description.slice(0, 160)
-      : `Check out "${listing.title}" on Campus Plug — the student marketplace at University of Ghana.`
+    const priceLabel = listing.price ? 'GH₵' + Number(listing.price).toLocaleString() : ''
+    const title = priceLabel ? `${listing.title} — ${priceLabel}` : listing.title
+    const description = listing.campus_location
+      ? `Available at ${listing.campus_location} • Verified on Campus Plug`
+      : `Verified on Campus Plug — the student marketplace at University of Ghana.`
+    const imageUrl = listing.image_url || (listing.images && listing.images[0]) || ''
 
     return {
       title: `${listing.title} — Campus Plug`,
       description,
       openGraph: {
-        title: listing.title,
+        title,
         description,
         url: `${SITE_URL}/listing/${id}`,
         siteName: 'Campus Plug',
         locale: 'en_GH',
+        // TODO: og:type "product" would be ideal but Next.js Metadata API doesn't support it — using "website"
         type: 'website',
-        images: [
+        images: imageUrl ? [
           {
-            url: ogUrl,
+            url: imageUrl,
             width: 1200,
             height: 630,
             alt: listing.title,
           },
-        ],
+        ] : [],
       },
       twitter: {
         card: 'summary_large_image',
-        title: listing.title,
+        title,
         description,
-        images: [ogUrl],
+        images: imageUrl ? [imageUrl] : [],
       },
     }
   } catch {

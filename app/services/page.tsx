@@ -386,7 +386,7 @@ export default function ServicesPage() {
                           📅 Book Now <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
                         </Link>
                         {service.seller?.whatsapp_number && (
-                          <a href={"https://wa.me/" + service.seller.whatsapp_number + "?text=" + encodeURIComponent("Hi! I'm interested in your \"" + service.title + "\" service on Campus Plug 🔌")} target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center bg-green-500 text-white rounded-full hover:bg-green-600 transition-all hover:scale-110" title="Message on WhatsApp">💬</a>
+                          <a href={"https://wa.me/" + service.seller.whatsapp_number + "?text=" + encodeURIComponent('Hi ' + (service.seller?.full_name ? formatName(service.seller.full_name) : 'there') + '! I saw your listing for "' + service.title + '" (GH\u20B5' + Number(service.price || 0).toLocaleString() + ') on Campus Plug: https://campuspluggh.com/listing/' + service.id + '. Is this still available?')} target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center bg-green-500 text-white rounded-full hover:bg-green-600 transition-all hover:scale-110" title="Message on WhatsApp">💬</a>
                         )}
                       </div>
                     </div>

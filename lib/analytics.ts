@@ -18,6 +18,25 @@ export async function logWhatsappOutcome(listingId: string, outcome: WhatsappOut
   }
 }
 
+// ── WhatsApp share tracking ────────────────────────────────────────
+// Logs a dedicated 'whatsapp_share' analytics event (allowed by the
+// analytics_events event_type CHECK constraint). The denormalized
+// whatsapp_click_count is intentionally NOT bumped — a share is not a chat
+// click and must not pollute the conversion metric.
+export async function logWhatsappShare(listingId: string) {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    await supabase.from('analytics_events').insert({
+      event_type: 'whatsapp_share',
+      listing_id: listingId,
+      user_id: user?.id || null,
+      metadata: { source: 'whatsapp_share' },
+    })
+  } catch (err) {
+    console.error('WhatsApp share log failed:', err)
+  }
+}
+
 // ── Sold listing helpers ───────────────────────────────────────────
 
 /** Mark a listing as sold (seller action). */

@@ -23,41 +23,36 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const displayName = seller.full_name || 'Student Seller'
     const listingCount = seller.listings.length
 
-    const ogParams = new URLSearchParams({
-      title: `${displayName}'s Shop on Campus Plug`,
-      price: `Catalog: ${listingCount} item${listingCount !== 1 ? 's' : ''}`,
-      location: seller.campus_location || '',
-      category: 'Verified Student Seller',
-    })
-
-    const ogUrl = `${SITE_URL}/api/og?${ogParams.toString()}`
-
-    const description = `${displayName} sells on Campus Plug — ${listingCount} approved listing${listingCount !== 1 ? 's' : ''}${seller.campus_location ? ` based at ${seller.campus_location}` : ''}. Browse and message directly on WhatsApp.`
+    const title = `${displayName}'s Shop on Campus Plug`
+    const description = listingCount > 0
+      ? `${listingCount} item${listingCount !== 1 ? 's' : ''} available • ${seller.campus_location || 'University of Ghana'}`
+      : `${displayName}'s shop on Campus Plug — the student marketplace at University of Ghana.`
+    const imageUrl = seller.listings[0]?.image_url || ''
 
     return {
       title: `${displayName}'s Shop — Campus Plug`,
       description,
       openGraph: {
-        title: `${displayName}'s Shop on Campus Plug`,
+        title,
         description,
         url: `${SITE_URL}/shop/${id}`,
         siteName: 'Campus Plug',
         locale: 'en_GH',
         type: 'website',
-        images: [
+        images: imageUrl ? [
           {
-            url: ogUrl,
+            url: imageUrl,
             width: 1200,
             height: 630,
             alt: `${displayName}'s Shop on Campus Plug`,
           },
-        ],
+        ] : [],
       },
       twitter: {
         card: 'summary_large_image',
-        title: `${displayName}'s Shop on Campus Plug`,
+        title,
         description,
-        images: [ogUrl],
+        images: imageUrl ? [imageUrl] : [],
       },
     }
   } catch {
