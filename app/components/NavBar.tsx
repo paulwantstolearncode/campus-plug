@@ -137,6 +137,16 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
                 Services
               </Link>
               <Link
+                href="/categories"
+                className={`text-sm font-medium transition-colors pb-1 ${
+                  isActive('/categories')
+                    ? `${textColor} border-b-2 ${activeBorder} pb-1`
+                    : `${mutedText} ${hoverText}`
+                }`}
+              >
+                Categories
+              </Link>
+              <Link
                 href="/requests"
                 className={`text-sm font-medium transition-colors pb-1 ${
                   isActive('/requests')
@@ -312,6 +322,13 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
               className={`px-4 py-3 rounded-xl transition-colors flex items-center gap-3 ${textColor} ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
             >
               <span>💼</span> Services
+            </Link>
+            <Link
+              href="/categories"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`px-4 py-3 rounded-xl transition-colors flex items-center gap-3 ${textColor} ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
+            >
+              <span>🗂️</span> Categories
             </Link>
             <Link
               href="/requests"

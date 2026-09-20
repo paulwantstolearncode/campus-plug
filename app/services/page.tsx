@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
 import { formatPriceRange } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
-import { getCategoriesByType, getCategoryDisplay } from '@/lib/categories'
+import { CATEGORIES, getCategoriesByType, getCategoryDisplay } from '@/lib/categories'
 import { CAMPUS_LOCATIONS, ALL_LOCATIONS } from '@/lib/campusLocations'
 import StarRating from '@/app/StarRating'
 import { getSellerRatings, type SellerRating } from '@/lib/reviews'
@@ -21,6 +21,7 @@ interface Service {
   service_duration: string | null
   service_location: string | null
   category: string | null
+  listing_type: string
   seller_id: string
   seller: {
     full_name: string | null
@@ -70,15 +71,20 @@ export default function ServicesPage() {
     const params = new URLSearchParams(window.location.search)
     const q = params.get('q')
     if (q) setSearchQuery(q)
+    // Read ?category= too (so /categories cards can deep-link a filter)
+    const cat = params.get('category')
+    if (cat) setCategoryFilter(cat)
   }, [])
 
   useEffect(() => {
     async function loadEverything() {
       try {
         const select = '*, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)'
+        // No listing_type restriction: category deep-links (?category=) must
+        // surface products too (hostel-essentials, electronics-gadgets, ...).
+        // The default board still shows services only via client-side filter.
         const baseQuery = (q: ReturnType<typeof supabase.from>) =>
           q.select(select)
-            .eq('listing_type', 'service')
             .eq('approval_status', 'approved')
             .is('deleted_at', null)
             .is('sold_at', null)
@@ -115,7 +121,14 @@ export default function ServicesPage() {
   }, [])
 
   const filteredServices = services.filter((s) => {
-    if (categoryFilter && s.category !== categoryFilter) return false
+    if (categoryFilter) {
+      // Browsing a category: show every listing type in it (products AND
+      // services) so product categories aren't mysteriously empty.
+      if (s.category !== categoryFilter) return false
+    } else if (s.listing_type !== 'service') {
+      // Default board: services only — unchanged page identity.
+      return false
+    }
     if (locationFilter) {
       if (locationFilter === 'Off-campus') {
         if (!s.service_location?.startsWith('Off-campus')) return false
@@ -208,7 +221,7 @@ export default function ServicesPage() {
               <div className="mb-10">
                 <p className="text-sm font-semibold text-gold tracking-widest uppercase mb-1">Available Now</p>
                 <p className="text-2xl md:text-3xl font-bold text-charcoal">
-                  {filteredServices.length} service{filteredServices.length !== 1 ? 's' : ''}
+                  {filteredServices.length} {categoryFilter ? 'listing' : 'service'}{filteredServices.length !== 1 ? 's' : ''}
                 </p>
 
                 {/* Search input with rotating placeholder */}
@@ -243,8 +256,11 @@ export default function ServicesPage() {
                     onChange={(e) => setCategoryFilter(e.target.value)}
                     className="px-4 py-2.5 rounded-full bg-white border-2 border-gray-200 text-sm font-semibold text-charcoal focus:outline-none focus:border-gold transition-colors"
                   >
-                    <option value="">📋 All Service Categories</option>
-                    {getCategoriesByType('service').map((c) => (
+                    <option value="">📋 All Categories</option>
+                    {(categoryFilter && !getCategoriesByType('service').some((c) => c.slug === categoryFilter)
+                      ? CATEGORIES
+                      : getCategoriesByType('service')
+                    ).map((c) => (
                       <option key={c.slug} value={c.slug}>{c.emoji} {c.label}</option>
                     ))}
                   </select>
@@ -335,13 +351,13 @@ export default function ServicesPage() {
                           <Image src={service.image_url} alt={service.title} fill sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw" className="object-cover group-hover:scale-110 transition-transform duration-700" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-charcoal via-gray-800 to-charcoal">
-                            <span className="text-7xl opacity-40">💼</span>
+                            <span className="text-7xl opacity-40">{service.listing_type === 'service' ? '💼' : '📦'}</span>
                           </div>
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/60 to-transparent"></div>
                         <div className="absolute top-4 left-4 glass px-3 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
                           <span className="w-2 h-2 bg-gold rounded-full"></span>
-                          Service
+                          {service.listing_type === 'service' ? 'Service' : 'Product'}
                         </div>
                         <div className="absolute top-4 right-4 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
                           {formatPriceRange(service.listing_items) || 'GH₵ ' + Number(service.price).toLocaleString()}
@@ -382,9 +398,15 @@ export default function ServicesPage() {
                         </div>
                       </Link>
                       <div className="p-4 flex gap-2">
-                        <Link href={"/services/" + service.id + "/book"} className="flex-1 flex items-center justify-center gap-2 bg-charcoal text-white py-3 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm group/btn">
-                          📅 Book Now <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
-                        </Link>
+                        {service.listing_type === 'service' ? (
+                          <Link href={"/services/" + service.id + "/book"} className="flex-1 flex items-center justify-center gap-2 bg-charcoal text-white py-3 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm group/btn">
+                            📅 Book Now <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
+                          </Link>
+                        ) : (
+                          <Link href={"/listing/" + service.id} className="flex-1 flex items-center justify-center gap-2 bg-charcoal text-white py-3 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm group/btn">
+                            🔍 View details <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
+                          </Link>
+                        )}
                         {service.seller?.whatsapp_number && (
                           <a href={"https://wa.me/" + service.seller.whatsapp_number + "?text=" + encodeURIComponent('Hi ' + (service.seller?.full_name ? formatName(service.seller.full_name) : 'there') + '! I saw your listing for "' + service.title + '" (GH\u20B5' + Number(service.price || 0).toLocaleString() + ') on Campus Plug: https://campuspluggh.com/listing/' + service.id + '. Is this still available?')} target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center bg-green-500 text-white rounded-full hover:bg-green-600 transition-all hover:scale-110" title="Message on WhatsApp">💬</a>
                         )}

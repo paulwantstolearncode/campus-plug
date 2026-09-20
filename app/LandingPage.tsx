@@ -8,6 +8,8 @@ import { CATEGORIES } from '@/lib/categories'
 import FeedbackModal from '@/app/components/FeedbackModal'
 import type { User } from '@supabase/supabase-js'
 import NavBar from '@/app/components/NavBar'
+import MarqueeStrip from '@/app/components/MarqueeStrip'
+import BentoGrid from '@/app/components/BentoGrid'
 import { useRouter } from 'next/navigation'
 
 interface MarketplaceStats {
@@ -468,6 +470,9 @@ export default function LandingPage() {
         <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-paper to-transparent pointer-events-none" />
       </section>
 
+      {/* Category marquee — instant category ticker for freshers */}
+      <MarqueeStrip />
+
       {/* BANNER ADS — admin-configurable sponsored slots */}
       {banners.length > 0 && (
         <section className="relative py-8 md:py-12 bg-paper">
@@ -595,6 +600,9 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Freshers — Start here bento */}
+      <BentoGrid />
 
       {/* Explore by Category */}
       {visibleCategories.length > 0 && (
