@@ -262,10 +262,18 @@ html {
 
 /* ── Fresher landing: marquee, scroll cue, grain ────────────────── */
 
-/* Marquee scroll */
-.marquee-track { animation: marquee 30s linear infinite; }
-.marquee-track:hover { animation-play-state: paused; }
-@keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+/* Marquee scroll — runs on ALL viewports incl. touch; hover pause is
+   mouse-only, so a tap on mobile can't leave it stuck paused. */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 25s linear infinite;
+  will-change: transform;
+}
+@media (hover: hover) {
+  .marquee-track:hover { animation-play-state: paused; }
+}
+@keyframes marquee { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-50%, 0, 0); } }
 
 /* Scroll indicator */
 .scroll-dot { animation: scrollBounce 1.8s ease-in-out infinite; }
@@ -281,7 +289,4 @@ html {
 /* Respect reduced motion + pause decorative loops on touch devices */
 @media (prefers-reduced-motion: reduce) {
   .marquee-track, .scroll-dot { animation: none; }
-}
-@media (hover: none) and (pointer: coarse) {
-  .marquee-track { animation-duration: 60s; }
 }
