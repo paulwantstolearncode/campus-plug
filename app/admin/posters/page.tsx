@@ -5,9 +5,12 @@ import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
+import { toPng, toJpeg } from 'html-to-image'
 
 type PosterType = 'general' | 'wanted' | 'seller'
 type PosterFormat = 'a4' | 'a5' | 'mobile'
+type BgTheme = 'obsidian' | 'paper' | 'gold' | 'legon'
+type BgPattern = 'glow' | 'grid' | 'clean'
 
 const POSTER_TEMPLATES: Record<PosterType, {
   targetUrl: string
@@ -41,6 +44,102 @@ const FORMAT_SIZES: Record<PosterFormat, { width: number; height: number; label:
   mobile: { width: 1080, height: 1920, label: 'Mobile Story' },
 }
 
+const THEME_CONFIG: Record<BgTheme, {
+  label: string
+  swatchClass: string
+  canvasClass: string
+  topTagClass: string
+  mastheadClass: string
+  ruleClass: string
+  stampClass: string
+  headlineClass: string
+  subheadingClass: string
+  contentCardClass: string
+  qrShellClass: string
+  locationChipClass: string
+  bracketClass: string
+}> = {
+  obsidian: {
+    label: '🖤 Obsidian',
+    swatchClass: 'bg-[#0f0f0f] border border-white/20',
+    canvasClass: 'bg-[#0f0f0f] text-white border border-white/10',
+    topTagClass: 'text-gold/90 bg-white/5 border-b border-white/10',
+    mastheadClass: 'bg-black/40 border-b border-gold/30',
+    ruleClass: 'bg-gold',
+    stampClass: 'text-gold',
+    headlineClass: 'text-white',
+    subheadingClass: 'text-white/70',
+    contentCardClass: 'bg-transparent',
+    qrShellClass: 'bg-white p-4 rounded-2xl border-2 border-gold shadow-lg shadow-gold/20',
+    locationChipClass: 'bg-gold-soft text-ink',
+    bracketClass: 'border-gold',
+  },
+  paper: {
+    label: '📄 Paper',
+    swatchClass: 'bg-[#f8f8f8] border border-rule',
+    canvasClass: 'bg-[#f8f8f8] text-white border border-rule',
+    topTagClass: 'text-ink-muted bg-white border-b border-rule',
+    mastheadClass: 'bg-ink',
+    ruleClass: 'bg-gold',
+    stampClass: 'text-gold',
+    headlineClass: 'text-white',
+    subheadingClass: 'text-white/70',
+    contentCardClass: 'bg-ink mx-6 my-4 rounded-2xl px-4 pt-2 pb-4',
+    qrShellClass: 'bg-white p-4 rounded-2xl border-2 border-gold shadow-md',
+    locationChipClass: 'bg-gold-soft text-ink',
+    bracketClass: 'border-gold',
+  },
+  gold: {
+    label: '✨ Gold',
+    swatchClass: 'bg-gradient-to-br from-[#c9a227] via-[#d4af37] to-[#b08a1e]',
+    canvasClass: 'bg-gradient-to-br from-[#c9a227] via-[#d4af37] to-[#b08a1e] text-white border border-[#0f0f0f]/20',
+    topTagClass: 'text-[#0f0f0f] bg-[#0f0f0f]/10 border-b border-[#0f0f0f]/20',
+    mastheadClass: 'bg-ink',
+    ruleClass: 'bg-gold',
+    stampClass: 'text-gold',
+    headlineClass: 'text-white',
+    subheadingClass: 'text-white/70',
+    contentCardClass: 'bg-[#0f0f0f] mx-6 my-4 rounded-2xl px-4 pt-2 pb-4',
+    qrShellClass: 'bg-white p-4 rounded-2xl border-2 border-[#0f0f0f] shadow-xl',
+    locationChipClass: 'bg-gold text-[#0f0f0f]',
+    bracketClass: 'border-[#0f0f0f]',
+  },
+  legon: {
+    label: '🏛️ Legon Slate',
+    swatchClass: 'bg-[#0b131e] border border-white/20',
+    canvasClass: 'bg-[#0b131e] text-white border border-white/10',
+    topTagClass: 'text-gold/90 bg-white/5 border-b border-white/10',
+    mastheadClass: 'bg-black/40 border-b border-gold/30',
+    ruleClass: 'bg-gold',
+    stampClass: 'text-gold',
+    headlineClass: 'text-white',
+    subheadingClass: 'text-white/70',
+    contentCardClass: 'bg-white/5 mx-6 my-4 rounded-2xl px-4 pt-2 pb-4 border border-gold/20',
+    qrShellClass: 'bg-white p-4 rounded-2xl border-2 border-gold shadow-lg shadow-gold/20',
+    locationChipClass: 'bg-gold text-[#0f0f0f]',
+    bracketClass: 'border-gold',
+  },
+}
+
+const PATTERN_CONFIG: Record<BgPattern, { label: string; style: React.CSSProperties }> = {
+  glow: {
+    label: '✨ Gold Glow',
+    style: { background: 'radial-gradient(ellipse 70% 45% at 50% 32%, rgba(201,162,39,0.20), transparent 70%)' },
+  },
+  grid: {
+    label: '▦ Grid',
+    style: {
+      backgroundImage:
+        'linear-gradient(rgba(201,162,39,0.10) 1px, transparent 1px), linear-gradient(90deg, rgba(201,162,39,0.10) 1px, transparent 1px)',
+      backgroundSize: '28px 28px',
+    },
+  },
+  clean: {
+    label: '○ Clean',
+    style: {},
+  },
+}
+
 export default function PosterGeneratorPage() {
   const router = useRouter()
   const [isAdmin, setIsAdmin] = useState(false)
@@ -49,10 +148,13 @@ export default function PosterGeneratorPage() {
 
   const [posterType, setPosterType] = useState<PosterType>('general')
   const [format, setFormat] = useState<PosterFormat>('a4')
+  const [bgTheme, setBgTheme] = useState<BgTheme>('obsidian')
+  const [bgPattern, setBgPattern] = useState<BgPattern>('glow')
   const [headline, setHeadline] = useState(POSTER_TEMPLATES.general.headline)
   const [subheading, setSubheading] = useState(POSTER_TEMPLATES.general.subheading)
   const [locationTag, setLocationTag] = useState('University of Ghana · Legon Campus')
   const [customQrImage, setCustomQrImage] = useState<string | null>(null)
+  const [isExporting, setIsExporting] = useState<'png' | 'jpeg' | null>(null)
 
   const posterRef = useRef<HTMLDivElement>(null)
 
@@ -101,6 +203,29 @@ export default function PosterGeneratorPage() {
   const targetUrl = POSTER_TEMPLATES[posterType].targetUrl
   const qrSrc = customQrImage || `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`
   const size = FORMAT_SIZES[format]
+  const theme = THEME_CONFIG[bgTheme]
+
+  async function handleDownload(exportFormat: 'png' | 'jpeg') {
+    if (!posterRef.current || isExporting) return
+    setIsExporting(exportFormat)
+    try {
+      // pixelRatio: 2 → ~150 DPI at A4 print size ×2 = 300 DPI equivalent
+      const options = { quality: 0.98, pixelRatio: 2, cacheBust: true }
+      const dataUrl = exportFormat === 'png'
+        ? await toPng(posterRef.current, options)
+        : await toJpeg(posterRef.current, options)
+
+      const link = document.createElement('a')
+      link.download = `campus-plug-poster-${bgTheme}-${format}.${exportFormat}`
+      link.href = dataUrl
+      link.click()
+    } catch (err) {
+      console.error('Poster export failed:', err)
+      alert('Could not export the poster. Please try again or use Print / Save PDF instead.')
+    } finally {
+      setIsExporting(null)
+    }
+  }
 
   function handlePrint() {
     window.print()
@@ -142,7 +267,7 @@ export default function PosterGeneratorPage() {
           <div>
             <div className="inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-2">Poster Generator</div>
             <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">🎨 Print Posters</h1>
-            <p className="text-white/60">Design and print promotional posters for Campus Plug.</p>
+            <p className="text-white/60">Design, download, and print promotional posters for Campus Plug.</p>
           </div>
 
           {/* Poster Type Selector */}
@@ -186,6 +311,53 @@ export default function PosterGeneratorPage() {
                     'px-5 py-2.5 rounded-full font-semibold text-sm transition-all ' +
                     (format === key
                       ? 'bg-white text-charcoal shadow-lg'
+                      : 'bg-white/10 text-white hover:bg-white/20')
+                  }
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Background Theme Selector */}
+          <div>
+            <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">Background Theme</label>
+            <div className="flex flex-wrap gap-2">
+              {(Object.keys(THEME_CONFIG) as BgTheme[]).map((key) => (
+                <button
+                  key={key}
+                  onClick={() => setBgTheme(key)}
+                  className={
+                    'flex items-center gap-2 px-4 py-2.5 rounded-full font-semibold text-sm transition-all border ' +
+                    (bgTheme === key
+                      ? 'bg-white text-charcoal border-white shadow-lg'
+                      : 'bg-white/10 text-white border-white/20 hover:bg-white/20')
+                  }
+                >
+                  <span className={`inline-block w-4 h-4 rounded-full ${THEME_CONFIG[key].swatchClass}`} aria-hidden="true" />
+                  {THEME_CONFIG[key].label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Pattern Overlay Selector */}
+          <div>
+            <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">Pattern Overlay</label>
+            <div className="flex flex-wrap gap-2">
+              {([
+                ['glow', PATTERN_CONFIG.glow.label],
+                ['grid', PATTERN_CONFIG.grid.label],
+                ['clean', PATTERN_CONFIG.clean.label],
+              ] as const).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setBgPattern(key)}
+                  className={
+                    'px-5 py-2.5 rounded-full font-semibold text-sm transition-all ' +
+                    (bgPattern === key
+                      ? 'bg-gold text-charcoal shadow-lg shadow-gold/25'
                       : 'bg-white/10 text-white hover:bg-white/20')
                   }
                 >
@@ -240,13 +412,27 @@ export default function PosterGeneratorPage() {
             </div>
           </div>
 
-          {/* Print Button */}
-          <div className="flex gap-3">
+          {/* Action Bar: Download PNG / JPEG / Print */}
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => handleDownload('png')}
+              disabled={isExporting !== null}
+              className="bg-gold text-charcoal px-8 py-3 rounded-full font-bold hover:bg-gold/90 transition-colors shadow-lg shadow-gold/25 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isExporting === 'png' ? '⏳ Rendering…' : '⬇️ Download PNG'}
+            </button>
+            <button
+              onClick={() => handleDownload('jpeg')}
+              disabled={isExporting !== null}
+              className="bg-white/10 text-white px-8 py-3 rounded-full font-bold hover:bg-white/20 transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {isExporting === 'jpeg' ? '⏳ Rendering…' : '⬇️ Download JPEG'}
+            </button>
             <button
               onClick={handlePrint}
-              className="bg-gold text-charcoal px-8 py-3 rounded-full font-bold hover:bg-gold/90 transition-colors shadow-lg shadow-gold/25 text-sm"
+              className="border border-gold/60 text-gold px-8 py-3 rounded-full font-bold hover:bg-gold/10 transition-colors text-sm"
             >
-              🖨️ Print Poster ({FORMAT_SIZES[format].label})
+              🖨️ Print / Save PDF ({FORMAT_SIZES[format].label})
             </button>
           </div>
         </div>
@@ -258,83 +444,104 @@ export default function PosterGeneratorPage() {
           <div className="bg-white/50 rounded-2xl p-6 border border-white/10 flex justify-center">
             <div
               ref={posterRef}
-              className="poster-canvas bg-paper border border-rule overflow-hidden shadow-2xl"
+              className={`poster-canvas relative overflow-hidden shadow-2xl ${theme.canvasClass}`}
               style={{ width: size.width, height: size.height }}
             >
-              {/* Masthead */}
-              <div className="bg-ink px-8 py-6 text-center">
-                <div className="flex items-center justify-center gap-3 mb-2">
-                  <span className="text-3xl">⚡</span>
-                  <span className="text-white font-bold text-xl md:text-2xl tracking-[0.15em] uppercase">Campus Plug</span>
-                  <span className="text-3xl">⚡</span>
+              {/* Pattern overlay (glow / grid / clean) */}
+              <div className="absolute inset-0 pointer-events-none" style={PATTERN_CONFIG[bgPattern].style} />
+
+              {/* Gold L-shaped corner brackets */}
+              <span className={`absolute top-3 left-3 w-9 h-9 border-t-[3px] border-l-[3px] ${theme.bracketClass}`} aria-hidden="true" />
+              <span className={`absolute top-3 right-3 w-9 h-9 border-t-[3px] border-r-[3px] ${theme.bracketClass}`} aria-hidden="true" />
+              <span className={`absolute bottom-3 left-3 w-9 h-9 border-b-[3px] border-l-[3px] ${theme.bracketClass}`} aria-hidden="true" />
+              <span className={`absolute bottom-3 right-3 w-9 h-9 border-b-[3px] border-r-[3px] ${theme.bracketClass}`} aria-hidden="true" />
+
+              <div className="relative">
+                {/* Editorial top tag */}
+                <div className={`px-8 py-2.5 text-center ${theme.topTagClass}`}>
+                  <p className="text-[9px] font-bold tracking-[0.35em] uppercase">
+                    Official Campus Marketplace • University of Ghana
+                  </p>
                 </div>
-                <p className="text-gold text-xs font-bold tracking-[0.3em] uppercase">University of Ghana · Legon</p>
-              </div>
 
-              {/* Gold rule */}
-              <div className="h-1 bg-gold" />
-
-              {/* Section stamp */}
-              <div className="px-8 pt-6 pb-2">
-                <span className="text-[10px] font-bold text-ink-muted tracking-[0.25em] uppercase">{POSTER_TEMPLATES[posterType].stamp}</span>
-              </div>
-
-              {/* Headline */}
-              <div className="px-8 pt-2 pb-4">
-                <h2 className="text-2xl md:text-3xl font-bold text-ink leading-tight font-serif-accent" style={{ fontFamily: 'var(--font-serif), Georgia, serif' }}>
-                  {headline.split(' ').map((word, i) => {
-                    const lower = word.toLowerCase()
-                    if (['sell', 'free', 'students', 'sell?', 'campus', 'plug', 'start'].includes(lower)) {
-                      return <span key={i} className="italic text-gold">{word} </span>
-                    }
-                    return <span key={i}>{word} </span>
-                  })}
-                </h2>
-              </div>
-
-              {/* Hairline rule */}
-              <div className="mx-8 border-t border-rule" />
-
-              {/* Subheading */}
-              <div className="px-8 py-4">
-                <p className="text-ink-muted text-base leading-relaxed">{subheading}</p>
-              </div>
-
-              {/* QR Code */}
-              <div className="px-8 py-4 flex flex-col items-center">
-                <div className="bg-white p-4 rounded-2xl border-2 border-gold shadow-md">
-                  <img
-                    src={qrSrc}
-                    alt="QR Code — scan to visit Campus Plug"
-                    width={200}
-                    height={200}
-                    className="w-[200px] h-[200px]"
-                  />
+                {/* Masthead */}
+                <div className={`px-8 py-6 text-center ${theme.mastheadClass}`}>
+                  <div className="flex items-center justify-center gap-3 mb-2">
+                    <span className="text-3xl">⚡</span>
+                    <span className="text-white font-bold text-xl md:text-2xl tracking-[0.15em] uppercase">Campus Plug</span>
+                    <span className="text-3xl">⚡</span>
+                  </div>
+                  <p className="text-gold text-xs font-bold tracking-[0.3em] uppercase">University of Ghana · Legon</p>
                 </div>
-                <p className="text-ink-muted text-[11px] font-semibold mt-3 tracking-wide">
-                  📸 Point your phone camera here to scan
-                </p>
-              </div>
 
-              {/* Location tag */}
-              <div className="px-8 py-2 text-center">
-                <span className="inline-block bg-gold-soft text-ink font-mono text-xs font-bold px-4 py-2 rounded-full">
-                  📍 {locationTag}
-                </span>
-              </div>
+                {/* Gold rule */}
+                <div className={`h-1 ${theme.ruleClass}`} />
 
-              {/* Trust bar */}
-              <div className="mx-8 border-t border-rule mt-4" />
-              <div className="px-8 py-4 text-center">
-                <p className="text-ink-muted text-[11px] font-semibold tracking-wide">
-                  100% Free for Students · Direct WhatsApp · Legon Campus
-                </p>
-              </div>
+                {/* Themed content card */}
+                <div className={theme.contentCardClass}>
+                  {/* Section stamp */}
+                  <div className="px-6 pt-5 pb-2">
+                    <span className={`text-[10px] font-bold tracking-[0.25em] uppercase ${theme.stampClass}`}>{POSTER_TEMPLATES[posterType].stamp}</span>
+                  </div>
 
-              {/* Footer */}
-              <div className="bg-ink px-8 py-4 text-center">
-                <p className="text-white text-xs font-bold tracking-[0.15em] uppercase">campuspluggh.com</p>
-                <p className="text-gold text-[10px] mt-1 tracking-widest">⚡ THE LEGON NOTICEBOARD ⚡</p>
+                  {/* Headline */}
+                  <div className="px-6 pt-2 pb-4">
+                    <h2 className={`text-2xl md:text-3xl font-bold leading-tight font-serif-accent ${theme.headlineClass}`} style={{ fontFamily: 'var(--font-serif), Georgia, serif' }}>
+                      {headline.split(' ').map((word, i) => {
+                        const lower = word.toLowerCase()
+                        if (['sell', 'free', 'students', 'sell?', 'campus', 'plug', 'start'].includes(lower)) {
+                          return <span key={i} className="italic text-gold">{word} </span>
+                        }
+                        return <span key={i}>{word} </span>
+                      })}
+                    </h2>
+                  </div>
+
+                  {/* Hairline rule */}
+                  <div className="mx-6 border-t border-white/15" />
+
+                  {/* Subheading */}
+                  <div className="px-6 py-4">
+                    <p className={`text-base leading-relaxed ${theme.subheadingClass}`}>{subheading}</p>
+                  </div>
+
+                  {/* QR Code — clean high-contrast white/gold backdrop for phone cameras */}
+                  <div className="px-6 py-4 flex flex-col items-center">
+                    <div className={theme.qrShellClass}>
+                      <img
+                        src={qrSrc}
+                        alt="QR Code — scan to visit Campus Plug"
+                        width={200}
+                        height={200}
+                        className="w-[200px] h-[200px]"
+                      />
+                    </div>
+                    <p className={`text-[11px] font-semibold mt-3 tracking-wide ${theme.stampClass}`}>
+                      📸 Point your phone camera here to scan
+                    </p>
+                  </div>
+
+                  {/* Location tag */}
+                  <div className="px-6 py-2 text-center">
+                    <span className={`inline-block font-mono text-xs font-bold px-4 py-2 rounded-full ${theme.locationChipClass}`}>
+                      📍 {locationTag}
+                    </span>
+                  </div>
+
+                  {/* Trust bar */}
+                  <div className="mx-6 border-t border-white/15 mt-4" />
+                  <div className="px-6 py-4 text-center">
+                    <p className={`text-[11px] font-semibold tracking-wide ${theme.subheadingClass}`}>
+                      100% Free for Students · Direct WhatsApp · Legon Campus
+                    </p>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="bg-ink px-8 py-4 text-center">
+                  <p className="text-white text-xs font-bold tracking-[0.15em] uppercase">campuspluggh.com</p>
+                  <p className="text-gold text-[10px] mt-1 tracking-widest">⚡ THE LEGON NOTICEBOARD ⚡</p>
+                </div>
               </div>
             </div>
           </div>
