@@ -156,6 +156,16 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
               >
                 Wanted Board
               </Link>
+              <Link
+                href="/fresher-kit"
+                className={`text-sm font-medium transition-colors pb-1 ${
+                  isActive('/fresher-kit')
+                    ? `${textColor} border-b-2 ${activeBorder} pb-1`
+                    : `${mutedText} ${hoverText}`
+                }`}
+              >
+                Fresher Kit 🎓
+              </Link>
               {user && (
                 <Link
                   href="/favorites"
@@ -336,6 +346,13 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
               className={`px-4 py-3 rounded-xl transition-colors flex items-center gap-3 ${textColor} ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
             >
               <span>📋</span> Wanted Board
+            </Link>
+            <Link
+              href="/fresher-kit"
+              onClick={() => setMobileMenuOpen(false)}
+              className={`px-4 py-3 rounded-xl transition-colors flex items-center gap-3 ${textColor} ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
+            >
+              <span>🎓</span> Fresher Kit 🎓
             </Link>
             {user && (
               <Link

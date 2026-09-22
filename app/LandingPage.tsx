@@ -290,6 +290,16 @@ export default function LandingPage() {
     <main className="min-h-screen bg-paper overflow-hidden">
       <NavBar />
 
+      {/* ── Fresher Kit announcement bar (clears the fixed nav) ── */}
+      <div className="bg-ink pt-16">
+        <Link
+          href="/fresher-kit"
+          className="block bg-gold text-charcoal text-center text-xs sm:text-sm font-bold px-4 py-3 tracking-wide hover:bg-gold/90 transition-colors"
+        >
+          ⚡ Level 100 at UG? Check out the Fresher Survival Kit →
+        </Link>
+      </div>
+
       {/* ── Hero: obsidian editorial statement + floating bento ── */}
       <section className="relative min-h-[92vh] flex items-center pt-28 pb-16 md:pt-32 md:pb-24 overflow-hidden bg-ink text-white">
         {/* Animated gradient blobs */}
