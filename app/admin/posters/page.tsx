@@ -44,6 +44,17 @@ const FORMAT_SIZES: Record<PosterFormat, { width: number; height: number; label:
   mobile: { width: 1080, height: 1920, label: 'Mobile Story' },
 }
 
+// Category feature strip — fills the middle of tall formats so posters read
+// top-to-bottom with no dead space.
+const CATEGORY_PILLARS = [
+  { emoji: '🏠', text: 'Hostel Setup (Kettles, Fans, Bedding)' },
+  { emoji: '💻', text: 'Laptops & Power Banks' },
+  { emoji: '📚', text: 'Past Questions & Handouts' },
+  { emoji: '✨', text: 'Laundry & Campus Services' },
+]
+
+const HALL_CHIPS = ['📍 Pentagon', '📍 Evandy', '📍 TF Hostels', '📍 Main Campus']
+
 const THEME_CONFIG: Record<BgTheme, {
   label: string
   swatchClass: string
@@ -55,6 +66,8 @@ const THEME_CONFIG: Record<BgTheme, {
   headlineClass: string
   subheadingClass: string
   contentCardClass: string
+  featureCardClass: string
+  featureTextClass: string
   qrShellClass: string
   locationChipClass: string
   bracketClass: string
@@ -70,6 +83,8 @@ const THEME_CONFIG: Record<BgTheme, {
     headlineClass: 'text-white',
     subheadingClass: 'text-white/70',
     contentCardClass: 'bg-transparent',
+    featureCardClass: 'bg-white/5 border border-gold/25',
+    featureTextClass: 'text-white',
     qrShellClass: 'bg-white p-4 rounded-2xl border-2 border-gold shadow-lg shadow-gold/20',
     locationChipClass: 'bg-gold-soft text-ink',
     bracketClass: 'border-gold',
@@ -85,6 +100,8 @@ const THEME_CONFIG: Record<BgTheme, {
     headlineClass: 'text-white',
     subheadingClass: 'text-white/70',
     contentCardClass: 'bg-ink mx-6 my-4 rounded-2xl px-4 pt-2 pb-4',
+    featureCardClass: 'bg-white border border-rule',
+    featureTextClass: 'text-ink',
     qrShellClass: 'bg-white p-4 rounded-2xl border-2 border-gold shadow-md',
     locationChipClass: 'bg-gold-soft text-ink',
     bracketClass: 'border-gold',
@@ -100,6 +117,8 @@ const THEME_CONFIG: Record<BgTheme, {
     headlineClass: 'text-white',
     subheadingClass: 'text-white/70',
     contentCardClass: 'bg-[#0f0f0f] mx-6 my-4 rounded-2xl px-4 pt-2 pb-4',
+    featureCardClass: 'bg-[#0f0f0f] border border-white/10',
+    featureTextClass: 'text-white',
     qrShellClass: 'bg-white p-4 rounded-2xl border-2 border-[#0f0f0f] shadow-xl',
     locationChipClass: 'bg-gold text-[#0f0f0f]',
     bracketClass: 'border-[#0f0f0f]',
@@ -115,6 +134,8 @@ const THEME_CONFIG: Record<BgTheme, {
     headlineClass: 'text-white',
     subheadingClass: 'text-white/70',
     contentCardClass: 'bg-white/5 mx-6 my-4 rounded-2xl px-4 pt-2 pb-4 border border-gold/20',
+    featureCardClass: 'bg-white/5 border border-gold/20',
+    featureTextClass: 'text-white',
     qrShellClass: 'bg-white p-4 rounded-2xl border-2 border-gold shadow-lg shadow-gold/20',
     locationChipClass: 'bg-gold text-[#0f0f0f]',
     bracketClass: 'border-gold',
@@ -495,91 +516,104 @@ export default function PosterGeneratorPage() {
               <span className={`absolute bottom-3 left-3 w-9 h-9 border-b-[3px] border-l-[3px] ${theme.bracketClass}`} aria-hidden="true" />
               <span className={`absolute bottom-3 right-3 w-9 h-9 border-b-[3px] border-r-[3px] ${theme.bracketClass}`} aria-hidden="true" />
 
-              <div className="relative">
-                {/* Editorial top tag */}
-                <div className={`px-8 py-2.5 text-center ${theme.topTagClass}`}>
-                  <p className="text-[9px] font-bold tracking-[0.35em] uppercase">
-                    Official Campus Marketplace • University of Ghana
-                  </p>
-                </div>
 
-                {/* Masthead */}
-                <div className={`px-8 py-6 text-center ${theme.mastheadClass}`}>
-                  <div className="flex items-center justify-center gap-3 mb-2">
-                    <span className="text-3xl">⚡</span>
-                    <span className="text-white font-bold text-xl md:text-2xl tracking-[0.15em] uppercase">Campus Plug</span>
-                    <span className="text-3xl">⚡</span>
-                  </div>
-                  <p className="text-gold text-xs font-bold tracking-[0.3em] uppercase">University of Ghana · Legon</p>
-                </div>
 
-                {/* Gold rule */}
-                <div className={`h-1 ${theme.ruleClass}`} />
-
-                {/* Themed content card */}
-                <div className={theme.contentCardClass}>
-                  {/* Section stamp */}
-                  <div className="px-6 pt-5 pb-2">
-                    <span className={`text-[10px] font-bold tracking-[0.25em] uppercase ${theme.stampClass}`}>{POSTER_TEMPLATES[posterType].stamp}</span>
-                  </div>
-
-                  {/* Headline */}
-                  <div className="px-6 pt-2 pb-4">
-                    <h2 className={`text-2xl md:text-3xl font-bold leading-tight font-serif-accent ${theme.headlineClass}`} style={{ fontFamily: 'var(--font-serif), Georgia, serif' }}>
-                      {headline.split(' ').map((word, i) => {
-                        const lower = word.toLowerCase()
-                        if (['sell', 'free', 'students', 'sell?', 'campus', 'plug', 'start'].includes(lower)) {
-                          return <span key={i} className="italic text-gold">{word} </span>
-                        }
-                        return <span key={i}>{word} </span>
-                      })}
-                    </h2>
-                  </div>
-
-                  {/* Hairline rule */}
-                  <div className="mx-6 border-t border-white/15" />
-
-                  {/* Subheading */}
-                  <div className="px-6 py-4">
-                    <p className={`text-base leading-relaxed ${theme.subheadingClass}`}>{subheading}</p>
-                  </div>
-
-                  {/* QR Code — clean high-contrast white/gold backdrop for phone cameras */}
-                  <div className="px-6 py-4 flex flex-col items-center">
-                    <div className={theme.qrShellClass}>
-                      <img
-                        src={qrSrc}
-                        alt="QR Code — scan to visit Campus Plug"
-                        width={200}
-                        height={200}
-                        className="w-[200px] h-[200px]"
-                      />
-                    </div>
-                    <p className={`text-[11px] font-semibold mt-3 tracking-wide ${theme.stampClass}`}>
-                      📸 Point your phone camera here to scan
+              {/* ── Layout: full-height flex column — full-bleed top bands,
+                  stretchy middle, footer pinned to the bottom edge (no dead void) ── */}
+              <div className="relative flex flex-col justify-between h-full min-h-full overflow-hidden">
+                {/* Top bands: editorial tag → masthead → gold rule (full-bleed) */}
+                <div>
+                  <div className={`px-8 py-2.5 text-center ${theme.topTagClass}`}>
+                    <p className="text-[9px] font-bold tracking-[0.35em] uppercase">
+                      Official Campus Marketplace • University of Ghana
                     </p>
                   </div>
 
-                  {/* Location tag */}
-                  <div className="px-6 py-2 text-center">
+                  <div className={`px-8 py-5 text-center ${theme.mastheadClass}`}>
+                    <div className="flex items-center justify-center gap-3 mb-1.5">
+                      <span className="text-2xl">⚡</span>
+                      <span className="text-white font-bold text-xl tracking-[0.15em] uppercase">Campus Plug</span>
+                      <span className="text-2xl">⚡</span>
+                    </div>
+                    <p className="text-gold text-[11px] font-bold tracking-[0.3em] uppercase">University of Ghana · Legon</p>
+                  </div>
+
+                  <div className={`h-1 ${theme.ruleClass}`} />
+                </div>
+
+                {/* ── Middle: stretches to fill every spare pixel — headline,
+                    subheading, category strip, glowing QR ── */}
+                <div className="flex-1 min-h-0 py-3 flex">
+                  <div className={`${theme.contentCardClass} flex-1 flex flex-col justify-evenly min-h-0 my-0! py-4!`}>
+                    <div className="text-center px-5 sm:px-8">
+                      <span className={`text-[10px] font-bold tracking-[0.25em] uppercase ${theme.stampClass}`}>{POSTER_TEMPLATES[posterType].stamp}</span>
+                      <h2 className={`mt-2 text-2xl font-bold leading-tight font-serif-accent ${theme.headlineClass}`} style={{ fontFamily: 'var(--font-serif), Georgia, serif' }}>
+                        {headline.split(' ').map((word, i) => {
+                          const lower = word.toLowerCase()
+                          if (['sell', 'free', 'students', 'sell?', 'campus', 'plug', 'start'].includes(lower)) {
+                            return <span key={i} className="italic text-gold">{word} </span>
+                          }
+                          return <span key={i}>{word} </span>
+                        })}
+                      </h2>
+                      <p className={`mt-2 text-sm leading-relaxed ${theme.subheadingClass}`}>{subheading}</p>
+                    </div>
+
+                    {/* Category highlights strip — what students can actually find */}
+                    <div className="grid grid-cols-1 gap-1.5 px-5 sm:px-8">
+                      {CATEGORY_PILLARS.map((pillar) => (
+                        <div key={pillar.text} className={`flex items-center gap-2.5 rounded-lg px-3 py-2 ${theme.featureCardClass}`}>
+                          <span className="text-base leading-none">{pillar.emoji}</span>
+                          <span className={`text-[11px] font-semibold ${theme.featureTextClass}`}>{pillar.text}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* QR code — prominent, centered, glowing for instant scans */}
+                    <div className="flex flex-col items-center px-5 sm:px-8">
+                      <div className={theme.qrShellClass}>
+                        <img
+                          src={qrSrc}
+                          alt="QR Code — scan to visit Campus Plug"
+                          width={200}
+                          height={200}
+                          className="w-[200px] h-[200px]"
+                        />
+                      </div>
+                      <p className={`text-[11px] font-semibold mt-2 tracking-wide ${theme.stampClass}`}>
+                        📸 Point your phone camera here to scan
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── Bottom stack: location chip, hall badges, trust line, footer ── */}
+                <div>
+                  <div className="px-6 sm:px-8 pb-2 text-center">
                     <span className={`inline-block font-mono text-xs font-bold px-4 py-2 rounded-full ${theme.locationChipClass}`}>
                       📍 {locationTag}
                     </span>
                   </div>
 
-                  {/* Trust bar */}
-                  <div className="mx-6 border-t border-white/15 mt-4" />
-                  <div className="px-6 py-4 text-center">
+                  <div className="px-6 sm:px-8 pb-3 flex flex-wrap justify-center gap-1.5">
+                    {HALL_CHIPS.map((hall) => (
+                      <span key={hall} className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${theme.featureCardClass} ${theme.featureTextClass}`}>
+                        {hall}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="px-6 sm:px-8 pb-3 text-center">
                     <p className={`text-[11px] font-semibold tracking-wide ${theme.subheadingClass}`}>
                       100% Free for Students · Direct WhatsApp · Legon Campus
                     </p>
                   </div>
-                </div>
 
-                {/* Footer */}
-                <div className="bg-ink px-8 py-4 text-center">
-                  <p className="text-white text-xs font-bold tracking-[0.15em] uppercase">campuspluggh.com</p>
-                  <p className="text-gold text-[10px] mt-1 tracking-widest">⚡ THE LEGON NOTICEBOARD ⚡</p>
+                  {/* Footer — anchored flush to the bottom border of the frame */}
+                  <div className="bg-ink px-8 py-4 text-center">
+                    <p className="text-white text-xs font-bold tracking-[0.15em] uppercase">campuspluggh.com</p>
+                    <p className="text-gold text-[10px] mt-1 tracking-widest">⚡ THE LEGON NOTICEBOARD ⚡</p>
+                  </div>
                 </div>
               </div>
             </div>
