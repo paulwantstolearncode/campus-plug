@@ -165,8 +165,7 @@ export default function AdminFeedbackPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">Admin Dashboard</div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Feedback</h1>
-            <p className="text-white/70">What users think about Campus Plug.</p>
+            <h1 className="text-4xl md:text-5xl font-bold text-white">Feedback</h1>
           </div>
           <div className="flex gap-2">
             <Link

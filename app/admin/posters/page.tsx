@@ -298,8 +298,7 @@ export default function PosterGeneratorPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 space-y-6">
           <div>
             <div className="inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-2">Poster Generator</div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">🎨 Print Posters</h1>
-            <p className="text-white/60">Design, download, and print promotional posters for Campus Plug.</p>
+            <h1 className="text-3xl md:text-4xl font-bold text-white">🎨 Print Posters</h1>
           </div>
 
           {/* Poster Type Selector */}

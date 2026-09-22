@@ -158,7 +158,6 @@ export default function BannerAdsPage() {
               <h1 className="text-4xl md:text-5xl font-bold text-white leading-tight tracking-tight">
                 Manage Landing Page Banners
               </h1>
-              <p className="text-white/60 mt-2">Sponsored banners shown between the hero and content sections.</p>
             </div>
             <button
               onClick={openCreate}

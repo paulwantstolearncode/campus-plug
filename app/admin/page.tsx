@@ -388,8 +388,7 @@ export default function AdminPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <div className="inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">Admin Dashboard</div>
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-4">Review Queue</h1>
-            <p className="text-white/70">Approve sellers and listings to keep Campus Plug premium.</p>
+            <h1 className="text-4xl md:text-5xl font-bold text-white">Review Queue</h1>
           </div>
           <Link
             href="/admin/sales"

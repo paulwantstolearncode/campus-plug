@@ -330,9 +330,6 @@ export default function AdminSalesPage() {
           <h1 className="fade-up fade-up-delay-1 text-4xl md:text-5xl font-bold text-white leading-tight tracking-tight mb-4">
             Sales <span className="gradient-text">Dashboard</span>
           </h1>
-          <p className="fade-up fade-up-delay-2 text-lg text-white/70 max-w-xl">
-            Private financial overview for the founder. Never shown publicly.
-          </p>
         </div>
       </section>
 
