@@ -547,7 +547,7 @@ export default function PosterGeneratorPage() {
                   <div className={`${theme.contentCardClass} flex-1 flex flex-col justify-evenly min-h-0 my-0! py-4!`}>
                     <div className="text-center px-5 sm:px-8">
                       <span className={`text-[10px] font-bold tracking-[0.25em] uppercase ${theme.stampClass}`}>{POSTER_TEMPLATES[posterType].stamp}</span>
-                      <h2 className={`mt-2 text-2xl font-bold leading-tight font-serif-accent ${theme.headlineClass}`} style={{ fontFamily: 'var(--font-serif), Georgia, serif' }}>
+                      <h2 className={`mt-2 ${isStory ? 'text-4xl' : 'text-2xl'} font-bold leading-tight font-serif-accent ${theme.headlineClass}`} style={{ fontFamily: 'var(--font-serif), Georgia, serif' }}>
                         {headline.split(' ').map((word, i) => {
                           const lower = word.toLowerCase()
                           if (['sell', 'free', 'students', 'sell?', 'campus', 'plug', 'start'].includes(lower)) {
@@ -556,7 +556,7 @@ export default function PosterGeneratorPage() {
                           return <span key={i}>{word} </span>
                         })}
                       </h2>
-                      <p className={`mt-2 text-sm leading-relaxed ${theme.subheadingClass}`}>{subheading}</p>
+                      <p className={`mt-2 ${isStory ? 'text-base' : 'text-sm'} leading-relaxed ${theme.subheadingClass}`}>{subheading}</p>
                     </div>
 
                     {/* Category highlights strip — what students can actually find */}
@@ -564,7 +564,7 @@ export default function PosterGeneratorPage() {
                       {CATEGORY_PILLARS.map((pillar) => (
                         <div key={pillar.text} className={`flex items-center gap-2.5 rounded-lg px-3 py-2 ${theme.featureCardClass}`}>
                           <span className="text-base leading-none">{pillar.emoji}</span>
-                          <span className={`text-[11px] font-semibold ${theme.featureTextClass}`}>{pillar.text}</span>
+                          <span className={`${isStory ? 'text-[13px]' : 'text-[11px]'} font-semibold ${theme.featureTextClass}`}>{pillar.text}</span>
                         </div>
                       ))}
                     </div>
@@ -575,12 +575,12 @@ export default function PosterGeneratorPage() {
                         <img
                           src={qrSrc}
                           alt="QR Code — scan to visit Campus Plug"
-                          width={200}
-                          height={200}
-                          className="w-[200px] h-[200px]"
+                          width={240}
+                          height={240}
+                          className={isStory ? 'w-[240px] h-[240px]' : 'w-[200px] h-[200px]'}
                         />
                       </div>
-                      <p className={`text-[11px] font-semibold mt-2 tracking-wide ${theme.stampClass}`}>
+                      <p className={`${isStory ? 'text-[13px]' : 'text-[11px]'} font-semibold mt-2 tracking-wide ${theme.stampClass}`}>
                         📸 Point your phone camera here to scan
                       </p>
                     </div>
@@ -590,28 +590,27 @@ export default function PosterGeneratorPage() {
                 {/* ── Bottom stack: location chip, hall badges, trust line, footer ── */}
                 <div>
                   <div className="px-6 sm:px-8 pb-2 text-center">
-                    <span className={`inline-block font-mono text-xs font-bold px-4 py-2 rounded-full ${theme.locationChipClass}`}>
+                    <span className={`inline-block font-mono ${isStory ? 'text-sm' : 'text-xs'} font-bold px-4 py-2 rounded-full ${theme.locationChipClass}`}>
                       📍 {locationTag}
                     </span>
                   </div>
 
                   <div className="px-6 sm:px-8 pb-3 flex flex-wrap justify-center gap-1.5">
                     {HALL_CHIPS.map((hall) => (
-                      <span key={hall} className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${theme.featureCardClass} ${theme.featureTextClass}`}>
+                      <span key={hall} className={`${isStory ? 'text-[12px]' : 'text-[10px]'} font-semibold px-2.5 py-1 rounded-full border ${theme.featureCardClass} ${theme.featureTextClass}`}>
                         {hall}
                       </span>
                     ))}
                   </div>
 
-                  <div className="px-6 sm:px-8 pb-3 text-center">
-                    <p className={`text-[11px] font-semibold tracking-wide ${theme.subheadingClass}`}>
+                  {/* Footer — anchored flush to the bottom border of the frame.
+                      Trust line lives here so it's always on the dark band,
+                      regardless of canvas theme. */}
+                  <div className="bg-ink px-8 py-3.5 text-center">
+                    <p className="text-white/70 text-[11px] font-semibold tracking-wide">
                       100% Free for Students · Direct WhatsApp · Legon Campus
                     </p>
-                  </div>
-
-                  {/* Footer — anchored flush to the bottom border of the frame */}
-                  <div className="bg-ink px-8 py-4 text-center">
-                    <p className="text-white text-xs font-bold tracking-[0.15em] uppercase">campuspluggh.com</p>
+                    <p className="text-white text-xs font-bold tracking-[0.15em] uppercase mt-1.5">campuspluggh.com</p>
                     <p className="text-gold text-[10px] mt-1 tracking-widest">⚡ THE LEGON NOTICEBOARD ⚡</p>
                   </div>
                 </div>
