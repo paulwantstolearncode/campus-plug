@@ -203,17 +203,49 @@ export default function PosterGeneratorPage() {
   const targetUrl = POSTER_TEMPLATES[posterType].targetUrl
   const qrSrc = customQrImage || `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`
   const size = FORMAT_SIZES[format]
+  const isStory = format === 'mobile'
   const theme = THEME_CONFIG[bgTheme]
+  // Story preview: the canvas is 360×640 (9:16) and the print-resolution
+  // layout (1080×1920) is zoomed DOWN to fit inside it.
+  const STORY_PREVIEW_WIDTH = 360
+  const storyZoom = STORY_PREVIEW_WIDTH / size.width
 
   async function handleDownload(exportFormat: 'png' | 'jpeg') {
     if (!posterRef.current || isExporting) return
     setIsExporting(exportFormat)
     try {
-      // pixelRatio: 2 → ~150 DPI at A4 print size ×2 = 300 DPI equivalent
-      const options = { quality: 0.98, pixelRatio: 2, cacheBust: true }
-      const dataUrl = exportFormat === 'png'
-        ? await toPng(posterRef.current, options)
-        : await toJpeg(posterRef.current, options)
+      const options = { quality: 0.98, cacheBust: true }
+      let dataUrl: string
+      if (isStory) {
+        // Story: render an exact 1080×1920 (9:16) export. The on-screen
+        // preview is a 360px-wide, zoomed-down copy, so we clone the node
+        // off-DOM at half print resolution (540×960 — same 9:16 ratio) and
+        // rasterize that; pixelRatio 2 doubles it to exactly 1080×1920.
+        const clone = posterRef.current.cloneNode(true) as HTMLElement
+        clone.style.width = `${Math.round(size.width / 2)}px`
+        clone.style.height = `${Math.round(size.height / 2)}px`
+        clone.style.zoom = '1'
+        clone.style.transform = 'none'
+        clone.style.position = 'fixed'
+        clone.style.left = '-99999px'
+        clone.style.top = '0'
+        document.body.appendChild(clone)
+        try {
+          // pixelRatio: 2 on 540×960 logical px → exact 1080×1920 output.
+          const storyOptions = { ...options, pixelRatio: 2 }
+          dataUrl = exportFormat === 'png'
+            ? await toPng(clone, storyOptions)
+            : await toJpeg(clone, storyOptions)
+        } finally {
+          document.body.removeChild(clone)
+        }
+      } else {
+        // A4/A5: pixelRatio: 2 → ~150 DPI at print size ×2 = 300 DPI equivalent.
+        const printOptions = { ...options, pixelRatio: 2 }
+        dataUrl = exportFormat === 'png'
+          ? await toPng(posterRef.current, printOptions)
+          : await toJpeg(posterRef.current, printOptions)
+      }
 
       const link = document.createElement('a')
       link.download = `campus-plug-poster-${bgTheme}-${format}.${exportFormat}`
@@ -442,10 +474,18 @@ export default function PosterGeneratorPage() {
       <section className="bg-off-white no-print pb-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8">
           <div className="bg-white/50 rounded-2xl p-6 border border-white/10 flex justify-center">
+            {/* Story: strict 9:16 contained preview shell — the canvas inside is
+                laid out at print resolution (1080×1920) and zoomed down ⅓ to a
+                360×640 box, so proportions match the export exactly. */}
+            <div className={isStory ? 'aspect-[9/16] max-h-[650px] w-auto max-w-[360px] mx-auto' : undefined}>
             <div
               ref={posterRef}
               className={`poster-canvas relative overflow-hidden shadow-2xl ${theme.canvasClass}`}
-              style={{ width: size.width, height: size.height }}
+              style={
+                isStory
+                  ? { width: size.width, height: size.height, zoom: storyZoom }
+                  : { width: size.width, height: size.height }
+              }
             >
               {/* Pattern overlay (glow / grid / clean) */}
               <div className="absolute inset-0 pointer-events-none" style={PATTERN_CONFIG[bgPattern].style} />
@@ -543,6 +583,7 @@ export default function PosterGeneratorPage() {
                   <p className="text-gold text-[10px] mt-1 tracking-widest">⚡ THE LEGON NOTICEBOARD ⚡</p>
                 </div>
               </div>
+            </div>
             </div>
           </div>
         </div>
