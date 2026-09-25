@@ -76,7 +76,7 @@ export default function FresherKitPage() {
       <section className="relative bg-ink text-white overflow-hidden -mt-[64px] pt-[calc(64px+4rem)] pb-14 px-4 sm:px-6">
         {/* Ambient layers */}
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute top-[-140px] left-1/2 -translate-x-1/2 w-[520px] h-[400px] bg-gold/15 blur-[140px] rounded-full" />
+          <div className="hidden md:block absolute top-[-140px] left-1/2 -translate-x-1/2 w-[520px] h-[400px] bg-gold/15 blur-[140px] rounded-full" />
           <div className="absolute inset-0 grain-overlay opacity-[0.03]" />
         </div>
 

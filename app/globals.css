@@ -216,6 +216,19 @@ html {
 
 /* ── Buttons ────────────────────────────────────────────────────── */
 
+/* Universal tactile tap feedback — subtle press-in on every button and
+   pill CTA. transform-only (compositor-friendly), 150ms so it reads as
+   "responsive", not "bouncy". */
+button:not(:disabled), .btn-tactile {
+  transition: transform 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+}
+button:not(:disabled):active, .btn-tactile:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled):active, .btn-tactile:active { transform: none; }
+}
+
 @keyframes shine {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
@@ -242,6 +255,12 @@ html {
 /* Pause continuous decorative animations on touch devices. */
 @media (hover: none) and (pointer: coarse) {
   .animated-gradient, .blob, .shine-button { animation: none; }
+}
+
+/* Hide ambient blur blobs entirely on mobile — heavy GPU compositing for
+   little visual gain on small screens. md and up keeps the depth. */
+@media (max-width: 767px) {
+  .blob { display: none; }
 }
 
 /* ── Skeleton shimmer sweep ─────────────────────────────────────── */

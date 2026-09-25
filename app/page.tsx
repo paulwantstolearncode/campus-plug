@@ -172,7 +172,7 @@ export default function Home() {
     <main className="min-h-screen bg-charcoal">
       <NavBar />
 
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden animated-gradient">
+      <section className="relative pt-24 pb-8 md:pt-40 md:pb-32 overflow-hidden animated-gradient">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="blob absolute top-10 -left-20 w-96 h-96 bg-gold/30 rounded-full blur-3xl"></div>
           <div className="blob absolute top-40 right-0 w-[500px] h-[500px] bg-purple-500/20 rounded-full blur-3xl" style={{animationDelay: '5s'}}></div>
@@ -182,18 +182,17 @@ export default function Home() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
           <div className="max-w-3xl">
-            <div className="fade-up inline-flex items-center gap-2 glass px-4 py-2 rounded-full text-sm font-semibold text-gold mb-8">
+            <div className="fade-up inline-flex items-center gap-2 glass px-4 py-2 rounded-full text-xs md:text-sm font-semibold text-gold mb-4 md:mb-8">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-gold opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-gold"></span>
               </span>
               Live on campus
             </div>
-            <h1 className="fade-up fade-up-delay-1 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[0.95] tracking-tight mb-6">
-              Discover<br />
-              <span className="gradient-text">amazing things</span>
+            <h1 className="fade-up fade-up-delay-1 text-2xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight md:leading-[0.95] tracking-tight mb-3 md:mb-6">
+              Discover <span className="gradient-text">amazing things</span>
             </h1>
-            <p className="fade-up fade-up-delay-2 text-lg md:text-xl text-white/70 leading-relaxed max-w-2xl mb-8">
+            <p className="fade-up fade-up-delay-2 hidden sm:block text-lg md:text-xl text-white/70 leading-relaxed max-w-2xl mb-8">
               Products and services from verified students on your campus.
             </p>
 
@@ -211,7 +210,7 @@ export default function Home() {
                   placeholder="Search for anything..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-14 pr-14 py-4 rounded-full bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-gold focus:bg-white/15 transition-all"
+                  className="w-full pl-14 pr-14 py-3 md:py-4 rounded-full bg-white/10 border border-white/20 text-white placeholder:text-white/40 focus:outline-none focus:border-gold focus:bg-white/15 transition-all"
                 />
                 {searchQuery && (
                   <button
@@ -228,7 +227,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-off-white to-transparent"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-16 md:h-32 bg-gradient-to-t from-off-white to-transparent"></div>
       </section>
 
       <section className="relative pb-24 md:pb-32 bg-off-white">

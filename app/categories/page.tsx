@@ -120,7 +120,7 @@ export default async function CategoriesPage() {
       {/* ── Page header: warm paper + ambient gold glow + search ── */}
       <section className="relative py-20 md:py-28 bg-paper overflow-hidden">
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute top-[-160px] left-1/2 -translate-x-1/2 w-[560px] h-[420px] bg-gold/10 blur-[100px] rounded-full" />
+          <div className="hidden md:block absolute top-[-160px] left-1/2 -translate-x-1/2 w-[560px] h-[420px] bg-gold/10 blur-[100px] rounded-full" />
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6">

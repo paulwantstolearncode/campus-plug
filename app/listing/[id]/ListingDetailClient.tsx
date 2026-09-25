@@ -74,6 +74,8 @@ export default function ListingDetailClient() {
   const [isFavorited, setIsFavorited] = useState(false)
   const [showMessagePreview, setShowMessagePreview] = useState(false)
   const [toast, setToast] = useState<{ message: string } | null>(null)
+  // Mobile thumb bar: slides away on scroll-down, returns on scroll-up.
+  const [thumbBarHidden, setThumbBarHidden] = useState(false)
   const router = useRouter()
   const params = useParams()
   const rawId = params.id
@@ -95,6 +97,26 @@ export default function ListingDetailClient() {
     }
     return listing?.image_url ? [listing.image_url] : []
   })()
+
+  // Mobile thumb bar visibility follows scroll direction. >15px delta so a
+  // jittery finger doesn't trigger it; near the page bottom the bar always
+  // reappears (that's where purchase intent peaks).
+  useEffect(() => {
+    let lastY = window.scrollY
+    const onScroll = () => {
+      const y = window.scrollY
+      const delta = y - lastY
+      if (delta > 15 && y > 100) {
+        setThumbBarHidden(true)
+        lastY = y
+      } else if (delta < -15 || window.innerHeight + y >= document.body.scrollHeight - 100) {
+        setThumbBarHidden(false)
+        lastY = y
+      }
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   // Auto-dismiss toast after 4 seconds
   useEffect(() => {
@@ -951,7 +973,9 @@ export default function ListingDetailClient() {
       {/* Sticky mobile thumb-zone action bar — WhatsApp is always one tap
           away; the heart mirrors the desktop Save button's toggle. */}
       {listing.seller?.whatsapp_number && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 p-3 bg-[#0a0a0c]/90 backdrop-blur-md border-t border-white/10 flex items-center gap-3 sm:hidden">
+        <div
+          className={"fixed bottom-0 left-0 right-0 z-40 p-3 bg-[#0a0a0c]/90 backdrop-blur-md border-t border-white/10 flex items-center gap-3 sm:hidden transition-transform duration-300 ease-in-out " + (thumbBarHidden ? 'translate-y-full' : 'translate-y-0')}
+        >
           <div className="min-w-0 shrink-0">
             <p className="text-[10px] font-mono text-white/50 uppercase tracking-wider leading-none mb-1">{isService ? 'Service' : 'Item'}</p>
             <p className="text-lg font-bold text-white leading-none truncate">{priceLabel}</p>
@@ -992,7 +1016,7 @@ export default function ListingDetailClient() {
 
       {/* Toast notification */}
       {toast && (
-        <div className="fixed bottom-6 right-6 bg-charcoal text-white px-6 py-4 rounded-xl shadow-xl z-50 flex items-center gap-3 animate-fade-in">
+        <div className="fixed bottom-24 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 bg-charcoal text-white px-6 py-4 rounded-xl shadow-xl z-50 flex items-center gap-3 animate-fade-in">
           <span className="text-sm">{toast.message}</span>
         </div>
       )}

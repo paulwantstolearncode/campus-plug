@@ -231,7 +231,7 @@ export default function ListingCard({
           )}
 
           {toast && (
-            <div className="absolute top-14 right-3 bg-ink text-white px-4 py-3 rounded-xl shadow-xl z-20 flex items-center gap-3 animate-fade-in">
+              <div className="absolute top-14 right-3 max-w-[calc(100%-1.5rem)] bg-ink text-white px-4 py-3 rounded-xl shadow-xl z-20 flex items-center gap-3 animate-fade-in">
               <span className="text-sm">{toast.message}</span>
               {toast.action && (
                 <button
