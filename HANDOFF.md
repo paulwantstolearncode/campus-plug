@@ -1,16 +1,37 @@
 ﻿# Handoff — Campus Plug
 
-Last updated: 2026-09-01
+Last updated: 2026-09-25
 
 ## Current state
 
 - **Repo**: github.com/paulwantstolearncode/campus-plug (origin/main)
 - **Live**: campuspluggh.com
-- **Latest commit**: 6ac4323 — validated funnel SQL files restored + HANDOFF update
-- **Working tree**: clean
-- **Local preview**: port 56816 via `nohup npm run dev -- -p 56816`
+- **Latest commit**: 116166b — fix: resolve eslint purity and set-state-in-effect warnings
+- **Working tree**: 27 routes build clean. Pre-existing uncommitted changes to leave alone: `supabase/add_analytics_and_boosts.sql` + `supabase/fix_profiles_public_read.sql` (modified), untracked `FREEBUFF_BRIEF.md` / `FREEBUFF_BRIEF_NAVBAR_EXTRACTION.md` — stage ONLY your own task files.
+- **Design system**: warm paper × obsidian × gold. Tokens in `app/globals.css` (`--color-paper #f6f5f1`, `--color-ink #0a0a0c`, `--color-gold-signal #c9a227`, `--color-gold-vivid #e8b93b`, `--color-rule #e4e1d8`); classes `bg-ink`, `text-gold`, `border-rule`, `bg-paper-deep`, `text-ink-muted`, `font-display` (Space Grotesk), `font-serif-accent` (Instrument Serif italic), `grain-overlay`, `card-lift`. Tailwind v4 (@theme inline tokens, trailing `!` important syntax). Next.js 16.2.12 (Turbopack) + Supabase.
 
 ## Recently shipped
+
+### ESLint purity / set-state-in-effect fixes (116166b)
+- `app/listing/[id]/ListingDetailClient.tsx`: `outcomeDismissed` reads `cp_outcome_<listingId>` from localStorage in a lazy `useState` initializer (SSR-guarded) instead of a mount effect; `isStale` no longer calls `Date.now()` during render — the clock is snapshotted once via `useState(() => Date.now())` and consumed in a pure `useMemo` keyed `[listing, nowTs]`.
+- **react-hooks v6 gotcha**: the purity rule flags `Date.now()` even *inside* `useMemo` (memo callbacks are render-phase code). Lazy `useState` initializers run once at mount — that's the accepted pattern for clock snapshots.
+- `app/services/page.tsx`: removed unused `ALL_LOCATIONS` import; `?q=` / `?category=` URL sync defers `setSearchQuery`/`setCategoryFilter` into a `setTimeout(..., 0)` callback instead of synchronous setState in the effect body. Deep-link behavior unchanged.
+
+### Poster generator — themes, story export, QA-verified layout (4fa1d32 → a64879e)
+- `/admin/posters`: 4 background themes (`obsidian` / `paper` / `gold` / `legon`) in `THEME_CONFIG` (each with `featureCardClass` / `featureTextClass`); formats a4 794×1123, a5 559×794, mobile story 1080×1920; PNG/JPEG export via `html-to-image@1.11.13`; 3 templates (General Student Poster, Wanted Board Flyer, Seller Recruitment) + QR uploader with auto-generated fallback + location backfill (per-row save or bulk auto-assign, `📍 Location Backfill` link in `/admin` header).
+- Story preview: canvas at print resolution 1080×1920 with CSS `zoom: 0.333` (`STORY_PREVIEW_WIDTH=360`) inside `aspect-[9/16] max-h-[650px] w-auto max-w-[360px] mx-auto` shell. Export clones the node off-DOM at 540×960, zoom 1, `pixelRatio: 2` → exact 1080×1920.
+- Inner layout `flex flex-col justify-between h-full`: full-bleed top bands / `flex-1 justify-evenly` middle (headline text-4xl on story vs text-2xl on A4, CATEGORY_PILLARS 4 pills, QR 240px story / 200px A4) / bottom stack (location chip, HALL_CHIPS, trust line inside the dark `bg-ink` footer band for contrast on light themes).
+- Verified via live visual QA (screenshots of all 4 themes + DOM measurements: zones 45/535/58px, footer gap 1px, 0 overflow); QA caught and fixed story type scale + trust-line contrast.
+
+### Categories & Fresher Kit redesigns (11115a6, fec50ce, c57d2fc)
+- `/categories` is a force-dynamic visual directory: native GET search form (`action="/services"` `name="q"`, placeholder "Search laptops, kettles, braiding…"), 4 hero cards (hostel-essentials / electronics-gadgets / tutoring / hair-beauty, `sm:col-span-2`, per-color gradient wash, 🔥 Freshers Choice / ⚡ High Demand badges), 10 standard cards, SamplePills, CountPill, obsidian CTA in a `p-px` metallic gold gradient wrapper with grain.
+- `lib/categories.ts`: 14 real DB-persisted slugs — services: `hair-beauty, tutoring, tech-repairs, design-creative, delivery-errands, food-catering, other-services`; products: `clothing-fashion, electronics-gadgets, snacks-food, beauty-products, hostel-essentials, gifts-accessories, other-products`. `Category` requires `sampleItems: string[]`. **Do not invent slugs — only these 14 exist in the DB.**
+- `/fresher-kit`: obsidian hero, bento pillars, dark glass FresherChecklist with gold progress bar + localStorage `cp_fresher_checklist`, glassmorphic share bar. Explanatory subtitles stripped from 5 admin pages.
+- c57d2fc: mobile thumb-zone action bar on listing detail (WhatsApp one tap away, heart mirrors Save), Ghanaian microcopy, shimmer skeletons, staggered feed animations. a6e10ea: story-format poster aspect/preview bounds (see Poster generator). 45ca5b6: marquee fixed on mobile (hover-pause only under `@media (hover: hover)`).
+
+### WhatsApp viral share loop (1b24d0c)
+- `whatsapp_share` analytics event type (migration `supabase/add_whatsapp_share_event_type.sql` already run in Supabase). Share buttons on listing detail + cards, branded wa.me lead messages with attribution, dashboard share-shop toolkit.
+- **Feeds convention**: public queries use `.eq('approval_status','approved').is('deleted_at',null).is('sold_at',null)`.
 
 ### WhatsApp Funnel Outcome Tracking + Sold Listings (dcfcc15)
 - **Post-WhatsApp outcomes**: new `whatsapp_outcome` analytics event type (extended CHECK constraint on `analytics_events`). Buyer follow-up panel on listing detail — "How did it go with the seller?" (sold / got a reply / messaged / no response / skip) — shown only after a WhatsApp click, never to the listing's own seller, persisted in localStorage (`cp_outcome_<listingId>`), zero layout shift (in-flow below the safety strip, ≥44px tap targets).
@@ -64,9 +85,6 @@ Last updated: 2026-09-01
 ### Instant Request Empty Search CTA
 - Empty search results on `/services` now direct students to post on `/requests` (Wanted Board) instead of showing a dead end.
 
-### Admin Poster Generator
-- Admin page at `/admin/posters` with 3 poster templates (General Student Poster, Wanted Board Flyer, Seller Recruitment), A4/A5/Mobile Story formats, custom QR code file uploader with auto-generated fallback, editable headline/subheading/location tag, Legon Noticeboard design canvas, and `@media print` CSS for instant campus flyer printing. Fetches approved listings where `campus_location IS NULL` or empty, shows gold suggestion badges when title/description matches campus location keywords, and offers per-row save or one-click bulk auto-assign. Added `📍 Location Backfill` link to `/admin` dashboard header.
-
 ### PageSpeed & Image Optimization
 - Converted 100% of raw `<img>` tags across 9 files to Next.js `<Image />` with `remotePatterns` configured for Supabase Storage, Google Avatars, and Unsplash. Implemented responsive `sizes`, `fill` containers, WebP auto-formatting, and `priority` loading for above-the-fold cards. Zero `<img>` tags remain in the codebase.
 
@@ -106,6 +124,12 @@ Last updated: 2026-09-01
 - `CLAUDE.md` starts with `@AGENTS.md` + `@HANDOFF.md` imports + priority note + no-modify guard (CLAUDE.md, AGENTS.md, HANDOFF.md are protected).
 - `AGENTS.md` expanded with full non-negotiable ground rules (SQL-first deploys, RLS conventions, no-touch list, code conventions, validation, design system, repo facts, testing limits).
 
+## Visual QA methodology (works well)
+1. Create a temp dev-only QA page (e.g. `app/dev-poster-qa/page.tsx`).
+2. `npm run dev > /tmp/campusplug-dev.log 2>&1 &` — picks a random port (e.g. 54201); read the log for `Local: http://localhost:PORT`.
+3. Find PID via `netstat -ano | grep :PORT | grep LISTEN`, then `register_preview` with `{url, pid}` and drive snapshot / screenshot / evaluate / resize.
+4. Cleanup: delete the QA page, `taskkill //F //PID <pid>`, and if tsc errors on a stale `.next/dev/types/validator.ts`, `rm -rf .next/dev/types .next/types` then re-run.
+
 ## Vercel duplicate project — RESOLVED
 
 There were two Vercel projects both named "campus-plug". The broken duplicate (`prj_JIdq7kavttXMXRzhXWJW59zmJUkM`, zero env vars, every build failing with `BUILD_UTILS_SPAWN_1`) has been removed. **Only one Vercel project remains:**
@@ -122,13 +146,16 @@ There were two Vercel projects both named "campus-plug". The broken duplicate (`
 - Vercel Analytics
 - Resend email setup
 - Existing seller reviews system
-- AGENTS.md, CLAUDE.md, HANDOFF.md
+- AGENTS.md, CLAUDE.md, HANDOFF.md, docs/
+- SQL migrations (any migration file or DB change)
+- No new npm packages unless asked
 
 ## Validation before shipping
 
 - `npx tsc --noEmit` — 0 errors
 - `npx eslint` on touched files — 0 errors
-- `npm run build` — clean
+- `rm -f .next/build.lock && npm run build` — clean
+- Stage ONLY task files (working tree has pre-existing untouchables — see Current state)
 - For SQL files: `node .sqlcheck/check.js <file>`
 
 ## Project Strategy & Roadmap
@@ -145,10 +172,11 @@ There were two Vercel projects both named "campus-plug". The broken duplicate (`
 
 ## Next steps
 
-1. (Done) Nav extracted to shared `app/components/NavBar.tsx` — all pages migrated (857b8e7), dead code cleaned (4b25ae3).
-2. (Done) WhatsApp funnel outcome tracking + sold listings (dcfcc15) — SQL applied in Supabase; repo files validated.
-3. (Done) IBM Plex Mono dropped for PageSpeed (4bee45e).
-4. Outreach to 3-5 local businesses near campus for banner ad trials (kit prepared: `outreach/` one-pager, WhatsApp scripts, playbook).
-5. Add payment gate to boost button (MoMo) once sellers show demand — needs payment-provider decision (Paystack recommended).
-6. Run `funnel_metrics_queries.sql` weekly to build the funnel ritual (views → clicks → outcomes → sold).
-7. Mobile QA pass on the follow-up panel + sold badges (360px viewport) before the January semester push.
+1. (Done) Nav extraction, WhatsApp funnel outcomes, IBM Plex Mono drop, share loop + categories/fresher-kit redesigns + poster generator upgrades (through c57d2fc).
+2. (Done) ESLint purity / set-state-in-effect cleanup in listing detail + services (116166b).
+3. Consider a full-repo `npx eslint .` audit — react-hooks v6 purity rules are strict; other components may call `Date.now()` during render.
+4. Candidate refactor: extract a shared `useNow()` hook (timestamp snapshot once at mount) for all relative-time/staleness calculations.
+5. Outreach to 3-5 local businesses near campus for banner ad trials (kit prepared: `outreach/` one-pager, WhatsApp scripts, playbook).
+6. Add payment gate to boost button (MoMo) once sellers show demand — needs payment-provider decision (Paystack recommended).
+7. Run `funnel_metrics_queries.sql` weekly to build the funnel ritual (views → clicks → outcomes → sold).
+8. Mobile QA pass on the follow-up panel + sold badges (360px viewport) before the January semester push.
