@@ -308,6 +308,9 @@ export default function ServicesPage() {
                 <div className="relative overflow-hidden bg-gradient-to-br from-off-white to-white rounded-3xl p-12 md:p-16 text-center border border-gray-200 shadow-sm">
                   <div className="relative">
                     <div className="text-6xl mb-4 opacity-60">🔍</div>
+                    {searchQuery.trim() ? (
+                      <p className="font-serif-accent text-gold-dark text-xl md:text-2xl mb-2">No wahala...</p>
+                    ) : null}
                     <h2 className="text-2xl md:text-3xl font-bold text-charcoal mb-3">
                       {searchQuery.trim()
                         ? <>Nothing on the board for ‘{searchQuery}’ — yet.</>
@@ -316,7 +319,7 @@ export default function ServicesPage() {
                     </h2>
                     <p className="text-gray-500 mb-8 max-w-lg mx-auto leading-relaxed">
                       {searchQuery.trim()
-                        ? 'Be the first to offer it — or put it on the Wanted Board and verified student sellers will pitch you directly.'
+                        ? `We couldn't find matches for '${searchQuery}'. Post a request on the Wanted Board and let sellers find you.`
                         : 'Try different filters, or put it on the Wanted Board and verified student sellers will pitch you directly.'
                       }
                     </p>
@@ -325,7 +328,7 @@ export default function ServicesPage() {
                         href="/requests"
                         className="inline-flex items-center justify-center gap-2 bg-gold text-charcoal px-8 py-4 rounded-full font-semibold hover:bg-gold-dark transition-all hover:scale-105 shadow-lg shadow-gold/25 group"
                       >
-                        Post a Wanted request
+                        {searchQuery.trim() ? 'Post a Request' : 'Post a Wanted request'}
                         <span className="group-hover:translate-x-1 transition-transform">→</span>
                       </Link>
                       {(searchQuery.trim() || categoryFilter || locationFilter) && (
@@ -344,7 +347,7 @@ export default function ServicesPage() {
                 {filteredServices.map((service, idx) => {
                   const cat = getCategoryDisplay(service.category)
                   return (
-                  <div key={service.id} className="group relative fade-up" style={{ animationDelay: (idx * 0.05) + 's' }}>
+                  <div key={service.id} className="group relative fade-up" style={{ animationDelay: ((idx % 10) * 45) + 'ms' }}>
                     <div className="relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
                       <Link href={"/listing/" + service.id} className="relative block aspect-[4/5] overflow-hidden bg-gray-100">
                         {service.image_url ? (

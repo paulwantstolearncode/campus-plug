@@ -35,6 +35,8 @@ export interface ListingCardData {
 interface ListingCardProps {
   listing: ListingCardData
   index?: number
+  /** Deprecated — stagger is now fixed at 45ms × (index % 10). Kept for
+      backward compatibility with existing callers. */
   staggerSeconds?: number
   sellerRatings?: Record<string, SellerRating>
   isOwner?: boolean
@@ -72,7 +74,6 @@ function HeartIcon({ filled }: { filled: boolean }) {
 export default function ListingCard({
   listing,
   index,
-  staggerSeconds = 0.05,
   sellerRatings,
   isOwner,
   onDelete,
@@ -86,7 +87,8 @@ export default function ListingCard({
     'GH\u20B5 ' + Number(listing.price || 0).toLocaleString()
   const rating = sellerRatings?.[listing.seller_id]
   const href = preview ? '/login' : '/listing/' + listing.id
-  const delay = index !== undefined ? (index * staggerSeconds) + 's' : undefined
+  // Stagger capped every 10 cards so deep feeds don't fade in late.
+  const delay = index !== undefined ? ((index % 10) * 45) + 'ms' : undefined
 
   const [localFavorited, setLocalFavorited] = useState(false)
   const [user, setUser] = useState<{ id: string } | null>(null)

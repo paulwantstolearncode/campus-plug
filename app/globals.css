@@ -244,6 +244,27 @@ html {
   .animated-gradient, .blob, .shine-button { animation: none; }
 }
 
+/* ── Skeleton shimmer sweep ─────────────────────────────────────── */
+
+@keyframes shimmer {
+  0% { background-position: -100% 0; }
+  100% { background-position: 100% 0; }
+}
+
+/* Dark-surface shimmer (obsidian heroes) */
+.skeleton-shimmer {
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.03) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite linear;
+}
+
+/* Light-surface shimmer (paper/white cards) */
+.skeleton-shimmer-light {
+  background: linear-gradient(90deg, rgba(0,0,0,0.04) 0%, rgba(0,0,0,0.09) 50%, rgba(0,0,0,0.04) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite linear;
+}
+
 /* ── Print styles for Poster Generator ──────────────────────────── */
 @media print {
   body { background: none !important; margin: 0; padding: 0; }
@@ -286,7 +307,17 @@ html {
   background-size: 128px 128px;
 }
 
-/* Respect reduced motion + pause decorative loops on touch devices */
+/* Respect reduced motion — disable ALL looping/entrance animations.
+   fade-up delay classes start at opacity:0, so they must be forced
+   visible when their animation is disabled. */
 @media (prefers-reduced-motion: reduce) {
-  .marquee-track, .scroll-dot { animation: none; }
+  .marquee-track, .scroll-dot, .animated-gradient, .blob,
+  .shine-button, .animate-fade-in, .skeleton-shimmer, .skeleton-shimmer-light {
+    animation: none;
+  }
+  .fade-up, .fade-up-delay-1, .fade-up-delay-2, .fade-up-delay-3,
+  .fade-up-delay-4, .fade-up-delay-5 {
+    animation: none;
+    opacity: 1;
+  }
 }
