@@ -302,6 +302,11 @@ button:not(:disabled):active, .btn-tactile:active {
 
 /* ── Fresher landing: marquee, scroll cue, grain ────────────────── */
 
+/* Story preview fallback scroller (poster generator, short screens) —
+   scrollbar hidden but content remains scrollable on touch. */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
 /* Marquee scroll — runs on ALL viewports incl. touch; hover pause is
    mouse-only, so a tap on mobile can't leave it stuck paused. */
 .marquee-track {

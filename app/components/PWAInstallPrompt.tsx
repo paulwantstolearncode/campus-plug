@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
@@ -9,29 +10,29 @@ interface BeforeInstallPromptEvent extends Event {
 const DISMISS_KEY = 'campus-plug-pwa-dismissed'
 
 export default function PWAInstallPrompt() {
+  const pathname = usePathname()
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showBanner, setShowBanner] = useState(false)
-  const [showIOS, setShowIOS] = useState(false)
-  const [installed, setInstalled] = useState(false)
+  // iOS Safari detection also lives in an initializer (runs once at mount);
+  // same no-hydration-mismatch argument as `installed`.
+  const [showIOS, setShowIOS] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window)
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
+    return isIOS && isSafari && !(window.navigator as unknown as Record<string, boolean>).standalone
+  })
+  // Standalone detection lives in the initializer (runs once at mount).
+  // The server always renders null and a standalone client renders null
+  // too, so there is no hydration mismatch.
+  const [installed, setInstalled] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return window.matchMedia('(display-mode: standalone)').matches
+  })
 
   useEffect(() => {
     // Check if already dismissed
     const dismissed = localStorage.getItem(DISMISS_KEY)
     if (dismissed) return
-
-    // Check if already installed (standalone mode)
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setInstalled(true)
-      return
-    }
-
-    // Detect iOS Safari
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window)
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
-    if (isIOS && isSafari && !(window.navigator as unknown as Record<string, boolean>).standalone) {
-      setShowIOS(true)
-      return
-    }
 
     // Chrome/Android: listen for beforeinstallprompt
     function onBeforeInstallPrompt(e: Event) {
@@ -71,6 +72,10 @@ export default function PWAInstallPrompt() {
     setShowBanner(false)
     setShowIOS(false)
   }
+
+  // Never render on admin pages — the floating toast covers poster
+  // preview/controls while the admin is working.
+  if (pathname?.startsWith('/admin')) return null
 
   // Already installed or dismissed — don't render
   if (installed || (!showBanner && !showIOS)) return null

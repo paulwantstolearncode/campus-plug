@@ -226,10 +226,26 @@ export default function PosterGeneratorPage() {
   const size = FORMAT_SIZES[format]
   const isStory = format === 'mobile'
   const theme = THEME_CONFIG[bgTheme]
-  // Story preview: the canvas is 360×640 (9:16) and the print-resolution
-  // layout (1080×1920) is zoomed DOWN to fit inside it.
+  // Story preview: the canvas keeps its print-resolution layout (1080×1920)
+  // and is zoomed DOWN to fit the preview shell. The factor is measured from
+  // the shell so it stays exact on phones (where the shell is narrower than
+  // 360px); 1/3 is the desktop fallback for the first paint.
   const STORY_PREVIEW_WIDTH = 360
-  const storyZoom = STORY_PREVIEW_WIDTH / size.width
+  const storyShellRef = useRef<HTMLDivElement>(null)
+  const [storyZoom, setStoryZoom] = useState(STORY_PREVIEW_WIDTH / 1080)
+  useEffect(() => {
+    if (!isStory || !storyShellRef.current) return
+    const el = storyShellRef.current
+    // ResizeObserver fires an initial entry on observe, so zoom tracks the
+    // real shell width (rotation, resize, breakpoint changes) without any
+    // synchronous setState in the effect body.
+    const ro = new ResizeObserver(() => {
+      const w = el.clientWidth
+      if (w > 0) setStoryZoom(w / size.width)
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [isStory, size.width])
 
   async function handleDownload(exportFormat: 'png' | 'jpeg') {
     if (!posterRef.current || isExporting) return
@@ -494,16 +510,26 @@ export default function PosterGeneratorPage() {
       <section className="bg-off-white no-print pb-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8">
           <div className="bg-white/50 rounded-2xl p-6 border border-white/10 flex justify-center">
-            {/* Story: strict 9:16 contained preview shell — the canvas inside is
-                laid out at print resolution (1080×1920) and zoomed down ⅓ to a
-                360×640 box, so proportions match the export exactly. */}
-            <div className={isStory ? 'aspect-[9/16] max-h-[650px] w-auto max-w-[360px] mx-auto' : undefined}>
+            {/* Story: strict 9:16 preview shell — the canvas inside is laid
+                out at print resolution (1080×1920) and zoomed down by
+                storyZoom, so proportions always match the export exactly.
+                Width is clamped responsively (viewport-aware on phones via
+                dvh units) and the shell scrolls if the viewport is too short
+                to show the whole story at once. */}
+            <div
+              ref={storyShellRef}
+              className={
+                isStory
+                  ? 'aspect-[9/16] w-[min(360px,calc(100vw_-_5.25rem),calc(92dvh*0.5625))] max-h-[92dvh] mx-auto overflow-y-auto no-scrollbar'
+                  : undefined
+              }
+            >
             <div
               ref={posterRef}
               className={`poster-canvas relative overflow-hidden shadow-2xl ${theme.canvasClass}`}
               style={
                 isStory
-                  ? { width: size.width, height: size.height, zoom: storyZoom }
+                  ? { width: size.width, height: size.height, zoom: storyZoom, transformOrigin: 'top left' }
                   : { width: size.width, height: size.height }
               }
             >
