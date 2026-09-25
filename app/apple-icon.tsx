@@ -4,8 +4,6 @@ export const runtime = 'edge';
 export const size = { width: 180, height: 180 };
 export const contentType = 'image/png';
 
-// Apple applies its own rounded-corner mask to apple-touch-icons, so this
-// variant is full-bleed square (no radius/border) — same obsidian + gold mark.
 export default function AppleIcon() {
   return new ImageResponse(
     (
@@ -17,15 +15,17 @@ export default function AppleIcon() {
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: '#0f0f0f',
+          borderRadius: '36px',
+          border: '3px solid #c9a227',
         }}
       >
         <svg
-          width="112"
-          height="112"
+          width="100"
+          height="100"
           viewBox="0 0 24 24"
-          fill="none"
+          fill="#c9a227"
           stroke="#c9a227"
-          strokeWidth="2.5"
+          strokeWidth="1"
           strokeLinecap="round"
           strokeLinejoin="round"
         >
