@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { formatPriceRange } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
 import { CATEGORIES, getCategoriesByType, getCategoryDisplay } from '@/lib/categories'
-import { CAMPUS_LOCATIONS, ALL_LOCATIONS } from '@/lib/campusLocations'
+import { CAMPUS_LOCATIONS } from '@/lib/campusLocations'
 import StarRating from '@/app/StarRating'
 import { getSellerRatings, type SellerRating } from '@/lib/reviews'
 import NavBar from '@/app/components/NavBar'
@@ -66,14 +66,21 @@ export default function ServicesPage() {
     return () => clearInterval(timer)
   }, [])
 
-  // Read ?q= from URL on mount (so landing page search can link here)
+  // Read ?q= and ?category= from the URL on mount (landing-page search and
+  // /categories cards deep-link here). The sync is deferred to a callback
+  // rather than running setState synchronously in the effect body, which
+  // would trigger cascading renders on hydration.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const q = params.get('q')
-    if (q) setSearchQuery(q)
-    // Read ?category= too (so /categories cards can deep-link a filter)
     const cat = params.get('category')
-    if (cat) setCategoryFilter(cat)
+    if (!q && !cat) return
+    const t = setTimeout(() => {
+      if (q) setSearchQuery(q)
+      // ?category= shows all listing types in that category
+      if (cat) setCategoryFilter(cat)
+    }, 0)
+    return () => clearTimeout(t)
   }, [])
 
   useEffect(() => {

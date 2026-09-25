@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import { logAnalyticsEvent, logWhatsappOutcome, logWhatsappShare, type WhatsappOutcome } from '@/lib/analytics'
@@ -74,13 +74,19 @@ export default function ListingDetailClient() {
   const [isFavorited, setIsFavorited] = useState(false)
   const [showMessagePreview, setShowMessagePreview] = useState(false)
   const [toast, setToast] = useState<{ message: string } | null>(null)
-  // WhatsApp follow-up panel state
-  const [whatsappClicked, setWhatsappClicked] = useState(false)
-  const [outcomeDismissed, setOutcomeDismissed] = useState(false)
   const router = useRouter()
   const params = useParams()
   const rawId = params.id
   const listingId = Array.isArray(rawId) ? rawId[0] : rawId
+  // WhatsApp follow-up panel state
+  const [whatsappClicked, setWhatsappClicked] = useState(false)
+  // Lazy initializer: restore the dismissed flag straight from localStorage.
+  // The panel only renders after whatsappClicked flips post-hydration, so the
+  // old mount effect (and its cascading setState) was unnecessary.
+  const [outcomeDismissed, setOutcomeDismissed] = useState<boolean>(() => {
+    if (typeof window === 'undefined' || !listingId) return false
+    return Boolean(localStorage.getItem('cp_outcome_' + listingId))
+  })
 
   // Carousel sources: listing_images (ordered), falling back to image_url.
   const photos = (() => {
@@ -97,7 +103,7 @@ export default function ListingDetailClient() {
     return () => clearTimeout(timer)
   }, [toast])
 
-  // Check auth status, favourite state, and outcome localStorage on mount
+  // Check auth status and favourite state on mount
   useEffect(() => {
     async function checkAuth() {
       const { data: { user } } = await supabase.auth.getUser()
@@ -116,12 +122,6 @@ export default function ListingDetailClient() {
     }
     
     checkAuth()
-
-    // Check if user already dismissed the follow-up panel this session
-    if (listingId) {
-      const dismissed = localStorage.getItem('cp_outcome_' + listingId)
-      if (dismissed) setOutcomeDismissed(true)
-    }
   }, [listingId])
 
   // Reviews for this seller (public) + the current user's review entry point.
@@ -277,6 +277,16 @@ export default function ListingDetailClient() {
     return () => window.removeEventListener('keydown', onKey)
   }, [photoCount])
 
+  // Stale detection (30+ days without activity). Date.now() is impure, so the
+  // clock is snapshotted once at mount and the memo itself stays pure.
+  const [nowTs] = useState(() => Date.now())
+  const isStale = useMemo(() => {
+    if (!listing) return false
+    const targetDate = listing.last_activity_at || listing.created_at
+    if (!targetDate) return false
+    return nowTs - new Date(targetDate).getTime() > 30 * 86400000
+  }, [listing, nowTs])
+
   if (loading || !listing) {
     return (
       <div className="flex items-center justify-center min-h-screen animated-gradient">
@@ -385,13 +395,6 @@ export default function ListingDetailClient() {
 
     syncFavorite()
   }
-
-  // Stale detection
-  const isStale = listing && (
-    !listing.last_activity_at 
-      ? (Date.now() - new Date(listing.created_at).getTime()) > 30 * 86400000
-      : (Date.now() - new Date(listing.last_activity_at).getTime()) > 30 * 86400000
-  )
 
   return (
     <main className="min-h-screen bg-charcoal">
