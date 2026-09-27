@@ -19,7 +19,9 @@ export default function Icon() {
           border: '1px solid rgba(201, 162, 39, 0.6)',
         }}
       >
-        {/* Marketplace Shopping Bag + Plug SVG */}
+        {/* Marketplace Shopping Bag + Plug SVG — same refined mark as the
+            apple icon (filled bag + gold zap), with 2px strokes for
+            legibility at 32px. */}
         <svg
           width="20"
           height="20"
@@ -31,12 +33,12 @@ export default function Icon() {
           strokeLinejoin="round"
         >
           {/* Shopping Bag Outline */}
-          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" fill="#18181b" />
           <line x1="3" y1="6" x2="21" y2="6" />
           {/* Bag Handle */}
-          <path d="M16 10a4 4 0 0 1-8 0" />
-          {/* Gold Plug Power Symbol Inside */}
-          <path d="M12 13v3M10 15h4" stroke="#c9a227" strokeWidth="2" />
+          <path d="M16 10a4 4 0 0 1-8 0" strokeWidth="2" />
+          {/* Gold Electric Plug / Zap Symbol on Front */}
+          <path d="M13 11L9 17h4l-1 4 5-6h-4l1-4z" fill="#c9a227" stroke="#c9a227" strokeWidth="1" />
         </svg>
       </div>
     ),
