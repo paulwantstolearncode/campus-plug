@@ -1,16 +1,24 @@
 ﻿# Handoff — Campus Plug
 
-Last updated: 2026-09-25
+Last updated: 2026-09-27
 
 ## Current state
 
 - **Repo**: github.com/paulwantstolearncode/campus-plug (origin/main)
 - **Live**: campuspluggh.com
-- **Latest commit**: 116166b — fix: resolve eslint purity and set-state-in-effect warnings
+- **Latest commit**: 79ecd88 — fix: heal broken og font pipeline and align legacy gold to brand
 - **Working tree**: 27 routes build clean. Pre-existing uncommitted changes to leave alone: `supabase/add_analytics_and_boosts.sql` + `supabase/fix_profiles_public_read.sql` (modified), untracked `FREEBUFF_BRIEF.md` / `FREEBUFF_BRIEF_NAVBAR_EXTRACTION.md` — stage ONLY your own task files.
 - **Design system**: warm paper × obsidian × gold. Tokens in `app/globals.css` (`--color-paper #f6f5f1`, `--color-ink #0a0a0c`, `--color-gold-signal #c9a227`, `--color-gold-vivid #e8b93b`, `--color-rule #e4e1d8`); classes `bg-ink`, `text-gold`, `border-rule`, `bg-paper-deep`, `text-ink-muted`, `font-display` (Space Grotesk), `font-serif-accent` (Instrument Serif italic), `grain-overlay`, `card-lift`. Tailwind v4 (@theme inline tokens, trailing `!` important syntax). Next.js 16.2.12 (Turbopack) + Supabase.
 
 ## Recently shipped
+
+### Brand icon system + OG pipeline fix (069344d → 79ecd88)
+- **Icon system**: `lib/brandMark.tsx` is the single source of truth for the Plug Bag mark (obsidian shopping bag, zinc `#18181b` fill, gold `#c9a227` zap) — tweak the mark THERE only. Four surfaces consume it: `app/icon.tsx` (32×32 tab favicon, rounded card, strokeWidth 2), `app/apple-icon.tsx` (180×180, square corners, 4px gold border), `app/icon-192/route.tsx` (192×192, `any maskable`), `app/icon-512/route.tsx` (512×512 maskable — mark inside the 80% safe zone, full-bleed, NO border/radius; Android masks would crop it). Manifest declares all four; the 192 uses `purpose: 'any maskable'` via a documented cast (Next's Manifest type doesn't accept the dual literal yet).
+- **Route-handler gotcha**: metadata icons (`icon.tsx`/`apple-icon.tsx`) use default exports, but files under `app/*/route.tsx` MUST export a real `GET` or typed-routes validation fails the build.
+- **OG pipeline healed (79ecd88)**: production `/api/og` was returning 0-byte PNGs — Google 404'd the pinned fonts.gstatic URLs, the serif font was never registered, satori rejects `wOF2` (so no runtime css2 resolution — Google serves woff2 to every UA now), and `inline-flex`/`zIndex` crash this satori build. Fix: Manrope 700 + DM Serif Display 400 vendored as WOFF in `public/fonts/og/` (from @fontsource via jsDelivr), fetched same-origin by the edge route, failures NOT cached (isolate can't be poisoned), illegal CSS removed. Verified: real 1200×630 branded PNGs. WhatsApp/TikTok unfurls work after deploy.
+- **Gold alignment**: legacy `#d4af37` purged from app scope (OG accents, favourites heart, detail Save heart, decorative dot grids); posters theme keeps its intentional multi-tone gradient.
+- **FAB overlap fix (20423d0)**: `HelpButton` + `FeedbackButton` sit at `bottom-24` on mobile (clear the 93px sticky WhatsApp bar on listing pages), `sm:bottom-6` on desktop.
+- **Outreach kit (822069c)**: `outreach/campus-outreach.md` — seller-recruitment blast + founding-partner banner pitch built on the production snapshot (10 live listings, 7/14 categories empty → the play is SELLER SUPPLY first, businesses second).
 
 ### ESLint purity / set-state-in-effect fixes (116166b)
 - `app/listing/[id]/ListingDetailClient.tsx`: `outcomeDismissed` reads `cp_outcome_<listingId>` from localStorage in a lazy `useState` initializer (SSR-guarded) instead of a mount effect; `isStale` no longer calls `Date.now()` during render — the clock is snapshotted once via `useState(() => Date.now())` and consumed in a pure `useMemo` keyed `[listing, nowTs]`.
@@ -172,11 +180,11 @@ There were two Vercel projects both named "campus-plug". The broken duplicate (`
 
 ## Next steps
 
-1. (Done) Nav extraction, WhatsApp funnel outcomes, IBM Plex Mono drop, share loop + categories/fresher-kit redesigns + poster generator upgrades (through c57d2fc).
-2. (Done) ESLint purity / set-state-in-effect cleanup in listing detail + services (116166b).
-3. Consider a full-repo `npx eslint .` audit — react-hooks v6 purity rules are strict; other components may call `Date.now()` during render.
-4. Candidate refactor: extract a shared `useNow()` hook (timestamp snapshot once at mount) for all relative-time/staleness calculations.
-5. Outreach to 3-5 local businesses near campus for banner ad trials (kit prepared: `outreach/` one-pager, WhatsApp scripts, playbook).
-6. Add payment gate to boost button (MoMo) once sellers show demand — needs payment-provider decision (Paystack recommended).
-7. Run `funnel_metrics_queries.sql` weekly to build the funnel ritual (views → clicks → outcomes → sold).
+1. (Done) Brand icon system, OG pipeline heal, gold alignment, FAB overlap fix, outreach kit (069344d → 79ecd88).
+2. **Owner action — replace the expired anon key in `.env.local`** (current `sb_publishable_…` 401s; local dev data-fetch broken until swapped).
+3. **Owner action — run SQL-editor queries 1, 3, 7 from `supabase/funnel_metrics_queries.sql`** and paste output; fold true post-click conversion numbers into `outreach/campus-outreach.md`.
+4. Execute Part 1 of the outreach kit: seller-recruitment posters (Seller Recruitment template, `/admin/posters`) + hall WhatsApp blasts — supply first, businesses second.
+5. Consider a full-repo `npx eslint .` audit — react-hooks v6 purity rules are strict; other components may call `Date.now()` during render.
+6. Test scaffold remains unapproved/open: vitest + ~10 tests on `lib/format`, `lib/categories`, phone formatting, `isMoolreSuccess` (needs owner go-ahead — new dev dependency).
+7. Add payment gate to boost button (MoMo) once sellers show demand — needs payment-provider decision (Paystack recommended).
 8. Mobile QA pass on the follow-up panel + sold badges (360px viewport) before the January semester push.
