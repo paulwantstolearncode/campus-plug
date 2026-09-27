@@ -1,10 +1,12 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const size = { width: 32, height: 32 };
-export const contentType = 'image/png';
 
-export default function Icon() {
+// 512x512 maskable PWA icon. Maskable icons must keep all meaningful content
+// inside the inner 80% safe zone (Android launchers crop into circles,
+// squircles, and rounded squares), so the mark is drawn small and centered on
+// a full-bleed obsidian field — no border, no corner radius.
+export async function GET() {
   return new ImageResponse(
     (
       <div
@@ -15,14 +17,12 @@ export default function Icon() {
           alignItems: 'center',
           justifyContent: 'center',
           backgroundColor: '#0f0f0f',
-          borderRadius: '7px',
-          border: '1px solid rgba(201, 162, 39, 0.6)',
         }}
       >
-        {/* Marketplace Shopping Bag + Plug SVG */}
+        {/* Marketplace Shopping Bag + Plug SVG (80% safe zone → 205px) */}
         <svg
-          width="20"
-          height="20"
+          width="205"
+          height="205"
           viewBox="0 0 24 24"
           fill="none"
           stroke="#c9a227"
@@ -40,6 +40,6 @@ export default function Icon() {
         </svg>
       </div>
     ),
-    { ...size }
+    { width: 512, height: 512 }
   );
 }
