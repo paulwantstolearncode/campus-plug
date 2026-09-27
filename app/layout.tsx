@@ -7,6 +7,11 @@ import { Analytics } from "@vercel/analytics/react";
 import { Space_Grotesk, Plus_Jakarta_Sans, Instrument_Serif } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
 
+// Global default share card — rendered by the /api/og edge route (no params =
+// the branded default card). Pages with their own openGraph.images (listings,
+// requests, categories) override this.
+const DEFAULT_OG_IMAGE = `${SITE_URL}/api/og`
+
 // ── Design-system type stack ──────────────────────────────────────
 // Space Grotesk  → display headings (geometric, confident editorial voice)
 // Plus Jakarta   → body/UI copy (clean, modern, highly legible)
@@ -55,14 +60,20 @@ export const metadata: Metadata = {
     siteName: "Campus Plug",
     locale: "en_GH",
     type: "website",
+    images: [
+      {
+        url: DEFAULT_OG_IMAGE,
+        width: 1200,
+        height: 630,
+        alt: "Campus Plug — Student Marketplace at University of Ghana",
+      },
+    ],
   },
-  // No OG image asset exists yet, so advertise the plain summary card — a
-  // "summary_large_image" card with no images configured renders image-less.
-  // Add openGraph.images + twitter.images when a real 1200x630 asset is ready.
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Campus Plug",
     description: "Campus Plug is a student marketplace for the University of Ghana community. Browse verified student sellers offering services like braiding, tutoring, home-cooked meals, phone repairs, and products. Message sellers directly on WhatsApp to book.",
+    images: [DEFAULT_OG_IMAGE],
   },
 };
 

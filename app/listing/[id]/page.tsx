@@ -48,6 +48,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       : `Verified on Campus Plug — the student marketplace at University of Ghana.`
     const imageUrl = listing.image_url || (listing.images && listing.images[0]) || ''
 
+    // Branded 1200x630 share card rendered by the /api/og edge route —
+    // correct aspect on every platform, title/price/location baked in.
+    const ogParams = new URLSearchParams({ title: listing.title })
+    if (listing.price) ogParams.set('price', Number(listing.price).toLocaleString())
+    if (listing.campus_location) ogParams.set('location', listing.campus_location)
+    if (listing.category) ogParams.set('category', listing.category.replace(/-/g, ' '))
+    if (imageUrl) ogParams.set('image', imageUrl)
+    const ogImageUrl = `${SITE_URL}/api/og?${ogParams.toString()}`
+
     return {
       title: `${listing.title} — Campus Plug`,
       description,
@@ -59,20 +68,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         locale: 'en_GH',
         // TODO: og:type "product" would be ideal but Next.js Metadata API doesn't support it — using "website"
         type: 'website',
-        images: imageUrl ? [
+        images: [
           {
-            url: imageUrl,
+            url: ogImageUrl,
             width: 1200,
             height: 630,
             alt: listing.title,
           },
-        ] : [],
+        ],
       },
       twitter: {
         card: 'summary_large_image',
         title,
         description,
-        images: imageUrl ? [imageUrl] : [],
+        images: [ogImageUrl],
       },
     }
   } catch {
