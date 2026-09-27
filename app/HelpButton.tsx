@@ -85,7 +85,7 @@ export default function HelpButton() {
       {/* Floating Button */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 z-40 w-14 h-14 bg-gradient-to-br from-gold to-gold-dark text-charcoal rounded-full shadow-2xl shadow-gold/50 hover:scale-110 transition-transform flex items-center justify-center text-2xl font-bold group"
+        className="fixed bottom-24 right-6 z-40 sm:bottom-6 w-14 h-14 bg-gradient-to-br from-gold to-gold-dark text-charcoal rounded-full shadow-2xl shadow-gold/50 hover:scale-110 transition-transform flex items-center justify-center text-2xl font-bold group"
         aria-label="Need help?"
         aria-haspopup="dialog"
         aria-expanded={isOpen}

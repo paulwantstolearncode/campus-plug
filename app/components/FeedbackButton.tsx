@@ -21,7 +21,7 @@ export default function FeedbackButton() {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-20 z-40 bg-gold text-charcoal rounded-full shadow-2xl shadow-gold/40 hover:scale-110 transition-all flex items-center gap-2 pl-4 pr-5 py-3 font-semibold text-sm group"
+        className="fixed bottom-24 right-20 z-40 sm:bottom-6 bg-gold text-charcoal rounded-full shadow-2xl shadow-gold/40 hover:scale-110 transition-all flex items-center gap-2 pl-4 pr-5 py-3 font-semibold text-sm group"
         aria-label="Send feedback"
       >
         {/* Chat bubble icon */}

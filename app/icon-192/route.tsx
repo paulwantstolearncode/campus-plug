@@ -3,10 +3,9 @@ import { PlugBagMark } from '@/lib/brandMark';
 
 export const runtime = 'edge';
 
-// 512x512 maskable PWA icon. Maskable icons must keep all meaningful content
-// inside the inner 80% safe zone (Android launchers crop into circles,
-// squircles, and rounded squares), so the mark is drawn small and centered on
-// a full-bleed obsidian field — no border, no corner radius.
+// 192x192 PWA icon serving the "any maskable" dual purpose: declared so
+// Android launchers stop upscaling the 180px apple icon, and drawn small
+// enough (mark well inside the inner safe zone) to survive circular masks.
 export async function GET() {
   return new ImageResponse(
     (
@@ -20,9 +19,9 @@ export async function GET() {
           backgroundColor: '#0f0f0f',
         }}
       >
-        <PlugBagMark size={205} />
+        <PlugBagMark size={96} />
       </div>
     ),
-    { width: 512, height: 512 }
+    { width: 192, height: 192 }
   );
 }

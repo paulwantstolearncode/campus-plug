@@ -16,6 +16,15 @@ export default function manifest(): MetadataRoute.Manifest {
         type: 'image/png',
       },
       {
+        src: '/icon-192',
+        sizes: '192x192',
+        type: 'image/png',
+        // Dual purpose is valid per the Web App Manifest spec and is what
+        // Android launchers expect, but Next's Manifest type only allows the
+        // single values — cast through unknown. The emitted JSON is correct.
+        purpose: 'any maskable' as unknown as 'maskable',
+      },
+      {
         src: '/apple-icon',
         sizes: '180x180',
         type: 'image/png',
