@@ -767,8 +767,8 @@ export default function ListingDetailClient() {
                       width="20"
                       height="20"
                       viewBox="0 0 24 24"
-                      fill={isFavorited ? '#d4af37' : 'none'}
-                      stroke="#d4af37"
+                      fill={isFavorited ? '#c9a227' : 'none'}
+                      stroke="#c9a227"
                       strokeWidth="2"
                       strokeLinecap="round"
                       strokeLinejoin="round"

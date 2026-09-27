@@ -3,6 +3,51 @@ import { NextRequest } from 'next/server'
 
 export const runtime = 'edge'
 
+// ---------------------------------------------------------------------------
+// Font loading — vendored, same-origin, rotation-proof.
+//
+// History: this route pinned versioned fonts.gstatic.com URLs that Google
+// later 404'd, then tried resolving css2 URLs at runtime — but Google now
+// serves WOFF2 to every UA and this satori build rejects 'wOF2' signatures.
+// The result was 500s and EMPTY PNGs on WhatsApp/social unfurls.
+//
+// Fix: Manrope 700 + DM Serif Display 400 are vendored as WOFF (satori-parseable)
+// under public/fonts/og/ (from @fontsource via jsDelivr) and fetched from the
+// request's own origin — no external dependency, no URL rotation risk.
+// Caching: per-isolate after first fetch; failures are NOT cached so the next
+// request retries instead of the isolate staying fontless until cold-start.
+// ---------------------------------------------------------------------------
+
+const LEGACY_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36'
+
+let fontCache: { manrope?: ArrayBuffer; serif?: ArrayBuffer } | null = null
+
+async function loadFont(url: string): Promise<ArrayBuffer | undefined> {
+  try {
+    const res = await fetch(url)
+    if (!res.ok) return undefined
+    const buf = await res.arrayBuffer()
+    // Reject HTML error pages ('<') — accept any real font container.
+    const sig = new Uint8Array(buf.slice(0, 4))
+    if (sig[0] === 0x3c) return undefined
+    return buf
+  } catch {
+    return undefined
+  }
+}
+
+async function loadFonts(origin: string): Promise<{ manrope?: ArrayBuffer; serif?: ArrayBuffer }> {
+  if (fontCache) return fontCache
+  const [manrope, serif] = await Promise.all([
+    loadFont(origin + '/fonts/og/manrope-latin-700-normal.woff'),
+    loadFont(origin + '/fonts/og/dm-serif-display-latin-400-normal.woff'),
+  ])
+  // Only cache success: if the fonts were unreachable this time, the next
+  // request retries instead of the isolate being poisoned with "no fonts".
+  if (manrope || serif) fontCache = { manrope, serif }
+  return { manrope, serif }
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl
 
@@ -12,17 +57,9 @@ export async function GET(request: NextRequest) {
   const category = searchParams.get('category') || ''
   const image = searchParams.get('image') || ''
 
-  // Load Manrope font from Google Fonts (weight 700)
-  const fontResponse = await fetch(
-    'https://fonts.gstatic.com/s/manrope/v15/xn7_YHE41ni1AdIRqAuZuw1Bx9mbZk59FO_F87jxeN7B.woff2',
-  )
-  const fontData = await fontResponse.arrayBuffer()
-
-  // Load DM Serif Display for the italic accent
-  const serifResponse = await fetch(
-    'https://fonts.gstatic.com/s/dmserifdisplay/v15/-nFnOHM81r4j6k0gjAW3mujVU2B2K_d109jy92k.woff2',
-  )
-  const serifData = await serifResponse.arrayBuffer()
+  // Vendored same-origin fonts (see note above) — both families registered so
+  // the serif accent renders in the italic headline spans.
+  const { manrope: fontData, serif: serifData } = await loadFonts(request.nextUrl.origin)
 
   return new ImageResponse(
     (
@@ -62,7 +99,7 @@ export async function GET(request: NextRequest) {
             left: 0,
             right: 0,
             height: '4px',
-            background: 'linear-gradient(90deg, #D4AF37, #F4EBC9, #D4AF37)',
+            background: 'linear-gradient(90deg, #c9a227, #F4EBC9, #c9a227)',
           }}
         />
 
@@ -74,7 +111,6 @@ export async function GET(request: NextRequest) {
             justifyContent: 'space-between',
             padding: '28px 48px 0',
             position: 'relative',
-            zIndex: 1,
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -115,7 +151,7 @@ export async function GET(request: NextRequest) {
                 alignItems: 'center',
                 padding: '6px 16px',
                 borderRadius: '999px',
-                backgroundColor: '#D4AF37',
+                backgroundColor: '#c9a227',
                 color: '#0F0F0F',
                 fontSize: '13px',
                 fontWeight: 700,
@@ -136,7 +172,6 @@ export async function GET(request: NextRequest) {
             padding: '24px 48px',
             gap: image ? '40px' : '0',
             position: 'relative',
-            zIndex: 1,
           }}
         >
           {/* Text column */}
@@ -189,7 +224,7 @@ export async function GET(request: NextRequest) {
             {price && (
               <div
                 style={{
-                  display: 'inline-flex',
+                  display: 'flex',
                   alignItems: 'center',
                   alignSelf: 'flex-start',
                   padding: '10px 24px',
@@ -248,7 +283,6 @@ export async function GET(request: NextRequest) {
             justifyContent: 'space-between',
             padding: '0 48px 28px',
             position: 'relative',
-            zIndex: 1,
           }}
         >
           <div
@@ -263,7 +297,7 @@ export async function GET(request: NextRequest) {
           >
             <span
               style={{
-                display: 'inline-flex',
+                display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 width: '28px',
@@ -297,7 +331,7 @@ export async function GET(request: NextRequest) {
             left: 0,
             right: 0,
             height: '4px',
-            background: 'linear-gradient(90deg, #D4AF37, #F4EBC9, #D4AF37)',
+            background: 'linear-gradient(90deg, #c9a227, #F4EBC9, #c9a227)',
           }}
         />
       </div>
@@ -306,12 +340,15 @@ export async function GET(request: NextRequest) {
       width: 1200,
       height: 630,
       fonts: [
-        {
-          name: 'Manrope',
-          data: fontData,
-          style: 'normal',
-          weight: 700,
-        },
+        // Both buffers may be undefined when Google Fonts is unreachable —
+        // omitting them lets satori render with its fallback font instead of
+        // crashing, so share unfurls never get an empty image again.
+        ...(fontData
+          ? [{ name: 'Manrope', data: fontData, style: 'normal' as const, weight: 700 as const }]
+          : []),
+        ...(serifData
+          ? [{ name: 'DM Serif Display', data: serifData, style: 'normal' as const, weight: 400 as const }]
+          : []),
       ],
     },
   )

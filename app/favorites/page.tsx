@@ -156,7 +156,7 @@ export default function FavoritesPage() {
                   height="80"
                   viewBox="0 0 24 24"
                   fill="none"
-                  stroke="#d4af37"
+                  stroke="#c9a227"
                   strokeWidth="1.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"

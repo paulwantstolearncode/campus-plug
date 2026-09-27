@@ -536,7 +536,7 @@ export default function LandingPage() {
           <div
             className="absolute inset-0 opacity-40"
             style={{
-              backgroundImage: 'radial-gradient(circle, #d4af37 1px, transparent 1px)',
+              backgroundImage: 'radial-gradient(circle, #c9a227 1px, transparent 1px)',
               backgroundSize: '30px 30px'
             }}
           ></div>

@@ -6,7 +6,7 @@ import { useState } from 'react'
 //     (e.g. an average of 4.8) via a clipped gold overlay.
 //   * Interactive: hover previews the rating, click sets it (integer 1-5).
 //
-// Gold stars (#d4af37) for filled, gray for empty. SVG so they stay crisp at
+// Gold stars (brand gold #c9a227) for filled, gray for empty. SVG so they stay crisp at
 // any size.
 
 interface StarRatingProps {
