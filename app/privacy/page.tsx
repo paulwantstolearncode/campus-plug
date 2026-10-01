@@ -5,7 +5,7 @@ import NavBar from '@/app/components/NavBar'
 export default function PrivacyPage() {
 
   return (
-    <main className="min-h-screen bg-off-white">
+    <main className="min-h-screen bg-adinkra-paper">
       {/* Navigation — same as the landing page */}
 <NavBar
         variant="light"
