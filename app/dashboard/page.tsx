@@ -12,7 +12,6 @@ import { formatName } from '@/lib/formatName'
 import { isWithinEditWindow, formatDateTime } from '@/lib/sales'
 import StarRating from '@/app/StarRating'
 import {
-  getSellerRating,
   createResponse,
   updateResponse,
   flagReview,

@@ -8,7 +8,6 @@ import NavBar from '@/app/components/NavBar'
 import { formatName } from '@/lib/formatName'
 import {
   CAMPUS_LOCATIONS,
-  ALL_LOCATIONS,
   suggestLocation,
   getUnassignedListings,
   updateListingLocation,

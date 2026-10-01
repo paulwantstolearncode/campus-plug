@@ -35,6 +35,9 @@ function formatPhoneForMoolre(phone: string): string {
   if (digits.startsWith('233') && digits.length === 12) {
     return '0' + digits.slice(3); // '233202388411' -> '0202388411'
   }
+  if (digits.startsWith('2330') && digits.length === 13) {
+    return digits.slice(3); // '2330202388411' -> '0202388411' (233 + trunk 0)
+  }
   if (digits.length === 9) {
     return '0' + digits; // '202388411' -> '0202388411'
   }

@@ -1,4 +1,3 @@
-import { supabase } from './supabase'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 

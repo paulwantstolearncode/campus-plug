@@ -6,7 +6,6 @@ import { supabase } from '@/lib/supabase'
 import ListingCard, { type ListingCardData } from '@/app/ListingCard'
 import { CATEGORIES } from '@/lib/categories'
 import FeedbackModal from '@/app/components/FeedbackModal'
-import type { User } from '@supabase/supabase-js'
 import NavBar from '@/app/components/NavBar'
 import MarqueeStrip from '@/app/components/MarqueeStrip'
 import BentoGrid from '@/app/components/BentoGrid'
@@ -72,19 +71,10 @@ export default function LandingPage() {
   const [liveListings, setLiveListings] = useState<ListingCardData[]>([])
   const [stats, setStats] = useState<MarketplaceStats | null>(null)
   const [categoryCounts, setCategoryCounts] = useState<Map<string, number>>(new Map())
-  const [user, setUser] = useState<User | null>(null)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const [banners, setBanners] = useState<{ id: string; title: string; subtitle: string | null; image_url: string | null; link_url: string; bg_color: string; text_color: string }[]>([])
 
   useEffect(() => {
-    // Check auth status
-    async function checkAuth() {
-      const { data: { user } } = await supabase.auth.getUser()
-      setUser(user)
-    }
-    
-    checkAuth()
-    
     // TODO(seo): convert this page to a Server Component and fetch listings
     // server-side so the live/category sections render in the initial HTML.
     // Requires splitting the client-only scroll-handler logic into a child

@@ -18,15 +18,21 @@ export default function FresherChecklist() {
   const [activeItem, setActiveItem] = useState<string | null>(null)
   const [mounted, setMounted] = useState(false)
 
-  // Hydrate from localStorage after mount (SSR-safe).
+  // Hydrate from localStorage after mount (SSR-safe). The read is deferred
+  // to a timeout callback (same pattern as /services) rather than running
+  // setState synchronously in the effect body, so the first client render
+  // still matches the server HTML.
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY)
-      if (raw) setChecked(JSON.parse(raw))
-    } catch {
-      // Corrupted storage — start fresh.
-    }
-    setMounted(true)
+    const t = setTimeout(() => {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY)
+        if (raw) setChecked(JSON.parse(raw))
+      } catch {
+        // Corrupted storage — start fresh.
+      }
+      setMounted(true)
+    }, 0)
+    return () => clearTimeout(t)
   }, [])
 
   function toggle(id: string) {

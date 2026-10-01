@@ -18,8 +18,6 @@ export const runtime = 'edge'
 // request retries instead of the isolate staying fontless until cold-start.
 // ---------------------------------------------------------------------------
 
-const LEGACY_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36'
-
 let fontCache: { manrope?: ArrayBuffer; serif?: ArrayBuffer } | null = null
 
 async function loadFont(url: string): Promise<ArrayBuffer | undefined> {

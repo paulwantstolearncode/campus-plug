@@ -65,7 +65,13 @@ export default function NotificationBell() {
   }, [userId])
 
   useEffect(() => {
-    if (open) loadNotifications()
+    if (!open) return
+    // Deferred to a callback like the other list loads — the async fetch's
+    // setState must not run synchronously in the effect body.
+    const t = setTimeout(() => {
+      loadNotifications()
+    }, 0)
+    return () => clearTimeout(t)
   }, [open, loadNotifications])
 
   // Click-outside to close
