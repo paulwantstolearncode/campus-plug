@@ -115,7 +115,7 @@ export default function RequestsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white overflow-hidden">
+    <main className="min-h-screen bg-adinkra-paper overflow-hidden">
       {/* Navigation */}
 <NavBar
         variant="light"

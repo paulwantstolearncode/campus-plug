@@ -46,7 +46,7 @@ export default function ShopClient({ seller }: ShopClientProps) {
     : null
 
   return (
-    <main className="min-h-screen bg-off-white">
+    <main className="min-h-screen bg-adinkra-paper">
       {/* Nav */}
 <NavBar variant="light" back={{ href: '/services', label: 'Browse all listings' }} />
 

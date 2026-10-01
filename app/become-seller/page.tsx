@@ -184,7 +184,7 @@ export default function BecomeSellerPage() {
         </div>
       </section>
 
-      <section className="relative pb-24 md:pb-32 bg-off-white -mt-8">
+      <section className="relative pb-24 md:pb-32 bg-adinkra-paper -mt-8">
         <div className="relative max-w-2xl mx-auto px-4 sm:px-6">
 
           <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-10 border border-gray-100">
