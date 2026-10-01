@@ -331,17 +331,34 @@ button:not(:disabled):active, .btn-tactile:active {
   background-size: 128px 128px;
 }
 
-/* ── Ghanaian Adinkra Watermark Pattern Background ──
-   Mate Masie-inspired geometric tile ("wisdom knots") in brand gold at
-   watermark opacity — a quiet Ghanaian texture for paper surfaces.
-   Applied to the site-wide body default plus the utility class. */
+/* ── Authentic Ghanaian Adinkra Pattern Background ──
+   Four Adinkra symbols in brand gold, one per quadrant of a 96px tile:
+   · Adinkrahene (bottom right) — concentric circles, greatness & leadership
+   · Dwennimmen  (top left)     — ram's horns, strength with humility
+   · Bese Saka   (top right)    — cola pods, abundance & affluence
+   · Nsaa        (bottom left)  — nested diamonds, excellence
+   Plus connecting heritage grid dots. Applied to the site-wide body
+   default, the .bg-paper utility, and the explicit utility classes. */
+body,
+.bg-paper,
 .bg-adinkra-paper,
-.bg-grid-dots,
-body {
+.bg-grid-dots {
   background-color: var(--color-paper, #f6f5f1);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23c9a227' stroke-width='0.8' stroke-opacity='0.12'%3E%3Cpath d='M32 8 L40 16 L32 24 L24 16 Z'/%3E%3Ccircle cx='32' cy='16' r='3'/%3E%3Cpath d='M8 32 L16 40 L24 32 L16 24 Z'/%3E%3Ccircle cx='16' cy='32' r='3'/%3E%3Cpath d='M40 32 L48 40 L56 32 L48 24 Z'/%3E%3Ccircle cx='48' cy='32' r='3'/%3E%3Cpath d='M32 40 L40 48 L32 56 L24 48 Z'/%3E%3Ccircle cx='32' cy='48' r='3'/%3E%3Ccircle cx='32' cy='32' r='1.5' fill='%23c9a227' fill-opacity='0.15'/%3E%3C/g%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='96' height='96' viewBox='0 0 96 96'%3E%3Cg fill='none' stroke='%23c9a227' stroke-width='1.4' stroke-opacity='0.38'%3E%3Ccircle cx='72' cy='72' r='14' stroke-opacity='0.42'/%3E%3Ccircle cx='72' cy='72' r='8' stroke-opacity='0.35'/%3E%3Ccircle cx='72' cy='72' r='3' fill='%23c9a227' fill-opacity='0.45'/%3E%3Cpath d='M16 24 C12 16, 20 12, 24 18 C28 24, 20 30, 16 24 Z' fill='%23c9a227' fill-opacity='0.20'/%3E%3Cpath d='M32 24 C36 16, 28 12, 24 18 C20 24, 28 30, 32 24 Z' fill='%23c9a227' fill-opacity='0.20'/%3E%3Ccircle cx='24' cy='24' r='2' fill='%23c9a227' fill-opacity='0.50'/%3E%3Cpath d='M72 12 C64 12, 64 24, 72 24 C80 24, 80 12, 72 12 Z M72 24 C72 16, 84 16, 84 24 C84 32, 72 32, 72 24 Z' fill='%23c9a227' fill-opacity='0.18'/%3E%3Cpath d='M72 24 C72 32, 60 32, 60 24 C60 16, 72 16, 72 24 Z M72 24 C80 24, 80 36, 72 36 C64 36, 64 24, 72 24 Z' fill='%23c9a227' fill-opacity='0.18'/%3E%3Cpolygon points='24,56 36,68 24,80 12,68' stroke-width='1.5' stroke-opacity='0.45'/%3E%3Cpolygon points='24,61 31,68 24,75 17,68' fill='%23c9a227' fill-opacity='0.25' stroke-opacity='0.35'/%3E%3Ccircle cx='48' cy='24' r='1.5' fill='%23c9a227' fill-opacity='0.30'/%3E%3Ccircle cx='48' cy='72' r='1.5' fill='%23c9a227' fill-opacity='0.30'/%3E%3Ccircle cx='24' cy='48' r='1.5' fill='%23c9a227' fill-opacity='0.30'/%3E%3Ccircle cx='72' cy='48' r='1.5' fill='%23c9a227' fill-opacity='0.30'/%3E%3C/g%3E%3C/svg%3E");
   background-repeat: repeat;
-  background-size: 64px 64px;
+  background-size: 96px 96px;
+  background-attachment: fixed;
+}
+
+/* iOS Safari treats fixed attachments as scroll anyway and repaints them
+   every frame — pin the pattern to the scroll layer on touch devices. */
+@media (hover: none) and (pointer: coarse) {
+  body,
+  .bg-paper,
+  .bg-adinkra-paper,
+  .bg-grid-dots {
+    background-attachment: scroll;
+  }
 }
 
 /* Respect reduced motion — disable ALL looping/entrance animations.
