@@ -73,7 +73,7 @@
 }
 
 body {
-  background: var(--color-paper);
+  background-color: var(--color-paper);
   color: var(--color-ink);
   font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -333,9 +333,11 @@ button:not(:disabled):active, .btn-tactile:active {
 
 /* ── Ghanaian Adinkra Watermark Pattern Background ──
    Mate Masie-inspired geometric tile ("wisdom knots") in brand gold at
-   watermark opacity — a quiet Ghanaian texture for paper surfaces. */
+   watermark opacity — a quiet Ghanaian texture for paper surfaces.
+   Applied to the site-wide body default plus the utility class. */
 .bg-adinkra-paper,
-.bg-grid-dots {
+.bg-grid-dots,
+body {
   background-color: var(--color-paper, #f6f5f1);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Cg fill='none' stroke='%23c9a227' stroke-width='0.8' stroke-opacity='0.12'%3E%3Cpath d='M32 8 L40 16 L32 24 L24 16 Z'/%3E%3Ccircle cx='32' cy='16' r='3'/%3E%3Cpath d='M8 32 L16 40 L24 32 L16 24 Z'/%3E%3Ccircle cx='16' cy='32' r='3'/%3E%3Cpath d='M40 32 L48 40 L56 32 L48 24 Z'/%3E%3Ccircle cx='48' cy='32' r='3'/%3E%3Cpath d='M32 40 L40 48 L32 56 L24 48 Z'/%3E%3Ccircle cx='32' cy='48' r='3'/%3E%3Ccircle cx='32' cy='32' r='1.5' fill='%23c9a227' fill-opacity='0.15'/%3E%3C/g%3E%3C/svg%3E");
   background-repeat: repeat;
