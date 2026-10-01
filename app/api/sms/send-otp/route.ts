@@ -27,6 +27,24 @@ function isMoolreSuccess(parsed: Record<string, unknown>): boolean {
   )
 }
 
+function formatPhoneForMoolre(phone: string): string {
+  // 1. Strip ALL non-digit characters (spaces, dashes, plus signs, brackets)
+  const digits = phone.replace(/\D/g, '');
+
+  // 2. Format to local Ghana 10-digit number starting with 0
+  if (digits.startsWith('233') && digits.length === 12) {
+    return '0' + digits.slice(3); // '233202388411' -> '0202388411'
+  }
+  if (digits.length === 9) {
+    return '0' + digits; // '202388411' -> '0202388411'
+  }
+  if (digits.length === 10 && digits.startsWith('0')) {
+    return digits; // '0202388411'
+  }
+
+  return digits;
+}
+
 export async function POST(request: Request) {
   console.log(`[SMS Proxy] ═══════════════════════════════════════════════`)
   console.log(`[SMS Proxy] NEW REQUEST at ${new Date().toISOString()}`)
@@ -71,17 +89,12 @@ export async function POST(request: Request) {
   console.log('[SMS Proxy] Extracted — phone:', rawPhone, '| otp:', otpCode || '(n/a)')
 
   // ── 3. Format phone to Ghana local 0XXXXXXXXX ──────────────────────────
-  const digits = rawPhone.replace(/[^0-9]/g, '')
+  const formattedPhone = formatPhoneForMoolre(rawPhone)
 
-  let formattedPhone: string
-  if (digits.startsWith('233') && digits.length === 12) {
-    formattedPhone = '0' + digits.slice(3)
-  } else if (digits.startsWith('0') && digits.length === 10) {
-    formattedPhone = digits
-  } else if (digits.length === 9) {
-    formattedPhone = '0' + digits
-  } else {
-    console.error('[SMS Proxy] ✗ Invalid phone format:', rawPhone, '| digits:', digits)
+  // Valid results are always the local 10-digit form (e.g. '0202388411');
+  // anything else means the input was not a recognizable Ghanaian number.
+  if (!/^0\d{9}$/.test(formattedPhone)) {
+    console.error('[SMS Proxy] ✗ Invalid phone format:', rawPhone, '| digits:', formattedPhone)
     return NextResponse.json({ error: 'Invalid phone number format' }, { status: 400 })
   }
 
