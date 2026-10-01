@@ -69,7 +69,7 @@ const PILLARS: {
 
 export default function FresherKitPage() {
   return (
-    <main className="min-h-screen bg-paper">
+    <main className="min-h-screen bg-adinkra-paper">
       <NavBar variant="light" />
 
       {/* ── Hero: full-width obsidian with ambient gold glow + grain ── */}

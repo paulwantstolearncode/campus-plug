@@ -114,11 +114,11 @@ export default async function CategoriesPage() {
   const restCategories = CATEGORIES.filter((c) => !(HERO_SLUGS as readonly string[]).includes(c.slug)).map(withCount)
 
   return (
-    <main className="min-h-screen bg-paper">
+    <main className="min-h-screen bg-adinkra-paper">
       <NavBar variant="light" />
 
       {/* ── Page header: warm paper + ambient gold glow + search ── */}
-      <section className="relative py-20 md:py-28 bg-paper overflow-hidden">
+      <section className="relative py-20 md:py-28 bg-adinkra-paper overflow-hidden">
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
           <div className="hidden md:block absolute top-[-160px] left-1/2 -translate-x-1/2 w-[560px] h-[420px] bg-gold/10 blur-[100px] rounded-full" />
         </div>
@@ -246,7 +246,7 @@ export default async function CategoriesPage() {
       </section>
 
       {/* ── Bottom CTA: obsidian card, metallic gold border, grain ── */}
-      <section className="relative pb-24 md:pb-32 bg-paper">
+      <section className="relative pb-24 md:pb-32 bg-adinkra-paper">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           {/* Gradient p-px wrapper = metallic gold border */}
           <div className="rounded-3xl p-px bg-gradient-to-br from-[#e8b93b] via-[#c9a227]/40 to-[#a8841a]">

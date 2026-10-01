@@ -145,7 +145,7 @@ export default function FavoritesPage() {
       </section>
 
       {/* Content */}
-      <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
+      <section className="relative pb-24 md:pb-32 bg-adinkra-paper -mt-6">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8">
           {listings.length === 0 ? (
             /* Empty state */

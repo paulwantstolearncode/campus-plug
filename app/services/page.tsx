@@ -162,7 +162,7 @@ export default function ServicesPage() {
             <div className="h-5 bg-white/10 rounded-lg w-1/2 animate-pulse" />
           </div>
         </section>
-        <section className="relative pb-24 bg-off-white -mt-4">
+        <section className="relative pb-24 bg-adinkra-paper -mt-4">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-8">
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
@@ -208,9 +208,7 @@ export default function ServicesPage() {
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-off-white to-transparent"></div>
       </section>
 
-      <section className="relative pb-24 md:pb-32 bg-off-white">
-        <div className="absolute inset-0 opacity-40" style={{backgroundImage: 'radial-gradient(circle, #c9a227 1px, transparent 1px)', backgroundSize: '30px 30px'}}></div>
-
+      <section className="relative pb-24 md:pb-32 bg-adinkra-paper">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8">
           {services.length === 0 ? (
             <div className="relative overflow-hidden bg-gradient-to-br from-charcoal to-gray-900 rounded-3xl p-12 md:p-20 text-center border border-white/10">
