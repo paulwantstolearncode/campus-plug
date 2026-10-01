@@ -589,6 +589,24 @@ export default function ListingDetailClient() {
                     </div>
                   </div>
 
+                  {/* Trust & availability pills */}
+                  <div className="flex flex-wrap gap-1.5 mt-3">
+                    <span className="inline-flex items-center gap-1.5 bg-gold-soft text-gold-dark px-2.5 py-1 rounded-full text-[11px] font-bold border border-gold/40">
+                      <span className="w-1.5 h-1.5 rounded-full bg-gold-signal"></span>
+                      ⚡ Verified Student Seller
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 bg-white text-ink-muted px-2.5 py-1 rounded-full text-[11px] font-semibold border border-rule">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                      📍 {listing.campus_location || 'Legon Campus'}
+                    </span>
+                    {listing.seller?.whatsapp_number && (
+                      <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 px-2.5 py-1 rounded-full text-[11px] font-semibold border border-green-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                        💬 Direct WhatsApp Deal
+                      </span>
+                    )}
+                  </div>
+
                   {/* Rating & Top Rated badge */}
                   {ratingInfo && ratingInfo.review_count > 0 && (
                     <div className="mt-4 pt-4 border-t border-gray-100">

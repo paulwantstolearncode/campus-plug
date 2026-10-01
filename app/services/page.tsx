@@ -254,6 +254,34 @@ export default function ServicesPage() {
                   </div>
                 </div>
 
+                {/* 1-tap quick filters — the most-searched campus items */}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {[
+                    { label: '🔌 Kettles', q: 'kettle' },
+                    { label: '💨 Standing Fans', q: 'fan' },
+                    { label: '💻 Laptops', q: 'laptop' },
+                    { label: '💇‍♀️ Hair & Braiding', q: 'braiding' },
+                    { label: '📚 Past Questions', q: 'past questions' },
+                    { label: '🧺 Laundry', q: 'laundry' },
+                  ].map((chip) => {
+                    const active = searchQuery.trim().toLowerCase() === chip.q
+                    return (
+                      <button
+                        key={chip.q}
+                        onClick={() => setSearchQuery(active ? '' : chip.q)}
+                        className={
+                          'px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ' +
+                          (active
+                            ? 'bg-gold-soft text-charcoal border-gold'
+                            : 'bg-black/5 text-gray-600 border-transparent hover:border-gold hover:text-charcoal')
+                        }
+                      >
+                        {chip.label}
+                      </button>
+                    )
+                  })}
+                </div>
+
                 <div className="mt-4 flex flex-wrap items-center gap-3">
                   <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Category</span>
                   <select

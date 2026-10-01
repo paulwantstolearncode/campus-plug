@@ -187,6 +187,40 @@ export default function BecomeSellerPage() {
       <section className="relative pb-24 md:pb-32 bg-adinkra-paper -mt-8">
         <div className="relative max-w-2xl mx-auto px-4 sm:px-6">
 
+          {/* How it works — 3-step visual flow */}
+          {status === 'form' && (
+            <div className="mb-6 bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-8">
+              <p className="eyebrow text-gold-dark mb-5">How it works</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {[
+                  { icon: '📸', title: 'Snap & Post', sub: 'List your item or service in under 60 seconds' },
+                  { icon: '💬', title: 'Direct WhatsApp', sub: 'Buyers message you directly on WhatsApp' },
+                  { icon: '💰', title: 'Keep 100% MoMo', sub: '0% commission fees, direct payment' },
+                ].map((step, i) => (
+                  <div key={step.title} className="relative">
+                    <div className="flex sm:flex-col items-start gap-3">
+                      <div className="relative shrink-0">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-gold/20 to-gold/5 border border-gold/30 flex items-center justify-center text-2xl">
+                          {step.icon}
+                        </div>
+                        <span className="absolute -top-2 -left-2 w-5 h-5 rounded-full bg-gold text-charcoal text-[10px] font-bold flex items-center justify-center shadow">
+                          {i + 1}
+                        </span>
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-bold text-charcoal text-sm">{step.title}</p>
+                        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{step.sub}</p>
+                      </div>
+                    </div>
+                    {i < 2 && (
+                      <span className="hidden sm:block absolute top-1/2 -right-3 -translate-y-1/2 text-gold text-sm" aria-hidden="true">→</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-10 border border-gray-100">
 
             {status === 'pending' ? (

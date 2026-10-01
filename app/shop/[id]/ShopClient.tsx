@@ -72,9 +72,24 @@ export default function ShopClient({ seller }: ShopClientProps) {
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <h1 className="text-2xl md:text-3xl font-bold text-white">{displayName}</h1>
-                <span className="inline-flex items-center gap-1 bg-green-500/15 text-green-300 px-2.5 py-1 rounded-full text-xs font-bold border border-green-500/30">
-                  ✓ Verified Student Seller
+              </div>
+
+              {/* Trust & availability pills */}
+              <div className="flex flex-wrap gap-2 mt-2">
+                <span className="inline-flex items-center gap-1.5 bg-gold/10 text-gold-vivid px-2.5 py-1 rounded-full text-xs font-bold border border-gold/40">
+                  <span className="w-1.5 h-1.5 rounded-full bg-gold-vivid"></span>
+                  ⚡ Verified Student Seller
                 </span>
+                <span className="inline-flex items-center gap-1.5 bg-white/5 text-white/80 px-2.5 py-1 rounded-full text-xs font-semibold border border-white/15">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                  📍 {seller.campus_location || 'Legon Campus'}
+                </span>
+                {seller.whatsapp_number && (
+                  <span className="inline-flex items-center gap-1.5 bg-green-500/10 text-green-300 px-2.5 py-1 rounded-full text-xs font-semibold border border-green-500/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                    💬 Direct WhatsApp Deal
+                  </span>
+                )}
               </div>
 
               {/* Rating */}
