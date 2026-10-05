@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { PlugBagMark } from '@/lib/brandMark';
+import BrandMark from '@/lib/brandMark';
 
 export const runtime = 'edge';
 export const size = { width: 32, height: 32 };
@@ -20,8 +20,7 @@ export default function Icon() {
           border: '1px solid rgba(201, 162, 39, 0.6)',
         }}
       >
-        {/* Heavier stroke for legibility at 32px */}
-        <PlugBagMark size={20} strokeWidth={2} />
+        <BrandMark size={28} />
       </div>
     ),
     { ...size }

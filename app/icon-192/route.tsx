@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { PlugBagMark } from '@/lib/brandMark';
+import BrandMark from '@/lib/brandMark';
 
 export const runtime = 'edge';
 
@@ -19,7 +19,7 @@ export async function GET() {
           backgroundColor: '#0f0f0f',
         }}
       >
-        <PlugBagMark size={96} />
+        <BrandMark size={136} />
       </div>
     ),
     { width: 192, height: 192 }

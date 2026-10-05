@@ -1,5 +1,5 @@
 import { ImageResponse } from 'next/og';
-import { PlugBagMark } from '@/lib/brandMark';
+import BrandMark from '@/lib/brandMark';
 
 export const runtime = 'edge';
 export const size = { width: 180, height: 180 };
@@ -20,7 +20,7 @@ export default function AppleIcon() {
           border: '4px solid #c9a227',
         }}
       >
-        <PlugBagMark size={110} />
+        <BrandMark size={156} />
       </div>
     ),
     { ...size }
