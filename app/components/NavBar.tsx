@@ -92,7 +92,9 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
 
   const brandName = variant === 'admin' ? 'Campus Plug Admin' : 'Campus Plug'
   const showNavLinks = variant !== 'admin' && variant !== 'dashboard'
-  const userInitial = user?.email?.charAt(0).toUpperCase() || '?'
+  const displayName = user?.user_metadata?.full_name || user?.user_metadata?.name
+  const contactInfo = user?.phone || user?.email
+  const userInitial = displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?'
 
   // Back link element (renders on ALL viewports when back prop is set)
   const backLink = showBack && (
@@ -227,7 +229,10 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
                       <div className="absolute right-0 top-12 w-64 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-50">
                         <div className="px-4 py-3 border-b border-gray-100">
                           <p className="text-xs text-gray-400 mb-0.5">Signed in as</p>
-                          <p className="text-sm text-charcoal font-medium truncate">{user.email}</p>
+                          <p className="text-sm text-charcoal font-semibold truncate">{displayName || contactInfo || 'Student'}</p>
+                          {displayName && contactInfo && (
+                            <p className="text-xs text-gray-400 truncate mt-0.5">{contactInfo}</p>
+                          )}
                         </div>
 
                         {isSeller && (
@@ -316,7 +321,10 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
             {user && (
               <div className={`px-4 py-3 border-b mb-2 ${isDark ? 'border-white/10' : 'border-gray-200'}`}>
                 <p className={`text-xs mb-1 ${isDark ? 'text-white/50' : 'text-gray-400'}`}>Signed in as</p>
-                <p className={`text-sm truncate ${textColor}`}>{user.email}</p>
+                <p className={`text-sm font-semibold truncate ${textColor}`}>{displayName || contactInfo || 'Student'}</p>
+                {displayName && contactInfo && (
+                  <p className={`text-xs truncate mt-0.5 ${isDark ? 'text-white/50' : 'text-gray-400'}`}>{contactInfo}</p>
+                )}
                 {isSeller && (
                   <span className="inline-block mt-2 bg-gold/20 text-gold px-2 py-0.5 rounded-full text-xs font-semibold border border-gold/30">✓ Seller</span>
                 )}
