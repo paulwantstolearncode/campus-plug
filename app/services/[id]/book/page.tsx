@@ -169,7 +169,7 @@ export default function BookServicePage() {
   const today = new Date().toISOString().split('T')[0]
 
   return (
-    <main className="min-h-screen bg-charcoal">
+    <main className="min-h-screen bg-ink">
       {/* Nav */}
 <NavBar back={{ href: '/services', label: 'Back to services' }} />
 
@@ -210,10 +210,10 @@ export default function BookServicePage() {
             {/* LEFT — Service Card (2 cols) */}
             <div className="lg:col-span-2">
               <div className="lg:sticky lg:top-24">
-                <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+                <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border border-rule">
 
                   {/* Service Image */}
-                  <div className="relative aspect-square overflow-hidden bg-gray-100">
+                  <div className="relative aspect-square overflow-hidden bg-paper-deep">
                     {service.image_url ? (
                       <Image
                         src={service.image_url}
@@ -223,56 +223,56 @@ export default function BookServicePage() {
                         className="object-cover"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-charcoal via-gray-800 to-charcoal">
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-ink via-ink-soft to-ink">
                         <span className="text-7xl opacity-40">💼</span>
                       </div>
                     )}
 
-                    <div className="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-ink/60 to-transparent"></div>
 
                     <div className="absolute top-4 left-4 glass px-3 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
                       <span className="w-2 h-2 bg-gold rounded-full"></span>
                       Service
                     </div>
 
-                    <div className="absolute top-4 right-4 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                    <div className="absolute top-4 right-4 bg-gold text-ink px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
                       GH₵ {Number(service.price || 0).toLocaleString()}
                     </div>
                   </div>
 
                   {/* Service Info */}
                   <div className="p-6">
-                    <h2 className="text-xl font-bold text-charcoal mb-3">
+                    <h2 className="text-xl font-bold text-ink mb-3">
                       {service.title}
                     </h2>
 
                     {service.seller?.full_name && (
-                      <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-100">
+                      <div className="flex items-center gap-2 mb-4 pb-4 border-b border-rule">
                         <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center font-bold text-gold-dark">
                           {formatName(service.seller.full_name).charAt(0)}
                         </div>
                         <div>
-                          <p className="font-semibold text-charcoal text-sm">{formatName(service.seller.full_name)}</p>
-                          <p className="text-xs text-gray-500">Seller</p>
+                          <p className="font-semibold text-ink text-sm">{formatName(service.seller.full_name)}</p>
+                          <p className="text-xs text-ink-muted">Seller</p>
                         </div>
                       </div>
                     )}
 
                     {service.description && (
-                      <p className="text-sm text-gray-600 mb-4 leading-relaxed">
+                      <p className="text-sm text-ink-muted mb-4 leading-relaxed">
                         {service.description}
                       </p>
                     )}
 
                     <div className="space-y-2">
                       {service.service_duration && (
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <div className="flex items-center gap-2 text-sm text-ink">
                           <span className="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center">⏱</span>
                           <span>{service.service_duration}</span>
                         </div>
                       )}
                       {service.service_location && (
-                        <div className="flex items-center gap-2 text-sm text-gray-700">
+                        <div className="flex items-center gap-2 text-sm text-ink">
                           <span className="w-8 h-8 rounded-lg bg-gold/10 flex items-center justify-center">📍</span>
                           <span>{service.service_location}</span>
                         </div>
@@ -287,31 +287,31 @@ export default function BookServicePage() {
             <div className="lg:col-span-3">
               <form
                 onSubmit={handleBooking}
-                className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 border border-gray-100 space-y-6"
+                className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-8 border border-rule space-y-6"
               >
                 {/* Header */}
                 <div>
-                  <h2 className="text-2xl font-bold text-charcoal mb-1">
+                  <h2 className="text-2xl font-bold text-ink mb-1">
                     Booking Details
                   </h2>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-ink-muted">
                     Pick when you&apos;d like the service.
                   </p>
                 </div>
 
                 {/* Date */}
                 <div>
-                  <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
+                  <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">
                     Preferred Date *
                   </label>
                   <div className="relative">
-                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none">
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-muted text-lg pointer-events-none">
                       📅
                     </span>
                     <input
                       type="date"
                       min={today}
-                      className="w-full pl-14 pr-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
+                      className="w-full pl-14 pr-5 py-4 rounded-2xl border-2 border-rule text-ink focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
                       value={bookingDate}
                       onChange={(e) => setBookingDate(e.target.value)}
                       required
@@ -321,16 +321,16 @@ export default function BookServicePage() {
 
                 {/* Time */}
                 <div>
-                  <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
+                  <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">
                     Preferred Time *
                   </label>
                   <div className="relative">
-                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none">
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-muted text-lg pointer-events-none">
                       ⏰
                     </span>
                     <input
                       type="time"
-                      className="w-full pl-14 pr-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
+                      className="w-full pl-14 pr-5 py-4 rounded-2xl border-2 border-rule text-ink focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
                       value={bookingTime}
                       onChange={(e) => setBookingTime(e.target.value)}
                       required
@@ -340,12 +340,12 @@ export default function BookServicePage() {
 
                 {/* Notes */}
                 <div>
-                  <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
-                    Notes <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                  <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">
+                    Notes <span className="text-ink-muted font-normal normal-case">(optional)</span>
                   </label>
                   <textarea
                     placeholder="Any special requests, location details, or questions..."
-                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors resize-none"
+                    className="w-full px-5 py-4 rounded-2xl border-2 border-rule text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors resize-none"
                     rows={3}
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
@@ -359,8 +359,8 @@ export default function BookServicePage() {
                       💬
                     </div>
                     <div>
-                      <p className="font-bold text-charcoal text-sm mb-1">What happens next</p>
-                      <p className="text-xs text-gray-600 leading-relaxed">
+                      <p className="font-bold text-ink text-sm mb-1">What happens next</p>
+                      <p className="text-xs text-ink-muted leading-relaxed">
                         Your booking is saved and you&apos;ll be sent to WhatsApp to confirm with the seller and arrange payment.
                       </p>
                     </div>
@@ -371,7 +371,7 @@ export default function BookServicePage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-charcoal text-white py-5 rounded-full font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-charcoal/25 flex items-center justify-center gap-2 group"
+                  className="w-full bg-ink text-white py-5 rounded-full font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-ink/25 flex items-center justify-center gap-2 group"
                 >
                   {loading ? (
                     <span>Booking...</span>
@@ -384,7 +384,7 @@ export default function BookServicePage() {
                 </button>
 
                 {/* Trust indicators */}
-                <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-gray-500 pt-2">
+                <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-ink-muted pt-2">
                   <div className="flex items-center gap-1.5">
                     <span className="text-gold">✓</span> Free to book
                   </div>

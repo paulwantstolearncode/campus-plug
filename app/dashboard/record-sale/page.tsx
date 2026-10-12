@@ -240,7 +240,7 @@ export default function RecordSalePage() {
   }
 
   return (
-    <main className="min-h-screen bg-charcoal">
+    <main className="min-h-screen bg-ink">
 <NavBar variant="dashboard" back={{ href: '/dashboard', label: 'Back to dashboard' }} />
 
       <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
@@ -266,24 +266,24 @@ export default function RecordSalePage() {
           )}
 
           {!error && listings.length === 0 && (
-            <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
               <div className="text-5xl mb-4">📦</div>
-              <p className="text-xl font-bold text-charcoal">No product listings yet</p>
-              <p className="text-gray-500 mt-2 mb-6">You need at least one product listing to record a sale.</p>
-              <Link href="/new" className="inline-flex items-center gap-2 bg-charcoal text-white px-6 py-3 rounded-full font-semibold hover:bg-black transition-colors">＋ Post a product listing</Link>
+              <p className="text-xl font-bold text-ink">No product listings yet</p>
+              <p className="text-ink-muted mt-2 mb-6">You need at least one product listing to record a sale.</p>
+              <Link href="/new" className="inline-flex items-center gap-2 bg-ink text-white px-6 py-3 rounded-full font-semibold hover:bg-black transition-colors">＋ Post a product listing</Link>
             </div>
           )}
 
           {listings.length > 0 && (
-            <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 border border-gray-100 space-y-6">
+            <form onSubmit={handleSubmit} className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-8 border border-rule space-y-6">
               {/* Listing picker */}
               <div>
-                <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">Which listing was the sale from? *</label>
+                <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">Which listing was the sale from? *</label>
                 <select
                   value={selectedListingId}
                   onChange={(e) => handleListingChange(e.target.value)}
                   required
-                  className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal bg-white focus:outline-none focus:border-gold transition-colors text-lg"
+                  className="w-full px-5 py-4 rounded-2xl border-2 border-rule text-ink bg-surface focus:outline-none focus:border-gold transition-colors text-lg"
                 >
                   <option value="" disabled>Select a product listing…</option>
                   {listings.map((l) => (
@@ -294,33 +294,33 @@ export default function RecordSalePage() {
 
               {selectedListing && isBundle && (
                 <div>
-                  <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">Select items sold *</label>
+                  <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">Select items sold *</label>
                   <div className="space-y-3">
                     {lines.map((line, idx) => (
-                      <div key={idx} className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                      <div key={idx} className="rounded-2xl border border-rule bg-paper-deep p-4">
                         <div className="flex items-start justify-between gap-3">
                           <label className="flex items-start gap-2.5 cursor-pointer">
                             <input
                               type="checkbox"
                               checked={line.selected}
                               onChange={(e) => updateLine(idx, { selected: e.target.checked })}
-                              className="mt-1 w-4 h-4 accent-charcoal"
+                              className="mt-1 w-4 h-4 accent-ink"
                             />
                             <span>
-                              <span className="font-semibold text-charcoal text-sm block">{line.item_name}</span>
-                              <span className="text-xs text-gray-500">{formatPrice(line.item_price)}</span>
+                              <span className="font-semibold text-ink text-sm block">{line.item_name}</span>
+                              <span className="text-xs text-ink-muted">{formatPrice(line.item_price)}</span>
                             </span>
                           </label>
                           {line.selected && (
                             <div className="flex items-center gap-2">
-                              <label className="text-xs text-gray-600 font-semibold">Qty</label>
+                              <label className="text-xs text-ink-muted font-semibold">Qty</label>
                               <input
                                 type="number"
                                 min="1"
                                 step="1"
                                 value={line.quantity}
                                 onChange={(e) => updateLine(idx, { quantity: Number(e.target.value) })}
-                                className="w-16 px-2 py-1.5 rounded-xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-sm font-semibold"
+                                className="w-16 px-2 py-1.5 rounded-xl border-2 border-rule text-ink focus:outline-none focus:border-gold transition-colors text-sm font-semibold"
                               />
                             </div>
                           )}
@@ -333,14 +333,14 @@ export default function RecordSalePage() {
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">Select every item included in this sale.</p>
+                  <p className="text-xs text-ink-muted mt-2">Select every item included in this sale.</p>
                 </div>
               )}
 
               {selectedListing && !isBundle && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">Quantity sold *</label>
+                    <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">Quantity sold *</label>
                     <input
                       type="number"
                       min="1"
@@ -348,11 +348,11 @@ export default function RecordSalePage() {
                       value={simpleQty}
                       onChange={(e) => setSimpleQty(e.target.value)}
                       required
-                      className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
+                      className="w-full px-5 py-4 rounded-2xl border-2 border-rule text-ink focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">Amount per unit (GH₵) *</label>
+                    <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">Amount per unit (GH₵) *</label>
                     <input
                       type="number"
                       min="0"
@@ -360,7 +360,7 @@ export default function RecordSalePage() {
                       value={simpleUnitPrice}
                       onChange={(e) => setSimpleUnitPrice(e.target.value)}
                       required
-                      className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
+                      className="w-full px-5 py-4 rounded-2xl border-2 border-rule text-ink focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
                     />
                   </div>
                 </div>
@@ -369,45 +369,45 @@ export default function RecordSalePage() {
               {/* Total */}
               {selectedListing && (
                 <div className="p-5 rounded-2xl bg-gradient-to-br from-gold/15 to-gold/5 border border-gold/20 flex items-center justify-between">
-                  <span className="text-sm font-bold text-charcoal uppercase tracking-widest">Total</span>
+                  <span className="text-sm font-bold text-ink uppercase tracking-widest">Total</span>
                   <span className="text-2xl font-bold text-gold-dark">{formatPrice(total)}</span>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
-                  Buyer name <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">
+                  Buyer name <span className="text-ink-muted font-normal normal-case">(optional)</span>
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. Ama"
-                  className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors"
+                  className="w-full px-5 py-4 rounded-2xl border-2 border-rule text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors"
                   value={buyerName}
                   onChange={(e) => setBuyerName(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
-                  Buyer WhatsApp <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">
+                  Buyer WhatsApp <span className="text-ink-muted font-normal normal-case">(optional)</span>
                 </label>
                 <input
                   type="text"
                   placeholder="e.g. 233201234567"
-                  className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors"
+                  className="w-full px-5 py-4 rounded-2xl border-2 border-rule text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors"
                   value={buyerWhatsapp}
                   onChange={(e) => setBuyerWhatsapp(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
-                  Notes <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">
+                  Notes <span className="text-ink-muted font-normal normal-case">(optional)</span>
                 </label>
                 <textarea
                   rows={3}
                   placeholder="Any details worth remembering..."
-                  className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors resize-none"
+                  className="w-full px-5 py-4 rounded-2xl border-2 border-rule text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors resize-none"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
@@ -417,19 +417,19 @@ export default function RecordSalePage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="flex-1 bg-charcoal text-white py-4 rounded-full font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-charcoal/25"
+                  className="flex-1 bg-ink text-white py-4 rounded-full font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-ink/25"
                 >
                   {saving ? 'Recording...' : '📝 Record Sale'}
                 </button>
                 <Link
                   href="/dashboard"
-                  className="flex-1 bg-white text-charcoal py-4 rounded-2xl font-bold text-lg border border-gray-200 hover:border-charcoal transition-colors text-center"
+                  className="flex-1 bg-surface text-ink py-4 rounded-2xl font-bold text-lg border border-rule hover:border-ink transition-colors text-center"
                 >
                   Cancel
                 </Link>
               </div>
 
-              <p className="text-xs text-gray-500 text-center">
+              <p className="text-xs text-ink-muted text-center">
                 Sales are private to you and Campus Plug admins. You can edit a sale within 24 hours of recording it.
               </p>
             </form>

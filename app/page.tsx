@@ -123,7 +123,7 @@ export default function Home() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-charcoal">
+      <main className="min-h-screen bg-ink">
         <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
             <div className="h-4 bg-white/10 rounded-full w-32 mb-4 animate-pulse" />
@@ -169,7 +169,7 @@ export default function Home() {
     })
 
   return (
-    <main className="min-h-screen bg-charcoal">
+    <main className="min-h-screen bg-ink">
       <NavBar />
 
       <section className="relative pt-24 pb-8 md:pt-40 md:pb-32 overflow-hidden animated-gradient">
@@ -258,7 +258,7 @@ export default function Home() {
                   <p className="text-sm font-semibold text-gold tracking-widest uppercase mb-1">Marketplace</p>
                   <p className="text-2xl md:text-3xl font-bold text-charcoal">
                     {filteredListings.length} {searchQuery ? 'result' : (filter === 'all' ? 'listing' : (filter === 'mine' ? 'my listing' : filter))}{filteredListings.length !== 1 ? 's' : ''}
-                    {searchQuery && <span className="text-gray-500 text-lg font-normal ml-2">for &quot;{searchQuery}&quot;</span>}
+                    {searchQuery && <span className="text-ink-muted text-lg font-normal ml-2">for &quot;{searchQuery}&quot;</span>}
                   </p>
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
@@ -271,7 +271,7 @@ export default function Home() {
                     <button
                       key={chip.key}
                       onClick={() => { setFilter(chip.key); setCategoryFilter('') }}
-                      className={"px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all " + (filter === chip.key ? "bg-charcoal text-white shadow-lg scale-105" : "bg-white text-charcoal hover:bg-charcoal hover:text-white border border-gray-200")}
+                      className={"px-5 py-2.5 rounded-full text-sm font-semibold whitespace-nowrap transition-all " + (filter === chip.key ? "bg-ink text-white shadow-lg scale-105" : "bg-white text-charcoal hover:bg-ink hover:text-white border border-rule")}
                     >
                       <span className="mr-1.5">{chip.icon}</span>
                       {chip.label}
@@ -283,11 +283,11 @@ export default function Home() {
               {/* CATEGORY FILTER — combines with the type chips, search, and
                   My Listings; the option list follows the active type tab. */}
               <div className="flex flex-wrap items-center gap-3 mb-8">
-                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Filter by category</span>
+                <span className="text-xs font-bold text-ink-muted uppercase tracking-widest">Filter by category</span>
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="px-4 py-2.5 rounded-full bg-white border-2 border-gray-200 text-sm font-semibold text-charcoal focus:outline-none focus:border-gold transition-colors"
+                  className="px-4 py-2.5 rounded-full bg-surface border-2 border-rule text-sm font-semibold text-charcoal focus:outline-none focus:border-gold transition-colors"
                 >
                   <option value="">📋 All Categories</option>
                   {filter === 'product' ? (
@@ -316,7 +316,7 @@ export default function Home() {
                 {categoryFilter && (
                   <button
                     onClick={() => setCategoryFilter('')}
-                    className="text-xs font-semibold text-gray-500 hover:text-charcoal underline underline-offset-2 transition-colors"
+                    className="text-xs font-semibold text-ink-muted hover:text-charcoal underline underline-offset-2 transition-colors"
                   >
                     ✕ Clear category
                   </button>
@@ -328,11 +328,11 @@ export default function Home() {
                   <div className="text-center py-20">
                     <div className="text-6xl mb-4 opacity-50">🏠</div>
                     <p className="text-xl font-semibold text-charcoal mb-2">You haven&apos;t posted any listings yet</p>
-                    <p className="text-gray-500 mb-6">
+                    <p className="text-ink-muted mb-6">
                       {searchQuery ? 'Try different keywords or clear filters.' : 'Once approved, your listings appear here.'}
                     </p>
                     {isSeller ? (
-                      <Link href="/new" className="inline-flex items-center gap-2 bg-charcoal text-white px-6 py-3 rounded-full font-semibold hover:bg-black transition-all hover:scale-105">
+                      <Link href="/new" className="inline-flex items-center gap-2 bg-ink text-white px-6 py-3 rounded-full font-semibold hover:bg-black transition-all hover:scale-105">
                         + Post your first listing
                       </Link>
                     ) : (
@@ -345,7 +345,7 @@ export default function Home() {
                   <div className="text-center py-20">
                     <div className="text-6xl mb-4 opacity-50">🔍</div>
                     <p className="text-xl font-semibold text-charcoal mb-2">No results found</p>
-                    <p className="text-gray-500">Try different keywords or clear filters</p>
+                    <p className="text-ink-muted">Try different keywords or clear filters</p>
                   </div>
                 )
               ) : (

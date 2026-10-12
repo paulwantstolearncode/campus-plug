@@ -159,7 +159,7 @@ export default function BecomeSellerPage() {
   }
 
   return (
-    <main className="min-h-screen bg-charcoal">
+    <main className="min-h-screen bg-ink">
 <NavBar back={{ href: '/', label: 'Back' }} />
 
       <section className="relative pt-32 pb-16 md:pt-40 md:pb-20 overflow-hidden animated-gradient">
@@ -189,7 +189,7 @@ export default function BecomeSellerPage() {
 
           {/* How it works — 3-step visual flow */}
           {status === 'form' && (
-            <div className="mb-6 bg-white rounded-3xl shadow-xl border border-gray-100 p-6 md:p-8">
+            <div className="mb-6 bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-rule p-6 md:p-8">
               <p className="eyebrow text-gold-dark mb-5">How it works</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
@@ -209,7 +209,7 @@ export default function BecomeSellerPage() {
                       </div>
                       <div className="flex-1">
                         <p className="font-bold text-charcoal text-sm">{step.title}</p>
-                        <p className="text-xs text-gray-500 mt-0.5 leading-relaxed">{step.sub}</p>
+                        <p className="text-xs text-ink-muted mt-0.5 leading-relaxed">{step.sub}</p>
                       </div>
                     </div>
                     {i < 2 && (
@@ -221,7 +221,7 @@ export default function BecomeSellerPage() {
             </div>
           )}
 
-          <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-10 border border-gray-100">
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-10 border border-rule">
 
             {status === 'pending' ? (
               <div className="text-center space-y-6">
@@ -231,7 +231,7 @@ export default function BecomeSellerPage() {
 
                 <div>
                   <h2 className="text-2xl md:text-3xl font-bold text-charcoal mb-2">Application received</h2>
-                  <p className="text-gray-500">We&apos;ll WhatsApp you within 24 hours to verify and welcome you aboard.</p>
+                  <p className="text-ink-muted">We&apos;ll WhatsApp you within 24 hours to verify and welcome you aboard.</p>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-gradient-to-br from-gold/10 to-transparent border border-gold/20 text-left">
@@ -239,7 +239,7 @@ export default function BecomeSellerPage() {
                     <span className="text-xl">💬</span>
                     <div>
                       <p className="text-sm font-semibold text-charcoal">What happens next</p>
-                      <ul className="text-xs text-gray-600 mt-2 space-y-1">
+                      <ul className="text-xs text-ink-muted mt-2 space-y-1">
                         <li>• Our team will WhatsApp you at <strong>+{whatsapp}</strong></li>
                         <li>• We&apos;ll verify you&apos;re a real person</li>
                         <li>• Once approved, you can post listings immediately</li>
@@ -254,7 +254,7 @@ export default function BecomeSellerPage() {
                     <span className="text-xl">✨</span>
                     <div>
                       <p className="text-sm font-semibold text-charcoal">Why we do this</p>
-                      <p className="text-xs text-gray-600 mt-1">
+                      <p className="text-xs text-ink-muted mt-1">
                         Every seller and listing is personally reviewed. This keeps Campus Plug free from scams and ensures buyers can trust what they see.
                       </p>
                     </div>
@@ -263,7 +263,7 @@ export default function BecomeSellerPage() {
 
                 <Link
                   href="/"
-                  className="inline-flex items-center gap-2 bg-charcoal text-white px-8 py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-105 shadow-xl group"
+                  className="inline-flex items-center gap-2 bg-ink text-white px-8 py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-105 shadow-xl group"
                 >
                   Browse Campus Plug
                   <span className="group-hover:translate-x-1 transition-transform">→</span>
@@ -276,7 +276,7 @@ export default function BecomeSellerPage() {
                     💬
                   </div>
                   <h2 className="text-2xl md:text-3xl font-bold text-charcoal mb-2">Your WhatsApp Number</h2>
-                  <p className="text-gray-500">We&apos;ll reach out here to welcome you and verify your account.</p>
+                  <p className="text-ink-muted">We&apos;ll reach out here to welcome you and verify your account.</p>
                 </div>
 
                 <div>
@@ -284,17 +284,17 @@ export default function BecomeSellerPage() {
                     WhatsApp Number for Buyers
                   </label>
                   <div className="relative">
-                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 font-semibold text-lg">🇬🇭</span>
+                    <span className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-muted font-semibold text-lg">🇬🇭</span>
                     <input
                       type="tel"
                       placeholder="0244 123 456"
-                      className="w-full pl-16 pr-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
+                      className="w-full pl-16 pr-5 py-4 rounded-2xl border-2 border-rule text-charcoal placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
                       value={whatsapp}
                       onChange={(e) => setWhatsapp(e.target.value)}
                       required
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                  <p className="text-xs text-ink-muted mt-2 flex items-center gap-1">
                     <span>ℹ️</span>
                     Buyers will message this number on WhatsApp to book your services.
                   </p>
@@ -305,7 +305,7 @@ export default function BecomeSellerPage() {
                     <span className="text-xl">🤝</span>
                     <div>
                       <p className="text-sm font-semibold text-charcoal">Personally verified</p>
-                      <p className="text-xs text-gray-600 mt-1">
+                      <p className="text-xs text-ink-muted mt-1">
                         We hand-verify every seller within 24 hours. This keeps Campus Plug premium and trusted.
                       </p>
                     </div>

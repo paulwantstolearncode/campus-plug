@@ -374,7 +374,7 @@ function LoginForm() {
               <h2 className="text-3xl md:text-4xl font-bold text-charcoal mb-2">
                 {PHONE_AUTH_ENABLED && authMethod === 'phone' ? phoneHeading() : isSignUp ? 'Create account' : 'Welcome back'}
               </h2>
-              <p className="text-gray-500">
+              <p className="text-ink-muted">
                 {PHONE_AUTH_ENABLED && authMethod === 'phone'
                   ? phoneSubheading()
                   : isSignUp ? 'Sign up with Google to get started' : 'Log in to continue to Campus Plug'}
@@ -382,7 +382,7 @@ function LoginForm() {
             </div>
 
             <button type="button" onClick={handleGoogleSignIn}
-              className="w-full py-4 rounded-2xl border-2 border-gray-200 text-charcoal font-semibold hover:border-charcoal hover:bg-gray-50 transition-all flex items-center justify-center gap-3 mb-6">
+              className="w-full py-4 rounded-2xl border-2 border-rule text-charcoal font-semibold hover:border-charcoal hover:bg-paper-deep transition-all flex items-center justify-center gap-3 mb-6">
               <svg width="20" height="20" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -394,19 +394,19 @@ function LoginForm() {
 
                 <div className={'mb-4 ' + (PHONE_AUTH_ENABLED ? 'flex gap-2' : '')}>
                   <button type="button" onClick={() => setAuthMethod('google-email')}
-                    className={(PHONE_AUTH_ENABLED ? 'flex-1' : 'w-full') + ' py-2.5 rounded-xl text-sm font-semibold transition-all ' + (authMethod === 'google-email' ? 'bg-charcoal text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}>
+                    className={(PHONE_AUTH_ENABLED ? 'flex-1' : 'w-full') + ' py-2.5 rounded-xl text-sm font-semibold transition-all ' + (authMethod === 'google-email' ? 'bg-ink text-white shadow-md' : 'bg-paper-deep text-ink-muted hover:bg-rule')}>
                     <svg className="inline-block mr-1.5 -mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Email
                   </button>
                   {PHONE_AUTH_ENABLED && (
                     <button type="button" onClick={switchToPhone}
-                      className={'flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ' + (authMethod === 'phone' ? 'bg-charcoal text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}>
+                      className={'flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ' + (authMethod === 'phone' ? 'bg-ink text-white shadow-md' : 'bg-paper-deep text-ink-muted hover:bg-rule')}>
                       <svg className="inline-block mr-1.5 -mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Phone
                     </button>
                   )}
                 </div>
 
                 {authMethod === 'google-email' && isSignUp && (
-                  <div className="text-center py-6 text-gray-500 text-sm">
+                  <div className="text-center py-6 text-ink-muted text-sm">
                     For email sign-up, use <button type="button" onClick={handleGoogleSignIn} className="text-gold font-semibold hover:text-gold-dark">Google</button>{PHONE_AUTH_ENABLED ? <> or switch to <button type="button" onClick={switchToPhone} className="text-gold font-semibold hover:text-gold-dark">Phone</button></> : null}.
                   </div>
                 )}
@@ -416,7 +416,7 @@ function LoginForm() {
                     <div>
                       <label className="block text-sm font-semibold text-charcoal mb-2">Email</label>
                       <input ref={emailRef} type="email" placeholder="you@example.com"
-                        className={"w-full px-4 py-3.5 rounded-2xl border-2 text-charcoal placeholder:text-gray-400 focus:outline-none transition-colors " + (showEmailError ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-gold")}
+                        className={"w-full px-4 py-3.5 rounded-2xl border-2 text-charcoal placeholder:text-ink-muted focus:outline-none transition-colors " + (showEmailError ? "border-red-500 focus:border-red-500" : "border-rule focus:border-gold")}
                         value={email} onChange={(e) => { submitAttempted.current = false; setEmail(e.target.value) }}
                         onBlur={handleEmailBlur} onFocus={handleEmailFocus} required />
                       {showEmailError && emailError && <p className="text-xs text-red-500 mt-2 flex items-center gap-1"><span>⚠️</span> {emailError}</p>}
@@ -424,13 +424,13 @@ function LoginForm() {
                     <div>
                       <label className="block text-sm font-semibold text-charcoal mb-2">Password</label>
                       <input ref={passwordRef} type="password" placeholder="Your password"
-                        className={"w-full px-4 py-3.5 rounded-2xl border-2 text-charcoal placeholder:text-gray-400 focus:outline-none transition-colors " + (showPasswordError ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-gold")}
+                        className={"w-full px-4 py-3.5 rounded-2xl border-2 text-charcoal placeholder:text-ink-muted focus:outline-none transition-colors " + (showPasswordError ? "border-red-500 focus:border-red-500" : "border-rule focus:border-gold")}
                         value={password} onChange={(e) => { submitAttempted.current = false; setPassword(e.target.value) }}
                         onBlur={handlePasswordBlur} onFocus={handlePasswordFocus} required />
                       {showPasswordError && passwordError && <p className="text-xs text-red-500 mt-2 flex items-center gap-1"><span>⚠️</span> {passwordError}</p>}
                     </div>
                     <button type="submit" disabled={loading}
-                      className="w-full bg-charcoal text-white py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-charcoal/20 flex items-center justify-center gap-2 group">
+                      className="w-full bg-ink text-white py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-charcoal/20 flex items-center justify-center gap-2 group">
                       {loading ? <span>Logging in...</span> : <><span>Log In</span><span className="group-hover:translate-x-1 transition-transform">→</span></>}
                     </button>
                   </form>
@@ -447,9 +447,9 @@ function LoginForm() {
                       <div>
                         <label className="block text-sm font-semibold text-charcoal mb-2">Your Name</label>
                         <input type="text" placeholder="e.g., Kwame Adjei"
-                          className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-200 focus:border-gold text-charcoal placeholder:text-gray-400 focus:outline-none transition-colors"
+                          className="w-full px-4 py-3.5 rounded-2xl border-2 border-rule focus:border-gold text-charcoal placeholder:text-ink-muted focus:outline-none transition-colors"
                           value={phoneName} onChange={(e) => setPhoneName(e.target.value)} />
-                        <p className="text-xs text-gray-400 mt-2">This will be your display name on Campus Plug.</p>
+                        <p className="text-xs text-ink-muted mt-2">This will be your display name on Campus Plug.</p>
                       </div>
                     )}
 
@@ -457,9 +457,9 @@ function LoginForm() {
                     <div>
                       <label className="block text-sm font-semibold text-charcoal mb-2">Phone number</label>
                       <div className="flex gap-2">
-                        <span className="flex items-center px-3 rounded-2xl border-2 border-gray-200 bg-gray-50 text-sm font-semibold text-charcoal shrink-0">🇬🇭 +233</span>
+                        <span className="flex items-center px-3 rounded-2xl border-2 border-rule bg-paper-deep text-sm font-semibold text-charcoal shrink-0">🇬🇭 +233</span>
                         <input ref={phoneRef} type="tel" placeholder="24 123 4567"
-                          className={"flex-1 px-4 py-3.5 rounded-2xl border-2 text-charcoal placeholder:text-gray-400 focus:outline-none transition-colors " + (showPhoneError ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-gold")}
+                          className={"flex-1 px-4 py-3.5 rounded-2xl border-2 text-charcoal placeholder:text-ink-muted focus:outline-none transition-colors " + (showPhoneError ? "border-red-500 focus:border-red-500" : "border-rule focus:border-gold")}
                           value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)}
                           onBlur={handlePhoneBlur} onFocus={handlePhoneFocus} />
                       </div>
@@ -470,7 +470,7 @@ function LoginForm() {
                       <div>
                         <label className="block text-sm font-semibold text-charcoal mb-2">Password</label>
                         <input ref={phonePasswordRef} type="password" placeholder="At least 6 characters"
-                          className={"w-full px-4 py-3.5 rounded-2xl border-2 text-charcoal placeholder:text-gray-400 focus:outline-none transition-colors " + (showPhoneError && phonePassword.length < 6 ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-gold")}
+                          className={"w-full px-4 py-3.5 rounded-2xl border-2 text-charcoal placeholder:text-ink-muted focus:outline-none transition-colors " + (showPhoneError && phonePassword.length < 6 ? "border-red-500 focus:border-red-500" : "border-rule focus:border-gold")}
                           value={phonePassword} onChange={(e) => setPhonePassword(e.target.value)} />
                       </div>
                     )}
@@ -482,7 +482,7 @@ function LoginForm() {
 
                     {/* Submit button */}
                     <button type="submit" disabled={loading}
-                      className="w-full bg-charcoal text-white py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-charcoal/20 flex items-center justify-center gap-2 group">
+                      className="w-full bg-ink text-white py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-charcoal/20 flex items-center justify-center gap-2 group">
                       {loading ? (
                         <span>{useOtpFallback ? 'Sending code...' : isSignUp ? 'Creating account...' : 'Logging in...'}</span>
                       ) : (
@@ -495,7 +495,7 @@ function LoginForm() {
                       <div className="text-center">
                         {useOtpFallback ? (
                           <button type="button" onClick={() => { setUseOtpFallback(false); setPhoneError(null) }}
-                            className="text-sm text-gray-500 hover:text-charcoal transition-colors">
+                            className="text-sm text-ink-muted hover:text-charcoal transition-colors">
                             ← Back to password login
                           </button>
                         ) : (
@@ -521,19 +521,19 @@ function LoginForm() {
                     <div>
                       <label className="block text-sm font-semibold text-charcoal mb-2">6-digit code</label>
                       <input ref={otpRef} type="text" inputMode="numeric" maxLength={6} placeholder="000000"
-                        className={"w-full px-4 py-3.5 rounded-2xl border-2 text-charcoal placeholder:text-gray-400 focus:outline-none transition-colors text-center text-2xl tracking-[0.3em] font-mono " + (showOtpError ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-gold")}
+                        className={"w-full px-4 py-3.5 rounded-2xl border-2 text-charcoal placeholder:text-ink-muted focus:outline-none transition-colors text-center text-2xl tracking-[0.3em] font-mono " + (showOtpError ? "border-red-500 focus:border-red-500" : "border-rule focus:border-gold")}
                         value={otpCode}
                         onChange={(e) => { const v = e.target.value.replace(/[^0-9]/g, '').slice(0, 6); setOtpCode(v); setOtpError(null) }}
                         onBlur={handleOtpBlur} onFocus={handleOtpFocus} />
                       {showOtpError && otpError && <p className="text-xs text-red-500 mt-2 flex items-center gap-1"><span>⚠️</span> {otpError}</p>}
                     </div>
                     <button type="submit" disabled={loading || otpCode.replace(/[^0-9]/g, '').length !== 6}
-                      className="w-full bg-charcoal text-white py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-charcoal/20 flex items-center justify-center gap-2 group">
+                      className="w-full bg-ink text-white py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-charcoal/20 flex items-center justify-center gap-2 group">
                       {loading ? <span>Verifying...</span> : <><span>Verify &amp; Continue</span><span className="group-hover:translate-x-1 transition-transform">→</span></>}
                     </button>
                     <div className="text-center">
                       {countdown > 0 ? (
-                        <p className="text-sm text-gray-500">Resend code in <span className="font-semibold text-charcoal">{countdown}s</span></p>
+                        <p className="text-sm text-ink-muted">Resend code in <span className="font-semibold text-charcoal">{countdown}s</span></p>
                       ) : (
                         <button type="button" onClick={handleResendOtp} disabled={loading}
                           className="text-sm text-gold hover:text-gold-dark font-semibold transition-colors">Resend code</button>
@@ -541,7 +541,7 @@ function LoginForm() {
                     </div>
                     <div className="text-center">
                       <button type="button" onClick={() => { setOtpSent(false); setOtpCode(''); setOtpError(null); setOtpTouched(false) }}
-                        className="text-sm text-gray-500 hover:text-charcoal transition-colors">← Change phone number</button>
+                        className="text-sm text-ink-muted hover:text-charcoal transition-colors">← Change phone number</button>
                     </div>
                   </form>
                 )}
@@ -552,20 +552,20 @@ function LoginForm() {
                   <svg className="shrink-0 text-gold" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2z"/></svg>
                   <div>
                     <p className="text-sm font-semibold text-charcoal">Quick &amp; secure</p>
-                    <p className="text-xs text-gray-600 mt-1">Sign up in 2 clicks with your Google account. No passwords to remember.</p>
+                    <p className="text-xs text-ink-muted mt-1">Sign up in 2 clicks with your Google account. No passwords to remember.</p>
                   </div>
                 </div>
               </div>
             )}
 
             <div className="mt-6 text-center">
-              <button type="button" onClick={toggleMode} className="text-sm text-gray-600 hover:text-charcoal transition-colors">
+              <button type="button" onClick={toggleMode} className="text-sm text-ink-muted hover:text-charcoal transition-colors">
                 {isSignUp ? 'Already have an account? Log in' : "New to Campus Plug? Sign up"}
               </button>
             </div>
 
             <div className="mt-8 text-center">
-              <Link href="/" className="text-sm text-gray-500 hover:text-charcoal transition-colors inline-flex items-center gap-1 group">
+              <Link href="/" className="text-sm text-ink-muted hover:text-charcoal transition-colors inline-flex items-center gap-1 group">
                 <span className="group-hover:-translate-x-1 transition-transform">←</span> Back to home
               </Link>
             </div>

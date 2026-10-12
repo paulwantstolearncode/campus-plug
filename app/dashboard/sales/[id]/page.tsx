@@ -120,10 +120,10 @@ export default function SaleDetailPage() {
   if (error || !sale) {
     return (
       <div className="flex items-center justify-center min-h-screen animated-gradient p-6">
-        <div className="bg-white rounded-3xl p-8 max-w-md text-center shadow-xl">
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 max-w-md text-center shadow-xl border border-rule">
           <div className="text-4xl mb-3">⚠️</div>
           <p className="text-red-600 font-semibold">{error || 'Sale not found'}</p>
-          <Link href="/dashboard" className="inline-block mt-5 text-sm text-white bg-charcoal rounded-full px-5 py-2.5 hover:bg-black transition-colors">← Back to dashboard</Link>
+          <Link href="/dashboard" className="inline-block mt-5 text-sm text-white bg-ink rounded-full px-5 py-2.5 hover:bg-black transition-colors">← Back to dashboard</Link>
         </div>
       </div>
     )
@@ -236,7 +236,7 @@ export default function SaleDetailPage() {
   }
 
   return (
-    <main className="min-h-screen bg-charcoal">
+    <main className="min-h-screen bg-ink">
 <NavBar variant="dashboard" back={{ href: '/dashboard', label: 'Back to dashboard' }} />
 
       <section className="relative pt-32 pb-12 md:pt-36 md:pb-14 overflow-hidden animated-gradient">
@@ -271,42 +271,42 @@ export default function SaleDetailPage() {
             </div>
           )}
 
-          <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-gray-100 space-y-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-xl border border-rule space-y-6">
             {/* Line items */}
             <div>
-              <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-3">Items Sold</p>
+              <p className="text-xs font-bold text-ink uppercase tracking-widest mb-3">Items Sold</p>
               {lines.length === 0 ? (
-                <p className="text-sm text-gray-500">No line items recorded.</p>
+                <p className="text-sm text-ink-muted">No line items recorded.</p>
               ) : (
                 <div className="space-y-3">
                   {lines.map((line, idx) => (
-                    <div key={line.id} className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                    <div key={line.id} className="rounded-2xl border border-rule bg-paper-deep p-4">
                       {editable ? (
                         <>
                           <input
                             type="text"
                             value={line.item_name}
                             onChange={(e) => updateLine(idx, { item_name: e.target.value })}
-                            className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-sm font-semibold"
+                            className="w-full px-3 py-2 rounded-xl border-2 border-rule text-ink focus:outline-none focus:border-gold transition-colors text-sm font-semibold"
                           />
                           <div className="flex items-center gap-2 mt-2">
-                            <span className="text-xs text-gray-600 font-semibold">GH₵</span>
+                            <span className="text-xs text-ink-muted font-semibold">GH₵</span>
                             <input
                               type="number"
                               min="0"
                               step="0.01"
                               value={line.item_price}
                               onChange={(e) => updateLine(idx, { item_price: Number(e.target.value) })}
-                              className="w-28 px-3 py-1.5 rounded-xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-sm font-semibold"
+                              className="w-28 px-3 py-1.5 rounded-xl border-2 border-rule text-ink focus:outline-none focus:border-gold transition-colors text-sm font-semibold"
                             />
-                            <span className="text-xs text-gray-600 font-semibold">× Qty</span>
+                            <span className="text-xs text-ink-muted font-semibold">× Qty</span>
                             <input
                               type="number"
                               min="1"
                               step="1"
                               value={line.quantity}
                               onChange={(e) => updateLine(idx, { quantity: Number(e.target.value) })}
-                              className="w-16 px-3 py-1.5 rounded-xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-sm font-semibold"
+                              className="w-16 px-3 py-1.5 rounded-xl border-2 border-rule text-ink focus:outline-none focus:border-gold transition-colors text-sm font-semibold"
                             />
                             <span className="ml-auto text-sm font-bold text-gold-dark">
                               {formatPrice((Number(line.item_price) || 0) * (Number(line.quantity) || 0))}
@@ -316,8 +316,8 @@ export default function SaleDetailPage() {
                       ) : (
                         <div className="flex items-center justify-between gap-3">
                           <div>
-                            <p className="font-semibold text-charcoal text-sm">{line.item_name}</p>
-                            <p className="text-xs text-gray-500 mt-0.5">
+                            <p className="font-semibold text-ink text-sm">{line.item_name}</p>
+                            <p className="text-xs text-ink-muted mt-0.5">
                               {formatPrice(line.item_price)} × {line.quantity}
                             </p>
                           </div>
@@ -329,8 +329,8 @@ export default function SaleDetailPage() {
                 </div>
               )}
 
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                <span className="text-sm font-bold text-charcoal uppercase tracking-widest">Total</span>
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-rule">
+                <span className="text-sm font-bold text-ink uppercase tracking-widest">Total</span>
                 <span className="text-2xl font-bold text-gold-dark">{formatPrice(editable ? editedTotal : sale.total_amount)}</span>
               </div>
             </div>
@@ -338,44 +338,44 @@ export default function SaleDetailPage() {
             {/* Buyer + notes */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold text-charcoal mb-2 uppercase tracking-widest">Buyer name</label>
+                <label className="block text-sm font-bold text-ink mb-2 uppercase tracking-widest">Buyer name</label>
                 {editable ? (
                   <input
                     type="text"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-rule text-ink focus:outline-none focus:border-gold transition-colors"
                     value={buyerName}
                     onChange={(e) => setBuyerName(e.target.value)}
                   />
                 ) : (
-                  <p className="text-sm text-gray-700">{buyerName || '—'}</p>
+                  <p className="text-sm text-ink">{buyerName || '—'}</p>
                 )}
               </div>
               <div>
-                <label className="block text-sm font-bold text-charcoal mb-2 uppercase tracking-widest">Buyer WhatsApp</label>
+                <label className="block text-sm font-bold text-ink mb-2 uppercase tracking-widest">Buyer WhatsApp</label>
                 {editable ? (
                   <input
                     type="text"
-                    className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border-2 border-rule text-ink focus:outline-none focus:border-gold transition-colors"
                     value={buyerWhatsapp}
                     onChange={(e) => setBuyerWhatsapp(e.target.value)}
                   />
                 ) : (
-                  <p className="text-sm text-gray-700 font-mono">{buyerWhatsapp || '—'}</p>
+                  <p className="text-sm text-ink font-mono">{buyerWhatsapp || '—'}</p>
                 )}
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-charcoal mb-2 uppercase tracking-widest">Notes</label>
+              <label className="block text-sm font-bold text-ink mb-2 uppercase tracking-widest">Notes</label>
               {editable ? (
                 <textarea
                   rows={3}
-                  className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors resize-none"
+                  className="w-full px-4 py-3 rounded-xl border-2 border-rule text-ink focus:outline-none focus:border-gold transition-colors resize-none"
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                 />
               ) : (
-                <p className="text-sm text-gray-700 whitespace-pre-line">{notes || '—'}</p>
+                <p className="text-sm text-ink whitespace-pre-line">{notes || '—'}</p>
               )}
             </div>
 
@@ -383,15 +383,15 @@ export default function SaleDetailPage() {
               <button
                 onClick={saveEdits}
                 disabled={saving}
-                className="w-full bg-charcoal text-white py-4 rounded-full font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-charcoal/25"
+                className="w-full bg-ink text-white py-4 rounded-full font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-ink/25"
               >
                 {saving ? 'Saving...' : '💾 Save Changes'}
               </button>
             )}
 
             {/* Status controls — always available */}
-            <div className="pt-2 border-t border-gray-100">
-              <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-3">Sale Status</p>
+            <div className="pt-2 border-t border-rule">
+              <p className="text-xs font-bold text-ink uppercase tracking-widest mb-3">Sale Status</p>
               <div className="flex flex-wrap gap-2">
                 {statusOptions.map((opt) => (
                   <button
@@ -403,7 +403,7 @@ export default function SaleDetailPage() {
                   </button>
                 ))}
               </div>
-              <p className="text-xs text-gray-400 mt-3">
+              <p className="text-xs text-ink-muted mt-3">
                 Status changes are always allowed — only the sale details (items, amount, notes) are locked after 24 hours.
               </p>
             </div>

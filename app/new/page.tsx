@@ -428,7 +428,7 @@ function NewListingContent() {
   }
 
   return (
-    <main className="min-h-screen bg-charcoal">
+    <main className="min-h-screen bg-ink">
 <NavBar back={{ href: '/', label: 'Back' }} />
 
       <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
@@ -454,15 +454,15 @@ function NewListingContent() {
       <section className="relative pb-24 md:pb-32 bg-off-white -mt-8">
         <div className="relative max-w-2xl mx-auto px-4 sm:px-6">
 
-          <form onSubmit={handleSubmit} className="relative bg-white rounded-3xl shadow-2xl p-6 md:p-10 border border-gray-100 space-y-8">
+          <form onSubmit={handleSubmit} className="relative bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-10 border border-rule space-y-8">
 
             <div>
-              <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">Listing Type</label>
+              <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">Listing Type</label>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
                   onClick={() => { setListingType('product'); setCategory(''); setCategoryError(null) }}
-                  className={"relative p-5 rounded-2xl font-semibold border-2 transition-all overflow-hidden group " + (listingType === 'product' ? "border-gold bg-gradient-to-br from-gold/10 to-gold/5 text-charcoal shadow-lg" : "border-gray-200 text-gray-500 hover:border-gray-400")}
+                  className={"relative p-5 rounded-2xl font-semibold border-2 transition-all overflow-hidden group " + (listingType === 'product' ? "border-gold bg-gradient-to-br from-gold/10 to-gold/5 text-ink shadow-lg" : "border-rule text-ink-muted hover:border-ink-muted")}
                 >
                   {listingType === 'product' && (<div className="absolute top-2 right-2 w-2 h-2 bg-gold rounded-full"></div>)}
                   <div className="text-3xl mb-2">📦</div>
@@ -472,7 +472,7 @@ function NewListingContent() {
                 <button
                   type="button"
                   onClick={() => { setListingType('service'); setCategory(''); setCategoryError(null) }}
-                  className={"relative p-5 rounded-2xl font-semibold border-2 transition-all overflow-hidden group " + (listingType === 'service' ? "border-gold bg-gradient-to-br from-gold/10 to-gold/5 text-charcoal shadow-lg" : "border-gray-200 text-gray-500 hover:border-gray-400")}
+                  className={"relative p-5 rounded-2xl font-semibold border-2 transition-all overflow-hidden group " + (listingType === 'service' ? "border-gold bg-gradient-to-br from-gold/10 to-gold/5 text-ink shadow-lg" : "border-rule text-ink-muted hover:border-ink-muted")}
                 >
                   {listingType === 'service' && (<div className="absolute top-2 right-2 w-2 h-2 bg-gold rounded-full"></div>)}
                   <div className="text-3xl mb-2">💼</div>
@@ -483,12 +483,12 @@ function NewListingContent() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">Category *</label>
+              <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">Category *</label>
               <select
                 value={category}
                 onChange={(e) => { setCategory(e.target.value); setCategoryError(null) }}
                 required
-                className={"w-full px-5 py-4 rounded-2xl border-2 text-charcoal bg-white focus:outline-none transition-colors text-lg " + (categoryError ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-gold")}
+                className={"w-full px-5 py-4 rounded-2xl border-2 text-ink bg-surface focus:outline-none transition-colors text-lg " + (categoryError ? "border-red-500 focus:border-red-500" : "border-rule focus:border-gold")}
               >
                 <option value="" disabled>Select a category…</option>
                 {getCategoriesByType(listingType).map((c) => (
@@ -504,12 +504,12 @@ function NewListingContent() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">📍 Where are you on campus? *</label>
+              <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">📍 Where are you on campus? *</label>
               <select
                 value={campusLocation}
                 onChange={(e) => { setCampusLocation(e.target.value); setCampusLocationError(null) }}
                 required
-                className={"w-full px-5 py-4 rounded-2xl border-2 text-charcoal bg-white focus:outline-none transition-colors text-lg " + (campusLocationError ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-gold")}
+                className={"w-full px-5 py-4 rounded-2xl border-2 text-ink bg-surface focus:outline-none transition-colors text-lg " + (campusLocationError ? "border-red-500 focus:border-red-500" : "border-rule focus:border-gold")}
               >
                 <option value="" disabled>Select your location…</option>
                 <optgroup label="Halls of Residence">
@@ -542,8 +542,8 @@ function NewListingContent() {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
-                Photos <span className="text-gray-400 font-normal normal-case">(up to {MAX_PHOTOS}, first = cover)</span>
+              <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">
+                Photos <span className="text-ink-muted font-normal normal-case">(up to {MAX_PHOTOS}, first = cover)</span>
                 {images.length > 0 && (
                   <span className="ml-2 text-xs font-semibold bg-gold/10 text-gold-dark px-2 py-0.5 rounded-full">
                     {images.length}/{MAX_PHOTOS} photos
@@ -557,7 +557,7 @@ function NewListingContent() {
                     <div key={idx} className="relative group aspect-square">
                       <Image src={img.url} alt={'Photo ' + (idx + 1)} width={200} height={200} className="w-full h-full object-cover rounded-2xl" />
                       {idx === 0 && (
-                        <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-charcoal/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
+                        <span className="absolute bottom-2 left-1/2 -translate-x-1/2 bg-ink/80 text-white text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
                           ⭐ Cover
                         </span>
                       )}
@@ -566,7 +566,7 @@ function NewListingContent() {
                           type="button"
                           onClick={() => moveImage(idx, idx - 1)}
                           disabled={idx === 0}
-                          className="w-8 h-8 bg-white text-charcoal rounded-full font-bold hover:bg-gold transition-colors disabled:opacity-30 disabled:hover:bg-white"
+                          className="w-8 h-8 bg-surface text-ink rounded-full font-bold hover:bg-gold transition-colors disabled:opacity-30 disabled:hover:bg-surface"
                           aria-label="Move photo left"
                         >
                           ←
@@ -575,7 +575,7 @@ function NewListingContent() {
                           type="button"
                           onClick={() => moveImage(idx, idx + 1)}
                           disabled={idx === images.length - 1}
-                          className="w-8 h-8 bg-white text-charcoal rounded-full font-bold hover:bg-gold transition-colors disabled:opacity-30 disabled:hover:bg-white"
+                          className="w-8 h-8 bg-surface text-ink rounded-full font-bold hover:bg-gold transition-colors disabled:opacity-30 disabled:hover:bg-surface"
                           aria-label="Move photo right"
                         >
                           →
@@ -595,11 +595,11 @@ function NewListingContent() {
               )}
 
               {images.length < MAX_PHOTOS ? (
-                <label className="relative flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-2xl cursor-pointer hover:border-gold hover:bg-gold/5 transition-all group">
+                <label className="relative flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-rule rounded-2xl cursor-pointer hover:border-gold hover:bg-gold/5 transition-all group">
                   <div className="text-center">
                     <div className="text-4xl mb-2 group-hover:scale-110 transition-transform">📸</div>
-                    <div className="font-semibold text-charcoal">Click to add photos</div>
-                    <div className="text-xs text-gray-500 mt-1">JPG, PNG, WEBP • Max 5MB each • Up to {MAX_PHOTOS} photos</div>
+                    <div className="font-semibold text-ink">Click to add photos</div>
+                    <div className="text-xs text-ink-muted mt-1">JPG, PNG, WEBP • Max 5MB each • Up to {MAX_PHOTOS} photos</div>
                   </div>
                   <input
                     type="file"
@@ -610,16 +610,16 @@ function NewListingContent() {
                   />
                 </label>
               ) : (
-                <p className="text-xs text-gray-500 text-center py-2">Photo limit reached ({MAX_PHOTOS}). Remove one to add another.</p>
+                <p className="text-xs text-ink-muted text-center py-2">Photo limit reached ({MAX_PHOTOS}). Remove one to add another.</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">Title *</label>
+              <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">Title *</label>
               <input
                 type="text"
                 placeholder={listingType === 'product' ? "e.g. Calculus Textbook" : "e.g. Hair Braiding"}
-                className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors text-lg"
+                className="w-full px-5 py-4 rounded-2xl border-2 border-rule text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors text-lg"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 required
@@ -628,15 +628,15 @@ function NewListingContent() {
 
             {derivedPrice === null ? (
               <div>
-                <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">
+                <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">
                   {listingType === 'service' ? 'Price per session *' : 'Price *'}
                 </label>
                 <div className="relative">
-                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-lg">GH₵</span>
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-muted font-bold text-lg">GH₵</span>
                   <input
                     type="number"
                     placeholder="0.00"
-                    className="w-full pl-20 pr-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
+                    className="w-full pl-20 pr-5 py-4 rounded-2xl border-2 border-rule text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     required
@@ -645,19 +645,19 @@ function NewListingContent() {
               </div>
             ) : (
               <div className="p-5 rounded-2xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
-                <label className="block text-sm font-bold text-charcoal mb-1 uppercase tracking-widest">Starting Price</label>
+                <label className="block text-sm font-bold text-ink mb-1 uppercase tracking-widest">Starting Price</label>
                 <p className="text-2xl font-bold text-gold-dark">{formatPrice(derivedPrice)}</p>
-                <p className="text-xs text-gray-600 mt-1">
+                <p className="text-xs text-ink-muted mt-1">
                   Auto-calculated from your bundle items below — shoppers will see the range {formatPrice(derivedPrice)}–{formatPrice(Math.max(...items.map((i) => Number(i.price) || 0)))}.
                 </p>
               </div>
             )}
 
             <div>
-              <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">Description</label>
+              <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">Description</label>
               <textarea
                 placeholder="Tell buyers what makes your offering special..."
-                className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors resize-none"
+                className="w-full px-5 py-4 rounded-2xl border-2 border-rule text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors resize-none"
                 rows={4}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -672,22 +672,22 @@ function NewListingContent() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">Duration</label>
+                  <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">Duration</label>
                   <input
                     type="text"
                     placeholder="e.g. 1 hour, 30 mins"
-                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 bg-white text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors"
+                    className="w-full px-5 py-4 rounded-2xl border-2 border-rule bg-surface text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors"
                     value={serviceDuration}
                     onChange={(e) => setServiceDuration(e.target.value)}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-charcoal mb-3 uppercase tracking-widest">Location</label>
+                  <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">Location</label>
                   <input
                     type="text"
                     placeholder="e.g. Legon Campus, I come to you"
-                    className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 bg-white text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors"
+                    className="w-full px-5 py-4 rounded-2xl border-2 border-rule bg-surface text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors"
                     value={serviceLocation}
                     onChange={(e) => setServiceLocation(e.target.value)}
                   />
@@ -704,7 +704,7 @@ function NewListingContent() {
                 </div>
                 <span className="text-[10px] font-semibold text-gold-dark bg-gold/10 px-2 py-1 rounded-full">OPTIONAL</span>
               </div>
-              <p className="text-xs text-gray-500 mb-4">
+              <p className="text-xs text-ink-muted mb-4">
                 Add multiple {listingType === 'service' ? 'services' : 'items'} to one listing — like a price menu. Shoppers will see a price range and can book each option.
               </p>
 
@@ -712,16 +712,16 @@ function NewListingContent() {
                 <button
                   type="button"
                   onClick={() => setItems([{ name: '', price: '', duration: '', description: '' }])}
-                  className="w-full py-3.5 rounded-2xl border-2 border-dashed border-gray-300 text-gray-500 font-semibold hover:border-gold hover:text-charcoal hover:bg-gold/5 transition-all"
+                  className="w-full py-3.5 rounded-2xl border-2 border-dashed border-rule text-ink-muted font-semibold hover:border-gold hover:text-ink hover:bg-gold/5 transition-all"
                 >
                   ＋ Add your first item
                 </button>
               ) : (
                 <div className="space-y-4">
                   {items.map((item, idx) => (
-                    <div key={idx} className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
+                    <div key={idx} className="bg-white/90 backdrop-blur-sm rounded-2xl border border-rule p-4 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-charcoal uppercase tracking-widest">
+                        <span className="text-xs font-bold text-ink uppercase tracking-widest">
                           {listingType === 'service' ? 'Service' : 'Item'} {idx + 1}
                         </span>
                         <button
@@ -737,17 +737,17 @@ function NewListingContent() {
                         <input
                           type="text"
                           placeholder="Name * (e.g. Box Braids)"
-                          className="sm:col-span-2 w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors text-sm"
+                          className="sm:col-span-2 w-full px-4 py-3 rounded-xl border-2 border-rule text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors text-sm"
                           value={item.name}
                           onChange={(e) => updateItem(idx, { name: e.target.value })}
                         />
                         <div className="relative">
-                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-bold">GH₵</span>
+                          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted text-sm font-bold">GH₵</span>
                           <input
                             type="number"
                             min="0"
                             placeholder="Price *"
-                            className="w-full pl-14 pr-3 py-3 rounded-xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors text-sm font-semibold"
+                            className="w-full pl-14 pr-3 py-3 rounded-xl border-2 border-rule text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors text-sm font-semibold"
                             value={item.price}
                             onChange={(e) => updateItem(idx, { price: e.target.value })}
                           />
@@ -758,7 +758,7 @@ function NewListingContent() {
                         <input
                           type="text"
                           placeholder="Duration (e.g. 3 hours)"
-                          className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors text-sm"
+                          className="w-full px-4 py-3 rounded-xl border-2 border-rule text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors text-sm"
                           value={item.duration}
                           onChange={(e) => updateItem(idx, { duration: e.target.value })}
                         />
@@ -767,7 +767,7 @@ function NewListingContent() {
                       <textarea
                         placeholder="Short description (optional)"
                         rows={2}
-                        className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors text-sm resize-none"
+                        className="w-full px-4 py-3 rounded-xl border-2 border-rule text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors text-sm resize-none"
                         value={item.description}
                         onChange={(e) => updateItem(idx, { description: e.target.value })}
                       />
@@ -777,7 +777,7 @@ function NewListingContent() {
                   <button
                     type="button"
                     onClick={() => setItems((prev) => [...prev, { name: '', price: '', duration: '', description: '' }])}
-                    className="w-full py-3 rounded-2xl border-2 border-dashed border-gray-300 text-gray-500 font-semibold hover:border-gold hover:text-charcoal hover:bg-gold/5 transition-all text-sm"
+                    className="w-full py-3 rounded-2xl border-2 border-dashed border-rule text-ink-muted font-semibold hover:border-gold hover:text-ink hover:bg-gold/5 transition-all text-sm"
                   >
                     ＋ Add another {listingType === 'service' ? 'service' : 'item'}
                   </button>
@@ -788,7 +788,7 @@ function NewListingContent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-charcoal text-white py-4 rounded-full font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-charcoal/25 flex items-center justify-center gap-2 group"
+              className="w-full bg-ink text-white py-4 rounded-full font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-ink/25 flex items-center justify-center gap-2 group"
             >
               {loading ? (
                 <span>{isEditMode ? 'Saving...' : 'Publishing...'}</span>
@@ -800,13 +800,13 @@ function NewListingContent() {
               )}
             </button>
 
-            <p className="text-xs text-gray-500 text-center flex items-center justify-center gap-1.5">
+            <p className="text-xs text-ink-muted text-center flex items-center justify-center gap-1.5">
               <span className="text-green-600 font-bold">✓</span>
               Review by the Campus Plug team
             </p>
           </form>
 
-          <div className="mt-6 p-6 rounded-2xl bg-gradient-to-br from-charcoal to-gray-900 text-white text-center">
+          <div className="mt-6 p-6 rounded-2xl bg-gradient-to-br from-ink to-ink-soft text-white text-center">
             <p className="text-sm text-white/70">
               💡 <strong className="text-gold">Pro tip:</strong> Bundled listings with a price menu get more bookings — add multiple services and great photos.
             </p>

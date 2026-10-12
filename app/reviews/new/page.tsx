@@ -209,7 +209,7 @@ function NewReviewInner() {
   }
 
   return (
-    <main className="min-h-screen bg-charcoal">
+    <main className="min-h-screen bg-ink">
 <NavBar back={{ href: '#', label: 'Cancel', onClick: () => router.back() }} />
 
       <section className="relative pt-28 pb-16 md:pt-36 overflow-hidden animated-gradient">
@@ -233,16 +233,16 @@ function NewReviewInner() {
       <section className="relative pb-24 bg-off-white -mt-6">
         <div className="relative max-w-2xl mx-auto px-4 sm:px-6 pt-8">
           {error ? (
-            <div className="bg-white rounded-3xl p-10 text-center shadow-xl border border-gray-100">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-10 text-center shadow-xl border border-rule">
               <div className="text-5xl mb-4">🤔</div>
               <p className="text-xl font-bold text-charcoal mb-2">Can&apos;t open this review</p>
-              <p className="text-gray-500 mb-6">{error}</p>
-              <Link href="/" className="inline-flex items-center gap-2 bg-charcoal text-white px-6 py-3 rounded-full font-semibold hover:bg-black transition-colors">
+              <p className="text-ink-muted mb-6">{error}</p>
+              <Link href="/" className="inline-flex items-center gap-2 bg-ink text-white px-6 py-3 rounded-full font-semibold hover:bg-black transition-colors">
                 ← Back to marketplace
               </Link>
             </div>
           ) : (
-            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-gray-100">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-xl border border-rule">
               {editWindowExpired && (
                 <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium">
                   ⏰ Your 7-day edit window has expired — this review is locked. You can still delete it.
@@ -254,13 +254,13 @@ function NewReviewInner() {
               </label>
               <StarRating rating={rating} interactive onChange={setRating} size="lg" />
               {rating > 0 && (
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-ink-muted mt-2">
                   {rating === 5 ? 'Excellent!' : rating === 4 ? 'Great' : rating === 3 ? 'Average' : rating === 2 ? 'Poor' : 'Very poor'}
                 </p>
               )}
 
               <label className="block text-xs font-bold text-charcoal uppercase tracking-widest mb-2 mt-7">
-                Your review <span className="text-gray-400 font-normal normal-case">(optional)</span>
+                Your review <span className="text-ink-muted font-normal normal-case">(optional)</span>
               </label>
               <div className="relative">
                 <textarea
@@ -270,9 +270,9 @@ function NewReviewInner() {
                   value={text}
                   onChange={(e) => setText(e.target.value)}
                   disabled={editWindowExpired}
-                  className="w-full px-5 py-4 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors resize-none disabled:bg-gray-50 disabled:text-gray-500"
+                  className="w-full px-5 py-4 rounded-2xl border-2 border-rule text-charcoal placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors resize-none disabled:bg-paper-deep disabled:text-ink-muted"
                 />
-                <span className="absolute bottom-3 right-4 text-[10px] text-gray-400 font-semibold">
+                <span className="absolute bottom-3 right-4 text-[10px] text-ink-muted font-semibold">
                   {text.length}/{REVIEW_TEXT_MAX}
                 </span>
               </div>
@@ -287,7 +287,7 @@ function NewReviewInner() {
                 <button
                   onClick={handleSubmit}
                   disabled={submitting || editWindowExpired}
-                  className="flex-1 bg-charcoal text-white py-3.5 rounded-full font-bold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-charcoal/25"
+                  className="flex-1 bg-ink text-white py-3.5 rounded-full font-bold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-charcoal/25"
                 >
                   {submitting ? 'Saving...' : editing ? '💾 Save Changes' : '⭐ Submit Review'}
                 </button>
@@ -302,7 +302,7 @@ function NewReviewInner() {
                 )}
               </div>
 
-              <p className="text-[11px] text-gray-400 mt-4 text-center">
+              <p className="text-[11px] text-ink-muted mt-4 text-center">
                 🔒 All reviews are verified against a completed booking or sale. You can edit within 7 days, delete anytime.
               </p>
             </div>
