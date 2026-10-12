@@ -788,7 +788,7 @@ function NewListingContent() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-charcoal text-white py-4 rounded-2xl font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-charcoal/25 flex items-center justify-center gap-2 group"
+              className="w-full bg-charcoal text-white py-4 rounded-full font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-charcoal/25 flex items-center justify-center gap-2 group"
             >
               {loading ? (
                 <span>{isEditMode ? 'Saving...' : 'Publishing...'}</span>

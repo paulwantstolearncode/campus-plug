@@ -351,33 +351,33 @@ export default function DashboardPage() {
 
   const statusChip = (status: string) => {
     if (status === 'approved') {
-      return <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold">✅ Approved</span>
+      return <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Approved</span>
     }
     if (status === 'pending') {
-      return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold">⏳ Pending</span>
+      return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pending</span>
     }
-    return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold">❌ Rejected</span>
+    return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Rejected</span>
   }
 
   const bookingStatusChip = (status: string | null) => {
     if (status === 'completed') {
-      return <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold">✅ Completed</span>
+      return <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Completed</span>
     }
     if (status === 'cancelled') {
-      return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold">❌ Cancelled</span>
+      return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Cancelled</span>
     }
     // Legacy bookings (status NULL before add_sales_tracking.sql) default to pending.
-    return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold">⏳ Pending</span>
+    return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pending</span>
   }
 
   const saleStatusChip = (status: string) => {
     if (status === 'completed') {
-      return <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold">✅ Completed</span>
+      return <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Completed</span>
     }
     if (status === 'refunded') {
-      return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold">↩️ Refunded</span>
+      return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg> Refunded</span>
     }
-    return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold">❌ Cancelled</span>
+    return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Cancelled</span>
   }
 
   const formatDate = (dateStr: string | null) => {
@@ -498,13 +498,13 @@ export default function DashboardPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-10">
           {error && (
             <div className="mb-8 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
-              ⚠️ {error}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> {error}
             </div>
           )}
 
           {recorded && (
             <div className="mb-8 p-4 rounded-2xl bg-green-50 border border-green-200 text-green-700 text-sm font-medium">
-              ✅ Sale recorded! It&apos;s in your Product Sales list below. You can edit it within 24 hours.
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Sale recorded! It&apos;s in your Product Sales list below. You can edit it within 24 hours.
             </div>
           )}
 
@@ -513,7 +513,7 @@ export default function DashboardPage() {
             <div className="bg-gradient-to-r from-gold/15 via-gold/10 to-gold/5 rounded-3xl p-6 md:p-7 border border-gold/40 mb-8 shadow-lg shadow-gold/10">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="flex-1">
-                  <h2 className="text-xl font-bold text-charcoal mb-1">🚀 Promote Your Campus Shop</h2>
+                  <h2 className="text-xl font-bold text-charcoal mb-1 flex items-center gap-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Promote Your Campus Shop</h2>
                   <p className="text-sm text-gray-600">Share your shop link on your WhatsApp Status so students can browse your inventory.</p>
                   <p className="text-xs text-charcoal font-mono mt-2">campuspluggh.com/shop/{userId}</p>
                 </div>
@@ -528,7 +528,7 @@ export default function DashboardPage() {
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
                       </svg>
-                      📲 Share to WhatsApp Status
+                      Share to WhatsApp Status
                     </a>
                     <button
                       onClick={async () => {
@@ -541,7 +541,7 @@ export default function DashboardPage() {
                       }}
                       className="relative bg-white text-charcoal px-4 py-2.5 rounded-full text-sm font-semibold border-2 border-gold/50 hover:bg-gold/10 hover:border-gold transition-colors min-h-[44px]"
                     >
-                      {copied ? '✓ Link copied!' : '📋 Copy Shop Link'}
+                      {copied ? 'Link copied!' : 'Copy Shop Link'}
                     </button>
                   </div>
                   <p className="text-[11px] text-gray-500 sm:text-right max-w-sm">
@@ -555,13 +555,13 @@ export default function DashboardPage() {
           {/* STATS */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {[
-              { label: 'Total listings', value: listings.length, icon: '📦' },
-              { label: 'Approved', value: approved, icon: '✅' },
-              { label: 'Pending review', value: pending, icon: '⏳' },
-              { label: 'Sold', value: sold, icon: '🏷️' },
+              { label: 'Total listings', value: listings.length, icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> },
+              { label: 'Approved', value: approved, icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> },
+              { label: 'Pending review', value: pending, icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-amber-500"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+              { label: 'Sold', value: sold, icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> },
             ].map((stat) => (
               <div key={stat.label} className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100">
-                <div className="text-2xl mb-2">{stat.icon}</div>
+                <div className="mb-2">{stat.icon}</div>
                 <div className="text-3xl font-bold text-charcoal">{stat.value}</div>
                 <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">{stat.label}</div>
               </div>
@@ -571,7 +571,7 @@ export default function DashboardPage() {
           {/* SALES STATS */}
           <div className="bg-white rounded-3xl p-6 shadow-lg border border-gold/40 mb-12">
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-xl">💰</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
               <h2 className="font-bold text-charcoal">Your Sales Stats</h2>
               <span className="text-xs text-gray-400 font-normal">(private to you)</span>
             </div>
@@ -595,7 +595,7 @@ export default function DashboardPage() {
           {analytics.length > 0 && (
             <div className="mb-10">
               <div className="flex items-center gap-2 mb-4">
-                <span className="text-xl">📊</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
                 <h2 className="text-2xl font-bold text-charcoal">Listing Analytics</h2>
                 <span className="text-xs text-gray-400 font-normal">(views & WhatsApp clicks)</span>
               </div>
@@ -679,8 +679,8 @@ export default function DashboardPage() {
                     <h3 className="font-bold text-charcoal text-lg line-clamp-1">{listing.title}</h3>
                     <p className="text-xl font-bold text-gold-dark mb-4">{formatPrice(listing.price)}</p>
                     <div className="flex gap-2">
-                      <Link href={"/new?edit=" + listing.id} className="flex-1 flex items-center justify-center gap-1.5 bg-charcoal text-white py-2.5 rounded-full font-semibold hover:bg-black transition-colors text-sm">✏️ Edit</Link>
-                      <Link href={"/listing/" + listing.id} className="flex-1 flex items-center justify-center bg-white text-charcoal py-2.5 rounded-full font-semibold border border-gray-200 hover:border-charcoal transition-colors text-sm">👁 View</Link>
+                      <Link href={"/new?edit=" + listing.id} className="flex-1 flex items-center justify-center gap-1.5 bg-charcoal text-white py-2.5 rounded-full font-semibold hover:bg-black transition-colors text-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit</Link>
+                      <Link href={"/listing/" + listing.id} className="flex-1 flex items-center justify-center gap-1.5 bg-white text-charcoal py-2.5 rounded-full font-semibold border border-gray-200 hover:border-charcoal transition-colors text-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View</Link>
                     </div>
                     {listing.approval_status === 'approved' && !listing.sold_at && (
                       <button
@@ -696,14 +696,14 @@ export default function DashboardPage() {
                           if (error) {
                             alert('Could not boost listing: ' + error.message)
                           } else {
-                            alert('🎉 Listing boosted for ' + boostDays + ' days! It will appear higher in search results.')
+                            alert('Listing boosted for ' + boostDays + ' days! It will appear higher in search results.')
                           }
                           setBoostingId(null)
                         }}
                         disabled={!!boostingId}
                         className="mt-2 w-full flex items-center justify-center gap-1.5 bg-gold/10 text-gold-dark py-2 rounded-full font-semibold text-xs border border-gold/30 hover:bg-gold/20 transition-colors disabled:opacity-50"
                       >
-                        🚀 Boost this listing (7 days)
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Boost this listing (7 days)
                       </button>
                     )}
                     {listing.approval_status === 'approved' && (
@@ -719,7 +719,7 @@ export default function DashboardPage() {
                           }}
                           className="mt-2 w-full flex items-center justify-center gap-1.5 bg-green-50 text-green-700 py-2 rounded-full font-semibold text-xs border border-green-200 hover:bg-green-100 transition-colors"
                         >
-                          ✅ Mark Available
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Mark Available
                         </button>
                       ) : (
                         <button
@@ -734,7 +734,7 @@ export default function DashboardPage() {
                           }}
                           className="mt-2 w-full flex items-center justify-center gap-1.5 bg-red-50 text-red-600 py-2 rounded-full font-semibold text-xs border border-red-200 hover:bg-red-100 transition-colors"
                         >
-                          🏷️ Mark as Sold
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> Mark as Sold
                         </button>
                       )
                     )}
@@ -747,12 +747,12 @@ export default function DashboardPage() {
           {/* RECENT BOOKINGS */}
           <h2 className="text-2xl font-bold text-charcoal mb-1">Recent Bookings</h2>
           <p className="text-xs text-gray-500 mb-4">
-            Buyer privacy protected 🔒 Share your WhatsApp on your listings — buyers will reach out to you.
+            Buyer privacy protected <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Share your WhatsApp on your listings — buyers will reach out to you.
           </p>
 
           {bookingsError && (
             <div className="mb-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
-              ⚠️ {bookingsError} — run seller_dashboard_rls.sql (or check the bookings schema) and refresh.
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> {bookingsError} — run seller_dashboard_rls.sql (or check the bookings schema) and refresh.
             </div>
           )}
 
@@ -774,11 +774,11 @@ export default function DashboardPage() {
                     {bookingStatusChip(booking.status)}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    📅 {formatDate(booking.booking_date)} · 🕒 {booking.booking_time || '—'} · 👤 Booking from: {formatName(booking.buyer?.full_name)}
+                    <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{formatDate(booking.booking_date)}</span> · <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{booking.booking_time || '—'}</span> · <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Booking from: {formatName(booking.buyer?.full_name)}</span>
                   </p>
                   {booking.notes && <p className="text-xs text-gray-600 mt-1 italic">&quot;{booking.notes}&quot;</p>}
                   {booking.status === 'completed' && booking.actual_amount != null && (
-                    <p className="text-xs text-gray-600 mt-1 font-semibold">💰 Received: {formatPrice(booking.actual_amount)}</p>
+                    <p className="text-xs text-gray-600 mt-1 font-semibold inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>Received: {formatPrice(booking.actual_amount)}</p>
                   )}
 
                   {booking.status !== 'completed' && booking.status !== 'cancelled' && (
@@ -787,13 +787,13 @@ export default function DashboardPage() {
                         onClick={() => openCompleteModal(booking)}
                         className="inline-flex items-center gap-1.5 bg-green-500 text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-green-600 transition-colors"
                       >
-                        ✅ Mark Completed
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Mark Completed
                       </button>
                       <button
                         onClick={() => cancelBooking(booking.id)}
                         className="inline-flex items-center gap-1.5 bg-white text-red-600 px-4 py-2 rounded-full font-semibold text-xs border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors"
                       >
-                        ❌ Cancel
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Cancel
                       </button>
                     </div>
                   )}
@@ -808,12 +808,12 @@ export default function DashboardPage() {
               <h2 className="text-2xl font-bold text-charcoal">Product Sales</h2>
               <p className="text-xs text-gray-500 mt-1">Record your product transactions — you can edit them within 24 hours.</p>
             </div>
-            <Link href="/dashboard/record-sale" className="bg-charcoal text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-colors whitespace-nowrap">➕ Record New Sale</Link>
+            <Link href="/dashboard/record-sale" className="inline-flex items-center gap-1.5 bg-charcoal text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-colors whitespace-nowrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Record New Sale</Link>
           </div>
 
           {salesError && (
             <div className="mb-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
-              ⚠️ {salesError} — run add_sales_tracking.sql in Supabase and refresh.
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> {salesError} — run add_sales_tracking.sql in Supabase and refresh.
             </div>
           )}
 
@@ -833,8 +833,8 @@ export default function DashboardPage() {
                     {saleStatusChip(sale.status)}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
-                    📅 {formatDateTime(sale.created_at)}
-                    {sale.buyer_name ? ' · 👤 ' + formatName(sale.buyer_name) : ''}
+                    <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{formatDateTime(sale.created_at)}</span>
+                    {sale.buyer_name ? <>{' · '}<span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>{formatName(sale.buyer_name)}</span></> : ''}
                   </p>
 
                   <div className="flex flex-wrap gap-2 mt-3">
@@ -842,14 +842,14 @@ export default function DashboardPage() {
                       href={"/dashboard/sales/" + sale.id}
                       className="inline-flex items-center gap-1.5 bg-charcoal text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors"
                     >
-                      👁 View Details
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Details
                     </Link>
                     {isWithinEditWindow(sale.created_at) ? (
                       <Link
                         href={"/dashboard/sales/" + sale.id}
                         className="inline-flex items-center gap-1.5 bg-white text-charcoal px-4 py-2 rounded-full font-semibold text-xs border border-gray-200 hover:border-charcoal transition-colors"
                       >
-                        ✏️ Edit
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit
                       </Link>
                     ) : sale.status === 'completed' ? (
                       <>
@@ -857,13 +857,13 @@ export default function DashboardPage() {
                           onClick={() => changeSaleStatus(sale.id, 'refunded')}
                           className="inline-flex items-center gap-1.5 bg-amber-500 text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-amber-600 transition-colors"
                         >
-                          ↩️ Mark Refunded
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg> Mark Refunded
                         </button>
                         <button
                           onClick={() => changeSaleStatus(sale.id, 'cancelled')}
                           className="inline-flex items-center gap-1.5 bg-white text-red-600 px-4 py-2 rounded-full font-semibold text-xs border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors"
                         >
-                          ❌ Mark Cancelled
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Mark Cancelled
                         </button>
                       </>
                     ) : null}
@@ -894,13 +894,13 @@ export default function DashboardPage() {
                     <div key={b.id} className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100">
                       <p className="font-semibold text-charcoal truncate">{b.listing?.title || 'Unknown listing'}</p>
                       <p className="text-xs text-gray-500 mt-1 mb-4">
-                        ✅ You completed a booking for this — share your experience with the seller.
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> You completed a booking for this — share your experience with the seller.
                       </p>
                       <Link
                         href={'/reviews/new?bookingId=' + b.id + '&sellerId=' + b.seller_id}
                         className="inline-flex items-center gap-1.5 bg-gold text-charcoal px-5 py-2.5 rounded-full font-bold text-sm hover:bg-gold-dark transition-all hover:scale-[1.02] shadow-md"
                       >
-                        ⭐ Leave a Review
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Leave a Review
                       </Link>
                     </div>
                   ))}
@@ -915,7 +915,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="flex items-center gap-2">
                         <StarRating rating={w.rating} size="sm" />
-                        <span className="text-[10px] text-green-600 font-semibold">✅ Verified buyer</span>
+                        <span className="text-[10px] text-green-600 font-semibold inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Verified buyer</span>
                       </div>
                       {w.review_text && (
                         <p className="text-sm text-gray-700 mt-2 leading-relaxed line-clamp-3">{w.review_text}</p>
@@ -925,13 +925,13 @@ export default function DashboardPage() {
                           href={'/reviews/new?reviewId=' + w.id}
                           className="inline-flex items-center gap-1.5 bg-charcoal text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors"
                         >
-                          ✏️ Edit
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit
                         </Link>
                         <button
                           onClick={() => deleteWrittenReview(w.id)}
                           className="inline-flex items-center gap-1.5 bg-white text-red-600 px-4 py-2 rounded-full font-semibold text-xs border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors"
                         >
-                          🗑 Delete
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete
                         </button>
                       </div>
                     </div>
@@ -953,14 +953,14 @@ export default function DashboardPage() {
               )}
               {myRating?.is_top_rated && (
                 <span className="inline-flex items-center gap-1.5 bg-gold text-charcoal px-3 py-1.5 rounded-full text-xs font-bold shadow-md">
-                  ⭐ Top Rated
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Top Rated
                 </span>
               )}
             </div>
 
             {reviewsError && (
               <div className="mb-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
-                ⚠️ {reviewsError} — run add_reviews_system.sql in Supabase and refresh.
+                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> {reviewsError} — run add_reviews_system.sql in Supabase and refresh.
               </div>
             )}
 
@@ -985,13 +985,13 @@ export default function DashboardPage() {
                           <span className="text-[10px] text-gray-400">{formatDate(r.created_at)}</span>
                         </span>
                       </div>
-                      <p className="text-[10px] text-green-600 font-semibold mt-1">✅ Verified buyer</p>
+                      <p className="text-[10px] text-green-600 font-semibold mt-1 inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Verified buyer</p>
                       {r.review_text && (
                         <p className="text-sm text-gray-700 mt-2 leading-relaxed">{r.review_text}</p>
                       )}
                       {r.is_flagged && (
                         <p className="inline-flex items-center gap-1 mt-2 text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                          🚩 Flagged for review
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> Flagged for review
                         </p>
                       )}
 
@@ -1008,7 +1008,7 @@ export default function DashboardPage() {
                                 }}
                                 className="text-[10px] text-gray-500 hover:text-charcoal underline underline-offset-2"
                               >
-                                {editingResponse === r.id ? 'Cancel' : '✏️ Edit'}
+                                {editingResponse === r.id ? 'Cancel' : (<><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit</>)}
                               </button>
                             )}
                           </div>
@@ -1026,7 +1026,7 @@ export default function DashboardPage() {
                                 disabled={submittingReply}
                                 className="mt-2 inline-flex items-center gap-1.5 bg-charcoal text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors disabled:opacity-50"
                               >
-                                💾 Save
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save
                               </button>
                             </div>
                           ) : (
@@ -1051,7 +1051,7 @@ export default function DashboardPage() {
                                   disabled={submittingReply}
                                   className="inline-flex items-center gap-1.5 bg-charcoal text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors disabled:opacity-50"
                                 >
-                                  💬 Post Reply
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Post Reply
                                 </button>
                                 <button
                                   onClick={() => { setReplyingTo(null); setReplyText('') }}
@@ -1066,7 +1066,7 @@ export default function DashboardPage() {
                               onClick={() => { setReplyingTo(r.id); setReplyText('') }}
                               className="inline-flex items-center gap-1.5 bg-white text-charcoal px-4 py-2 rounded-full font-semibold text-xs border border-gray-200 hover:border-charcoal transition-colors"
                             >
-                              💬 Reply
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Reply
                             </button>
                           )}
                         </div>
@@ -1089,7 +1089,7 @@ export default function DashboardPage() {
                                 disabled={submittingFlag}
                                 className="inline-flex items-center gap-1 bg-amber-500 text-white px-3 py-2 rounded-full font-semibold text-xs hover:bg-amber-600 transition-colors disabled:opacity-50"
                               >
-                                🚩 Flag
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> Flag
                               </button>
                               <button
                                 onClick={() => { setFlaggingId(null); setFlagReason('') }}
@@ -1103,7 +1103,7 @@ export default function DashboardPage() {
                               onClick={() => { setFlaggingId(r.id); setFlagReason('') }}
                               className="text-[11px] text-gray-400 hover:text-amber-600 transition-colors underline underline-offset-2"
                             >
-                              🚩 Flag this review
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> Flag this review
                             </button>
                           )}
                         </div>
@@ -1153,7 +1153,7 @@ export default function DashboardPage() {
                 onClick={confirmComplete}
                 className="flex-1 bg-green-500 text-white py-3 rounded-full font-semibold hover:bg-green-600 transition-colors"
               >
-                ✓ Confirm
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Confirm
               </button>
               <button
                 onClick={() => setCompleting(null)}

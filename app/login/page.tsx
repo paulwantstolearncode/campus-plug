@@ -3,6 +3,7 @@ import { useState, useRef, useEffect, Suspense } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import BrandMark from '@/lib/brandMark'
 
 // Set to true when Moolre Sender ID "CampusPlug" is Approved in Moolre dashboard
 const PHONE_AUTH_ENABLED = true
@@ -317,7 +318,7 @@ function LoginForm() {
         <div className="absolute inset-0 opacity-[0.05]" style={{backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px'}}></div>
         <div className="relative z-10 flex flex-col justify-between p-12 xl:p-16 text-white w-full">
           <Link href="/" className="flex items-center gap-2 group w-fit">
-            <span className="text-3xl group-hover:rotate-12 transition-transform">🔌</span>
+            <BrandMark size={30} className="group-hover:scale-110 transition-transform" />
             <span className="text-2xl font-bold tracking-tight">Campus Plug</span>
           </Link>
           <div className="max-w-lg">
@@ -352,7 +353,7 @@ function LoginForm() {
           <div className="blob absolute -top-10 -right-10 w-64 h-64 bg-gold/30 rounded-full blur-3xl"></div>
           <div className="relative">
             <Link href="/" className="flex items-center gap-2 text-white mb-6">
-              <span className="text-2xl">🔌</span>
+              <BrandMark size={26} />
               <span className="text-xl font-bold">Campus Plug</span>
             </Link>
             <h1 className="text-3xl font-bold text-white leading-tight">
@@ -394,12 +395,12 @@ function LoginForm() {
                 <div className={'mb-4 ' + (PHONE_AUTH_ENABLED ? 'flex gap-2' : '')}>
                   <button type="button" onClick={() => setAuthMethod('google-email')}
                     className={(PHONE_AUTH_ENABLED ? 'flex-1' : 'w-full') + ' py-2.5 rounded-xl text-sm font-semibold transition-all ' + (authMethod === 'google-email' ? 'bg-charcoal text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}>
-                    ✉️ Email
+                    <svg className="inline-block mr-1.5 -mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>Email
                   </button>
                   {PHONE_AUTH_ENABLED && (
                     <button type="button" onClick={switchToPhone}
                       className={'flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ' + (authMethod === 'phone' ? 'bg-charcoal text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200')}>
-                      📱 Phone
+                      <svg className="inline-block mr-1.5 -mt-0.5" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Phone
                     </button>
                   )}
                 </div>
@@ -429,7 +430,7 @@ function LoginForm() {
                       {showPasswordError && passwordError && <p className="text-xs text-red-500 mt-2 flex items-center gap-1"><span>⚠️</span> {passwordError}</p>}
                     </div>
                     <button type="submit" disabled={loading}
-                      className="w-full bg-charcoal text-white py-4 rounded-2xl font-semibold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-charcoal/20 flex items-center justify-center gap-2 group">
+                      className="w-full bg-charcoal text-white py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-charcoal/20 flex items-center justify-center gap-2 group">
                       {loading ? <span>Logging in...</span> : <><span>Log In</span><span className="group-hover:translate-x-1 transition-transform">→</span></>}
                     </button>
                   </form>
@@ -481,7 +482,7 @@ function LoginForm() {
 
                     {/* Submit button */}
                     <button type="submit" disabled={loading}
-                      className="w-full bg-charcoal text-white py-4 rounded-2xl font-semibold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-charcoal/20 flex items-center justify-center gap-2 group">
+                      className="w-full bg-charcoal text-white py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-charcoal/20 flex items-center justify-center gap-2 group">
                       {loading ? (
                         <span>{useOtpFallback ? 'Sending code...' : isSignUp ? 'Creating account...' : 'Logging in...'}</span>
                       ) : (
@@ -527,7 +528,7 @@ function LoginForm() {
                       {showOtpError && otpError && <p className="text-xs text-red-500 mt-2 flex items-center gap-1"><span>⚠️</span> {otpError}</p>}
                     </div>
                     <button type="submit" disabled={loading || otpCode.replace(/[^0-9]/g, '').length !== 6}
-                      className="w-full bg-charcoal text-white py-4 rounded-2xl font-semibold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-charcoal/20 flex items-center justify-center gap-2 group">
+                      className="w-full bg-charcoal text-white py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-lg shadow-charcoal/20 flex items-center justify-center gap-2 group">
                       {loading ? <span>Verifying...</span> : <><span>Verify &amp; Continue</span><span className="group-hover:translate-x-1 transition-transform">→</span></>}
                     </button>
                     <div className="text-center">
@@ -548,7 +549,7 @@ function LoginForm() {
             {isSignUp && authMethod === 'google-email' && (
               <div className="p-4 rounded-2xl bg-gradient-to-br from-gold/10 via-gold/5 to-transparent border border-gold/20 mb-4">
                 <div className="flex gap-3">
-                  <span className="text-xl">💡</span>
+                  <svg className="shrink-0 text-gold" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2z"/></svg>
                   <div>
                     <p className="text-sm font-semibold text-charcoal">Quick &amp; secure</p>
                     <p className="text-xs text-gray-600 mt-1">Sign up in 2 clicks with your Google account. No passwords to remember.</p>

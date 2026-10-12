@@ -354,7 +354,7 @@ export default function BannerAdsPage() {
               <button
                 type="submit"
                 disabled={submitting || !formTitle.trim() || !formLinkUrl.trim()}
-                className="w-full bg-gold text-charcoal py-4 rounded-2xl font-bold text-lg hover:bg-gold-dark transition-all disabled:opacity-50 shadow-lg shadow-gold/20"
+                className="w-full bg-gold text-charcoal py-4 rounded-full font-bold text-lg hover:bg-gold-dark transition-all disabled:opacity-50 shadow-lg shadow-gold/20"
               >
                 {submitting ? 'Saving...' : editingId ? 'Save Changes' : 'Create Banner'}
               </button>

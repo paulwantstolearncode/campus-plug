@@ -324,7 +324,7 @@ export default function BecomeSellerPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full shine-button text-charcoal py-5 rounded-2xl font-bold text-lg hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-gold/25 flex items-center justify-center gap-2 group"
+                  className="w-full shine-button text-charcoal py-5 rounded-full font-bold text-lg hover:scale-[1.02] transition-transform disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-gold/25 flex items-center justify-center gap-2 group"
                 >
                   {loading ? (<span>Submitting...</span>) : (<><span>Apply to list your service</span><span className="group-hover:translate-x-1 transition-transform">→</span></>)}
                 </button>

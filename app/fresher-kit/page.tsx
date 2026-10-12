@@ -221,8 +221,7 @@ export default function FresherKitPage() {
             )}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full min-h-[52px] text-white text-sm sm:text-base font-bold px-6 py-3.5 rounded-2xl border border-white/15 backdrop-blur-md shadow-xl transition-all hover:brightness-105"
-            style={{
+            className="flex items-center justify-center gap-2 w-full min-h-[52px] text-white text-sm sm:text-base font-bold px-6 py-3.5 rounded-full border border-white/15 backdrop-blur-md shadow-xl transition-all hover:brightness-105"            style={{
               background: 'linear-gradient(135deg, rgba(37,211,102,0.92) 0%, rgba(18,140,74,0.92) 100%)',
             }}
           >

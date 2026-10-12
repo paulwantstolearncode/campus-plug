@@ -342,7 +342,7 @@ export default function AdminPage() {
       if (error) {
         alert('Could not save: ' + error.message)
       } else {
-        alert('✅ Featured listings saved. The landing page will show the new order.')
+        alert('Featured listings saved. The landing page will show the new order.')
       }
     } catch (err) {
       console.error('Save featured failed:', err)
@@ -394,31 +394,31 @@ export default function AdminPage() {
             href="/admin/sales"
             className="inline-flex items-center gap-2 bg-gold text-charcoal px-6 py-3 rounded-full font-bold hover:bg-gold/90 transition-colors shadow-lg shadow-gold/25"
           >
-            💰 View Sales Dashboard
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg> View Sales Dashboard
           </Link>
           <Link
             href="/admin/feedback"
             className="inline-flex items-center gap-2 bg-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/20 transition-colors"
           >
-            💬 View Feedback
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> View Feedback
           </Link>
           <Link
             href="/admin/locations"
             className="inline-flex items-center gap-2 bg-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/20 transition-colors"
           >
-            📍 Location Backfill
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> Location Backfill
           </Link>
           <Link
             href="/admin/posters"
             className="inline-flex items-center gap-2 bg-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/20 transition-colors"
           >
-            🎨 Print Posters
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Print Posters
           </Link>
           <Link
             href="/admin/banners"
             className="inline-flex items-center gap-2 bg-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/20 transition-colors"
           >
-            📢 Banner Ads
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M3 11l18-5v12L3 13v-2z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg> Banner Ads
           </Link>
         </div>
       </section>
@@ -428,34 +428,34 @@ export default function AdminPage() {
 
           {error && (
             <div className="mb-6 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
-              ⚠️ {error}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> {error}
             </div>
           )}
 
           <div className="flex gap-2 mb-8 overflow-x-auto">
             <button
               onClick={() => setTab('sellers')}
-              className={"px-6 py-3 rounded-full font-semibold whitespace-nowrap transition-all " + (tab === 'sellers' ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200')}
+              className={"inline-flex items-center gap-1.5 px-6 py-3 rounded-full font-semibold whitespace-nowrap transition-all " + (tab === 'sellers' ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200')}
             >
-              👤 Pending Sellers ({sellers.length})
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Pending Sellers ({sellers.length})
             </button>
             <button
               onClick={() => setTab('listings')}
-              className={"px-6 py-3 rounded-full font-semibold whitespace-nowrap transition-all " + (tab === 'listings' ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200')}
+              className={"inline-flex items-center gap-1.5 px-6 py-3 rounded-full font-semibold whitespace-nowrap transition-all " + (tab === 'listings' ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200')}
             >
-              📦 Pending Listings ({listings.length})
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Pending Listings ({listings.length})
             </button>
             <button
               onClick={() => setTab('reviews')}
-              className={"px-6 py-3 rounded-full font-semibold whitespace-nowrap transition-all " + (tab === 'reviews' ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200')}
+              className={"inline-flex items-center gap-1.5 px-6 py-3 rounded-full font-semibold whitespace-nowrap transition-all " + (tab === 'reviews' ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200')}
             >
-              🚩 Flagged Reviews ({flaggedReviews.length})
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> Flagged Reviews ({flaggedReviews.length})
             </button>
             <button
               onClick={() => setTab('featured')}
-              className={"px-6 py-3 rounded-full font-semibold whitespace-nowrap transition-all " + (tab === 'featured' ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200')}
+              className={"inline-flex items-center gap-1.5 px-6 py-3 rounded-full font-semibold whitespace-nowrap transition-all " + (tab === 'featured' ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200')}
             >
-              ⭐ Featured ({featuredSelections.filter(Boolean).length}/6)
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Featured ({featuredSelections.filter(Boolean).length}/6)
             </button>
           </div>
 
@@ -486,9 +486,9 @@ export default function AdminPage() {
 
                       <div className="bg-gray-50 rounded-xl p-3 mb-4 space-y-1.5">
                         <p className="text-xs text-gray-600">
-                          📱 <span className="font-mono">{seller.whatsapp_number ? '+' + seller.whatsapp_number : '—'}</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> <span className="font-mono">{seller.whatsapp_number ? '+' + seller.whatsapp_number : '—'}</span>
                         </p>
-                        <p className="text-xs text-gray-600">🕒 {fullTimestamp}</p>
+                        <p className="text-xs text-gray-600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {fullTimestamp}</p>
                       </div>
 
                       {seller.whatsapp_number && (
@@ -496,24 +496,25 @@ export default function AdminPage() {
                           href={"https://wa.me/" + seller.whatsapp_number + "?text=" + encodeURIComponent(waMessage)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="block w-full text-center py-3 mb-2 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors text-sm"
+                          className="flex items-center justify-center gap-2 w-full text-center py-3 mb-2 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors text-sm"
                         >
-                          💬 WhatsApp +{seller.whatsapp_number}
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> WhatsApp +{seller.whatsapp_number}
                         </a>
                       )}
 
                       <div className="flex gap-2 mt-3">
                         <button
                           onClick={() => approveSeller(seller.id)}
-                          className="flex-1 py-2.5 bg-charcoal text-white rounded-full font-semibold hover:bg-black transition-colors text-sm"
+                          className="flex-1 py-2.5 bg-charcoal text-white rounded-full font-semibold hover:bg-black transition-colors text-sm inline-flex items-center justify-center gap-1.5"
                         >
-                          ✓ Approve
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polyline points="20 6 9 17 4 12"/></svg> Approve
                         </button>
                         <button
                           onClick={() => rejectSeller(seller.id)}
-                          className="py-2.5 px-4 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors text-sm"
+                          className="py-2.5 px-4 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors text-sm inline-flex items-center justify-center"
+                          aria-label="Reject seller"
                         >
-                          ✕
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                         </button>
                       </div>
                     </div>
@@ -556,8 +557,8 @@ export default function AdminPage() {
 
                       <div className="p-5">
                         <div className="flex items-center gap-2 mb-2">
-                          <span className={"text-xs font-bold px-2 py-1 rounded-full " + (listing.listing_type === 'service' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700')}>
-                            {listing.listing_type === 'service' ? '💼 Service' : '📦 Product'}
+                          <span className={"inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full " + (listing.listing_type === 'service' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700')}>
+                            {listing.listing_type === 'service' ? (<><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg> Service</>) : (<><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> Product</>)}
                           </span>
                           <span className="text-xs text-gray-500">{new Date(listing.created_at).toLocaleDateString()}</span>
                         </div>
@@ -570,23 +571,23 @@ export default function AdminPage() {
                         )}
 
                         {listing.service_duration && (
-                          <p className="text-xs text-gray-500">⏱ {listing.service_duration}</p>
+                          <p className="text-xs text-gray-500"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {listing.service_duration}</p>
                         )}
                         {listing.service_location && (
-                          <p className="text-xs text-gray-500">📍 {listing.service_location}</p>
+                          <p className="text-xs text-gray-500"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> {listing.service_location}</p>
                         )}
                         {(listing.listing_images && listing.listing_images.length > 0) || (listing.listing_items && listing.listing_items.length > 0) ? (
                           <p className="text-xs text-gray-500 mt-1">
-                            🖼 {listing.listing_images?.length || 0} photo{listing.listing_images?.length === 1 ? '' : 's'} · 📦 {listing.listing_items?.length || 0} bundle item{listing.listing_items?.length === 1 ? '' : 's'}
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> {listing.listing_images?.length || 0} photo{listing.listing_images?.length === 1 ? '' : 's'} · <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> {listing.listing_items?.length || 0} bundle item{listing.listing_items?.length === 1 ? '' : 's'}
                           </p>
                         ) : null}
 
                         <div className="bg-gray-50 rounded-xl p-3 mt-3 mb-4 space-y-1.5">
-                          <p className="text-xs text-gray-600">👤 {sellerName}</p>
+                          <p className="text-xs text-gray-600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> {sellerName}</p>
                           <p className="text-xs text-gray-600">
-                            📱 <span className="font-mono">{listing.seller?.whatsapp_number ? '+' + listing.seller.whatsapp_number : '—'}</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg> <span className="font-mono">{listing.seller?.whatsapp_number ? '+' + listing.seller.whatsapp_number : '—'}</span>
                           </p>
-                          <p className="text-xs text-gray-600">🕒 {fullTimestamp}</p>
+                          <p className="text-xs text-gray-600"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {fullTimestamp}</p>
                         </div>
 
                         {listing.seller?.whatsapp_number && (
@@ -594,24 +595,25 @@ export default function AdminPage() {
                             href={"https://wa.me/" + listing.seller.whatsapp_number + "?text=" + encodeURIComponent(waMessage)}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="block w-full text-center py-3 mb-2 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors text-sm"
+                            className="flex items-center justify-center gap-2 w-full text-center py-3 mb-2 bg-green-500 text-white rounded-full font-semibold hover:bg-green-600 transition-colors text-sm"
                           >
-                            💬 WhatsApp Seller
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> WhatsApp Seller
                           </a>
                         )}
 
                         <div className="flex gap-2">
                           <button
                             onClick={() => approveListing(listing.id)}
-                            className="flex-1 py-2.5 bg-charcoal text-white rounded-full font-semibold hover:bg-black transition-colors text-sm"
+                            className="flex-1 py-2.5 bg-charcoal text-white rounded-full font-semibold hover:bg-black transition-colors text-sm inline-flex items-center justify-center gap-1.5"
                           >
-                            ✓ Approve
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polyline points="20 6 9 17 4 12"/></svg> Approve
                           </button>
                           <button
                             onClick={() => rejectListing(listing.id, listing.title)}
-                            className="py-2.5 px-4 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors text-sm"
+                            className="py-2.5 px-4 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors text-sm inline-flex items-center justify-center"
+                            aria-label="Reject listing"
                           >
-                            ✕
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                           </button>
                         </div>
                       </div>
@@ -642,7 +644,7 @@ export default function AdminPage() {
                     <div key={review.id} className="bg-white rounded-3xl p-6 shadow-lg border border-amber-200">
                       <div className="flex items-center justify-between gap-2 mb-2">
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                          🚩 Flagged
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> Flagged
                         </span>
                         <span className="text-[10px] text-gray-400">{reviewDate(review.created_at)}</span>
                       </div>
@@ -650,7 +652,7 @@ export default function AdminPage() {
                       <p className="text-xs text-gray-500 mb-2">By: <span className="font-bold text-charcoal">{reviewerName}</span></p>
                       <div className="flex items-center gap-2 mb-2">
                         <StarRating rating={review.rating} size="sm" />
-                        <span className="text-[10px] text-green-600 font-semibold">✅ Verified buyer</span>
+                        <span className="text-[10px] text-green-600 font-semibold inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Verified buyer</span>
                       </div>
                       {review.review_text && (
                         <p className="text-sm text-gray-700 leading-relaxed mb-3">{review.review_text}</p>
@@ -663,21 +665,22 @@ export default function AdminPage() {
                       <div className="flex flex-wrap gap-2 mt-3">
                         <button
                           onClick={() => dismissReviewFlag(review.id)}
-                          className="flex-1 py-2.5 bg-charcoal text-white rounded-full font-semibold hover:bg-black transition-colors text-sm"
+                          className="flex-1 py-2.5 bg-charcoal text-white rounded-full font-semibold hover:bg-black transition-colors text-sm inline-flex items-center justify-center gap-1.5"
                         >
-                          ✓ Dismiss Flag
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polyline points="20 6 9 17 4 12"/></svg> Dismiss Flag
                         </button>
                         <button
                           onClick={() => hideFlaggedReview(review.id)}
-                          className="py-2.5 px-4 bg-amber-500 text-white rounded-full font-semibold hover:bg-amber-600 transition-colors text-sm"
+                          className="py-2.5 px-4 bg-amber-500 text-white rounded-full font-semibold hover:bg-amber-600 transition-colors text-sm inline-flex items-center justify-center gap-1.5"
                         >
-                          🙈 Hide
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 11 8 11 8a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 1 12s4 8 11 8a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg> Hide
                         </button>
                         <button
                           onClick={() => deleteFlaggedReview(review.id)}
-                          className="py-2.5 px-4 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors text-sm"
+                          className="py-2.5 px-4 bg-red-500 text-white rounded-full font-semibold hover:bg-red-600 transition-colors text-sm inline-flex items-center justify-center"
+                          aria-label="Delete review"
                         >
-                          🗑
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
                         </button>
                       </div>
                     </div>
@@ -704,9 +707,9 @@ export default function AdminPage() {
                   <button
                     onClick={saveFeatured}
                     disabled={featuredSaving}
-                    className="shrink-0 bg-charcoal text-white px-6 py-3 rounded-full font-semibold hover:bg-black transition-colors disabled:opacity-50"
+                    className="shrink-0 inline-flex items-center gap-2 bg-charcoal text-white px-6 py-3 rounded-full font-semibold hover:bg-black transition-colors disabled:opacity-50"
                   >
-                    {featuredSaving ? 'Saving...' : '💾 Save changes'}
+                    {featuredSaving ? 'Saving...' : (<><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save changes</>)}
                   </button>
                 </div>
 
@@ -723,9 +726,9 @@ export default function AdminPage() {
                           {sel && (
                             <button
                               onClick={() => clearFeaturedSlot(i)}
-                              className="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors"
+                              className="inline-flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-700 transition-colors"
                             >
-                              ✕ Clear
+                              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Clear
                             </button>
                           )}
                         </div>
@@ -770,7 +773,7 @@ export default function AdminPage() {
                             const taken = takenElsewhere.includes(l.id)
                             return (
                               <option key={l.id} value={l.id} disabled={taken}>
-                                {taken ? '⛔ ' : ''}{l.title} — GH₵ {Number(l.price).toLocaleString()}{l.seller?.full_name ? ' (' + formatName(l.seller.full_name) + ')' : ''}
+                                {l.title} — GH₵ {Number(l.price).toLocaleString()}{l.seller?.full_name ? ' (' + formatName(l.seller.full_name) + ')' : ''}
                               </option>
                             )
                           })}

@@ -246,7 +246,7 @@ export default function SaleDetailPage() {
         </div>
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6">
           <div className="flex flex-wrap items-center gap-2 mb-4">
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-purple-100 text-purple-700">📦 Product Sale</span>
+            <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-gold/15 text-gold-dark border border-gold/30">📦 Product Sale</span>
             {statusChip(sale.status)}
             {!editable && (
               <span className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-white/10 text-white/70 border border-white/20">🔒 Edit window closed</span>
@@ -383,7 +383,7 @@ export default function SaleDetailPage() {
               <button
                 onClick={saveEdits}
                 disabled={saving}
-                className="w-full bg-charcoal text-white py-4 rounded-2xl font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-charcoal/25"
+                className="w-full bg-charcoal text-white py-4 rounded-full font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-charcoal/25"
               >
                 {saving ? 'Saving...' : '💾 Save Changes'}
               </button>
