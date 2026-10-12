@@ -251,7 +251,7 @@ export default function RecordSalePage() {
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
           <div className="fade-up inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">Product Sales</div>
           <h1 className="fade-up fade-up-delay-1 text-4xl md:text-5xl font-bold text-white leading-tight tracking-tight mb-4">
-            Record a <span className="gradient-text">product sale</span>
+            Record a <span className="font-serif-accent italic text-gold">product sale</span>
           </h1>
           <p className="fade-up fade-up-delay-2 text-lg text-white/70">Keep your sales history accurate — it&apos;s private to you.</p>
         </div>

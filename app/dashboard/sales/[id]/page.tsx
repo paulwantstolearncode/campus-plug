@@ -108,10 +108,12 @@ export default function SaleDetailPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen animated-gradient">
-        <div className="text-center">
-          <div className="text-4xl mb-2 animate-pulse">🔌</div>
-          <p className="text-white/70">Loading sale...</p>
+      <div className="min-h-screen animated-gradient px-4 py-24">
+        <div className="max-w-3xl mx-auto space-y-6">
+          <div className="h-4 w-40 rounded-full skeleton-shimmer" />
+          <div className="h-9 w-2/3 rounded-2xl skeleton-shimmer" />
+          <div className="h-40 rounded-3xl bg-white/90 backdrop-blur-sm border border-rule p-6 space-y-3 skeleton-shimmer-light" />
+          <div className="h-28 rounded-3xl bg-white/90 backdrop-blur-sm border border-rule skeleton-shimmer-light" />
         </div>
       </div>
     )
@@ -256,7 +258,7 @@ export default function SaleDetailPage() {
             {sale.listing?.title || 'Unknown listing'}
           </h1>
           <div className="fade-up fade-up-delay-2 flex flex-wrap items-end gap-x-4 gap-y-2">
-            <span className="text-3xl md:text-4xl font-bold gradient-text">{formatPrice(sale.total_amount)}</span>
+            <span className="text-3xl md:text-4xl font-bold text-gold">{formatPrice(sale.total_amount)}</span>
             <span className="text-sm text-white/60 mb-1.5">Recorded {formatDateTime(sale.created_at)}</span>
           </div>
         </div>

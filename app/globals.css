@@ -197,14 +197,6 @@ html {
   font-weight: 400;
 }
 
-/* Gradient gold text */
-.gradient-text {
-  background: linear-gradient(120deg, #e8b93b 0%, #c9a227 45%, #f0d27a 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
 /* Eyebrow label — mono meta tag used above section headings */
 .eyebrow {
   font-family: var(--font-mono), monospace;

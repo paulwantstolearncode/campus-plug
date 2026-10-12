@@ -193,7 +193,7 @@ export default function BookServicePage() {
             Book Now
           </div>
           <h1 className="fade-up fade-up-delay-1 text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-4">
-            Almost <span className="gradient-text">there</span>
+            Almost <span className="font-serif-accent italic text-gold">there</span>
           </h1>
           <p className="fade-up fade-up-delay-2 text-lg text-white/70">
             Pick your preferred time and confirm via WhatsApp.

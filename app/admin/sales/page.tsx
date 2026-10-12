@@ -328,7 +328,7 @@ export default function AdminSalesPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
           <div className="fade-up inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">Admin Only</div>
           <h1 className="fade-up fade-up-delay-1 text-4xl md:text-5xl font-bold text-white leading-tight tracking-tight mb-4">
-            Sales <span className="gradient-text">Dashboard</span>
+            Sales <span className="font-serif-accent italic text-gold">Dashboard</span>
           </h1>
         </div>
       </section>

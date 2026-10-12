@@ -198,7 +198,7 @@ export default function ServicesPage() {
             <h1 className="fade-up fade-up-delay-1 text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-[0.95] tracking-tight mb-6">
               Book trusted<br />
               services from<br />
-              <span className="gradient-text">fellow students</span>
+              <span className="font-serif-accent italic text-gold">fellow students</span>
             </h1>
             <p className="fade-up fade-up-delay-2 text-lg md:text-xl text-white/70 leading-relaxed max-w-2xl">
               Hair styling, tutoring, photography, tech support — all from verified students on campus.
@@ -339,19 +339,19 @@ export default function ServicesPage() {
               </div>
 
               {filteredServices.length === 0 ? (
-                <div className="relative overflow-hidden bg-gradient-to-br from-off-white to-white rounded-3xl p-12 md:p-16 text-center border border-gray-200 shadow-sm">
+                <div className="relative overflow-hidden bg-gradient-to-br from-off-white to-white rounded-3xl p-12 md:p-16 text-center border border-rule shadow-sm">
                   <div className="relative">
                     <div className="text-6xl mb-4 opacity-60">🔍</div>
                     {searchQuery.trim() ? (
                       <p className="font-serif-accent text-gold-dark text-xl md:text-2xl mb-2">No wahala...</p>
                     ) : null}
-                    <h2 className="text-2xl md:text-3xl font-bold text-charcoal mb-3">
+                    <h2 className="text-2xl md:text-3xl font-bold text-ink mb-3">
                       {searchQuery.trim()
                         ? <>Nothing on the board for ‘{searchQuery}’ — yet.</>
                         : 'Nothing matching your filters yet'
                       }
                     </h2>
-                    <p className="text-gray-500 mb-8 max-w-lg mx-auto leading-relaxed">
+                    <p className="text-ink-muted mb-8 max-w-lg mx-auto leading-relaxed">
                       {searchQuery.trim()
                         ? `We couldn't find matches for '${searchQuery}'. Post a request on the Wanted Board and let sellers find you.`
                         : 'Try different filters, or put it on the Wanted Board and verified student sellers will pitch you directly.'

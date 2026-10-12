@@ -260,7 +260,7 @@ export default async function CategoriesPage() {
               <div className="relative">
                 <p className="font-serif-accent italic text-xl sm:text-2xl text-gold mb-4">Sell on Campus Plug</p>
                 <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-bold text-white leading-tight mb-4">
-                  Got something to <em className="font-serif-accent gradient-text">sell?</em>
+                  Got something to <em className="font-serif-accent text-gold">sell?</em>
                 </h2>
                 <p className="text-base md:text-lg text-white/60 max-w-xl mx-auto mb-8 leading-relaxed">
                   Post it on the board and reach thousands of students — from Pentagon to

@@ -417,14 +417,7 @@ function NewListingContent() {
   }
 
   if (checking) {
-    return (
-      <div className="flex items-center justify-center min-h-screen animated-gradient">
-        <div className="text-center">
-          <div className="text-4xl mb-2 animate-pulse">🔌</div>
-          <p className="text-white/70">Loading...</p>
-        </div>
-      </div>
-    )
+    return <NewListingSkeleton />
   }
 
   return (
@@ -443,7 +436,7 @@ function NewListingContent() {
             {isEditMode ? 'Edit Listing · Step 1 of 3' : 'New Listing · Step 1 of 3'}
           </div>
           <h1 className="fade-up fade-up-delay-1 text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-4">
-            {isEditMode ? (<>Update your<br /><span className="gradient-text">listing</span></>) : (<>Share what<br /><span className="gradient-text">you offer</span></>)}
+            {isEditMode ? (<>Update your<br /><span className="font-serif-accent italic text-gold">listing</span></>) : (<>Share what<br /><span className="font-serif-accent italic text-gold">you offer</span></>)}
           </h1>
           <p className="fade-up fade-up-delay-2 text-lg text-white/70 max-w-xl mx-auto">
             {isEditMode ? 'Make changes and save when ready.' : 'You&apos;ve got the skill. We&apos;ll help students find it.'}
@@ -817,16 +810,37 @@ function NewListingContent() {
   )
 }
 
+function NewListingSkeleton() {
+  return (
+    <main className="min-h-screen bg-ink">
+      <NavBar back={{ href: '/', label: 'Back' }} />
+
+      {/* Hero skeleton (dark) */}
+      <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center">
+          <div className="h-6 skeleton-shimmer rounded-full w-48 mx-auto mb-5" />
+          <div className="h-12 md:h-14 skeleton-shimmer rounded-xl w-2/3 mx-auto" />
+        </div>
+      </section>
+
+      {/* Form skeleton */}
+      <section className="relative pb-24 md:pb-32 bg-off-white -mt-8">
+        <div className="relative max-w-2xl mx-auto px-4 sm:px-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-10 border border-rule space-y-8">
+            <div className="h-12 skeleton-shimmer-light rounded-full" />
+            <div className="h-12 skeleton-shimmer-light rounded-full" />
+            <div className="h-32 skeleton-shimmer-light rounded-2xl" />
+            <div className="h-12 skeleton-shimmer-light rounded-full" />
+          </div>
+        </div>
+      </section>
+    </main>
+  )
+}
+
 export default function NewListingPage() {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen animated-gradient">
-        <div className="text-center">
-          <div className="text-4xl mb-2 animate-pulse">🔌</div>
-          <p className="text-white/70">Loading...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<NewListingSkeleton />}>
       <NewListingContent />
     </Suspense>
   )

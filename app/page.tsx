@@ -190,7 +190,7 @@ export default function Home() {
               Live on campus
             </div>
             <h1 className="fade-up fade-up-delay-1 text-2xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight md:leading-[0.95] tracking-tight mb-3 md:mb-6">
-              Discover <span className="gradient-text">amazing things</span>
+              Discover <span className="font-serif-accent italic text-gold">amazing things</span>
             </h1>
             <p className="fade-up fade-up-delay-2 hidden sm:block text-lg md:text-xl text-white/70 leading-relaxed max-w-2xl mb-8">
               Products and services from verified students on your campus.

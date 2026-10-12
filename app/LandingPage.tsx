@@ -337,7 +337,7 @@ export default function LandingPage() {
               {/* Main headline */}
               <h1 className="fade-up fade-up-delay-1 text-5xl sm:text-6xl md:text-7xl xl:text-8xl font-bold text-white leading-[0.95] tracking-tight mb-5">
                 Campus help,<br className="hidden sm:block" />
-                without the <em className="font-serif-accent gradient-text not-italic">guesswork</em>.
+                without the <em className="font-serif-accent text-gold not-italic">guesswork</em>.
               </h1>
 
               <p className="fade-up fade-up-delay-1 text-base sm:text-lg text-gold-vivid font-semibold tracking-wide mb-4">
@@ -511,7 +511,7 @@ export default function LandingPage() {
           <div className="hairline rounded-3xl bg-surface px-6 py-12 md:px-12 md:py-16 text-center shadow-lift">
             <p className="eyebrow text-gold-dark mb-4">The marketplace</p>
             <h2 className="text-4xl md:text-5xl font-bold text-ink leading-tight mb-6">
-              What is <em className="font-serif-accent gradient-text">Campus Plug</em>?
+              What is <em className="font-serif-accent text-gold">Campus Plug</em>?
             </h2>
             <p className="text-lg md:text-xl text-ink-muted leading-relaxed">
               Campus Plug is a student marketplace built for the University of Ghana community. Browse verified student sellers offering services like braiding, tutoring, home-cooked meals, phone repairs, and everyday products — then message them directly on WhatsApp to book. Every seller is a verified UG student.
@@ -535,7 +535,7 @@ export default function LandingPage() {
             <div className="text-center mb-12 md:mb-16">
               <p className="eyebrow text-gold-dark mb-4">01 · Fresh on campus</p>
               <h2 className="text-4xl md:text-6xl font-bold text-ink leading-tight">
-                See what&apos;s fresh <em className="font-serif-accent gradient-text">right now</em>
+                See what&apos;s fresh <em className="font-serif-accent text-gold">right now</em>
               </h2>
               <p className="text-ink-muted mt-3">This week on Campus Plug</p>
             </div>
@@ -571,7 +571,7 @@ export default function LandingPage() {
           <div className="text-center mb-12 md:mb-16">
             <p className="eyebrow text-gold-dark mb-4">02 · How it works</p>
             <h2 className="text-4xl md:text-5xl font-bold text-ink leading-tight mb-3">
-              How it <em className="font-serif-accent gradient-text">works</em>
+              How it <em className="font-serif-accent text-gold">works</em>
             </h2>
             <p className="text-lg md:text-xl text-ink-muted">
               Three steps. That&apos;s it.
@@ -611,7 +611,7 @@ export default function LandingPage() {
             <div className="text-center mb-12 md:mb-16">
               <p className="eyebrow text-gold-dark mb-4">03 · Explore categories</p>
               <h2 className="text-4xl md:text-5xl font-bold text-ink leading-tight mb-3">
-                Explore by <em className="font-serif-accent gradient-text">category</em>
+                Explore by <em className="font-serif-accent text-gold">category</em>
               </h2>
               <p className="text-lg md:text-xl text-ink-muted">
                 Find exactly what you need
@@ -646,7 +646,7 @@ export default function LandingPage() {
           <div className="text-center mb-12 md:mb-16">
             <p className="eyebrow text-gold-dark mb-4">04 · Why campus plug</p>
             <h2 className="text-4xl md:text-5xl font-bold text-ink leading-tight mb-3">
-              Why Campus <em className="font-serif-accent gradient-text">Plug</em>
+              Why Campus <em className="font-serif-accent text-gold">Plug</em>
             </h2>
             <p className="text-lg md:text-xl text-ink-muted">
               Built for campus
@@ -679,7 +679,7 @@ export default function LandingPage() {
           <div className="text-center mb-12">
             <p className="eyebrow text-gold-dark mb-4">05 · Wanted board</p>
             <h2 className="text-4xl md:text-5xl font-bold text-ink leading-tight mb-4">
-              Need something <em className="font-serif-accent gradient-text">specific</em>?
+              Need something <em className="font-serif-accent text-gold">specific</em>?
             </h2>
             <p className="text-lg md:text-xl text-ink-muted max-w-2xl mx-auto">
               Put it on the board and sellers will pitch you directly on WhatsApp.

@@ -330,7 +330,7 @@ function LoginForm() {
               Now live at UG
             </div>
             <h1 className="text-5xl xl:text-6xl font-bold leading-tight tracking-tight mb-6">
-              Every skill.<br /><span className="gradient-text">One plug.</span>
+              Every skill.<br /><span className="font-serif-accent italic text-gold">One plug.</span>
             </h1>
             <p className="text-lg text-white/70 leading-relaxed">
               Join hundreds of UG students booking and offering trusted services on campus.
@@ -357,7 +357,7 @@ function LoginForm() {
               <span className="text-xl font-bold">Campus Plug</span>
             </Link>
             <h1 className="text-3xl font-bold text-white leading-tight">
-              Every skill.<br /><span className="gradient-text">One plug.</span>
+              Every skill.<br /><span className="font-serif-accent italic text-gold">One plug.</span>
             </h1>
           </div>
         </div>

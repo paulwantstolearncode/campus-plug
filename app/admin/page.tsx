@@ -7,6 +7,7 @@ import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
 import { formatName } from '@/lib/formatName'
 import StarRating from '@/app/StarRating'
+import { StatCardSkeleton } from '@/app/components/Skeleton'
 import {
   dismissFlag,
   hideReview,
@@ -357,12 +358,31 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen animated-gradient">
-        <div className="text-center">
-          <div className="text-4xl mb-2 animate-pulse">🔌</div>
-          <p className="text-white/70">Loading admin...</p>
-        </div>
-      </div>
+      <main className="min-h-screen bg-ink">
+        {/* Hero skeleton (dark) */}
+        <section className="pt-32 pb-12 animated-gradient">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6">
+            <div className="h-4 skeleton-shimmer rounded-full w-40 mb-4" />
+            <div className="h-10 md:h-12 skeleton-shimmer rounded-xl w-2/3 md:w-1/3" />
+          </div>
+        </section>
+
+        {/* Stat cards + list rows skeleton */}
+        <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8">
+            <div className="grid gap-4 grid-cols-2 lg:grid-cols-4 mb-8">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <StatCardSkeleton key={i} />
+              ))}
+            </div>
+            <div className="space-y-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="h-20 skeleton-shimmer-light rounded-2xl" />
+              ))}
+            </div>
+          </div>
+        </section>
+      </main>
     )
   }
 

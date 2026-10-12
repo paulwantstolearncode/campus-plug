@@ -158,9 +158,10 @@ export default function RequestsPage() {
       <section className="relative pb-24 md:pb-32">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
           {loading ? (
-            <div className="text-center py-20">
-              <div className="text-4xl mb-2 animate-pulse">🔌</div>
-              <p className="text-gray-500">Loading requests...</p>
+            <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-24 rounded-2xl skeleton-shimmer-light" />
+              ))}
             </div>
           ) : requests.length === 0 ? (
             <div className="text-center py-20 bg-off-white rounded-3xl border border-gray-100">

@@ -174,7 +174,7 @@ export default function BecomeSellerPage() {
             {status === 'pending' ? 'Verification In Progress' : 'Apply to be a Seller'}
           </div>
           <h1 className="fade-up fade-up-delay-1 text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-4">
-            {status === 'pending' ? (<>You&apos;re on<br /><span className="gradient-text">the list</span></>) : (<>Your side hustle deserves<br />a <span className="gradient-text">better front door.</span></>)}
+            {status === 'pending' ? (<>You&apos;re on<br /><span className="font-serif-accent italic text-gold">the list</span></>) : (<>Your side hustle deserves<br />a <span className="font-serif-accent italic text-gold">better front door.</span></>)}
           </h1>
           <p className="fade-up fade-up-delay-2 text-lg text-white/70 max-w-xl mx-auto">
             {status === 'pending'

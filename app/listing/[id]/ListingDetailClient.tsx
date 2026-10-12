@@ -311,12 +311,23 @@ export default function ListingDetailClient() {
 
   if (loading || !listing) {
     return (
-      <div className="flex items-center justify-center min-h-screen animated-gradient">
-        <div className="text-center">
-          <div className="text-4xl mb-2 animate-pulse">🔌</div>
-          <p className="text-white/70">Loading listing...</p>
-        </div>
-      </div>
+      <main className="min-h-screen bg-ink">
+        {/* Hero skeleton (dark) */}
+        <section className="relative pt-28 pb-10 md:pt-36 md:pb-14 animated-gradient">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+            <div className="aspect-[4/3] md:aspect-[21/9] skeleton-shimmer rounded-3xl mb-6" />
+            <div className="h-8 skeleton-shimmer rounded-xl w-2/3 mb-3" />
+            <div className="h-9 skeleton-shimmer rounded-lg w-1/3" />
+          </div>
+        </section>
+
+        {/* Seller card skeleton */}
+        <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
+          <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
+            <div className="h-24 skeleton-shimmer-light rounded-2xl" />
+          </div>
+        </section>
+      </main>
     )
   }
 
@@ -455,7 +466,7 @@ export default function ListingDetailClient() {
             {listing.title}
           </h1>
           <div className="fade-up fade-up-delay-2 flex flex-wrap items-end gap-x-4 gap-y-2">
-            <span className="text-3xl md:text-4xl font-bold gradient-text">{priceLabel}</span>
+            <span className="text-3xl md:text-4xl font-bold text-gold">{priceLabel}</span>
             {itemCount > 0 && priceRange && (
               <span className="text-sm text-white/60 mb-1.5">
                 starting from {formatPrice(priceRange.min)}

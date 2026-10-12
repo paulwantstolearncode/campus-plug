@@ -486,7 +486,7 @@ export default function DashboardPage() {
           <div className="fade-up inline-block text-sm font-semibold text-gold tracking-widest uppercase mb-4">Seller Dashboard</div>
           <h1 className="fade-up fade-up-delay-1 text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight mb-4">
             Your Campus Plug<br />
-            <span className="gradient-text">at a glance</span>
+            <span className="font-serif-accent italic text-gold">at a glance</span>
           </h1>
           <p className="fade-up fade-up-delay-2 text-lg text-white/70 max-w-xl">
             Track your listings, bookings and sales in one place.
