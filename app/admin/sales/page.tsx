@@ -296,10 +296,10 @@ export default function AdminSalesPage() {
   if (error && !isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen animated-gradient p-6">
-        <div className="bg-white rounded-3xl p-8 max-w-md text-center shadow-xl">
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 max-w-md text-center shadow-xl border border-rule">
           <div className="text-4xl mb-3">⚠️</div>
           <p className="text-red-600 font-semibold">{error}</p>
-          <Link href="/" className="inline-block mt-5 text-sm text-white bg-charcoal rounded-full px-5 py-2.5 hover:bg-black transition-colors">← Back to app</Link>
+          <Link href="/" className="inline-block mt-5 text-sm text-white bg-ink rounded-full px-5 py-2.5 hover:bg-black transition-colors">← Back to app</Link>
         </div>
       </div>
     )
@@ -310,14 +310,14 @@ export default function AdminSalesPage() {
   const filterChip = (value: TimeFilter, label: string) => (
     <button
       onClick={() => setFilter(value)}
-      className={"px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap transition-all " + (filter === value ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200 hover:border-gray-400')}
+      className={"px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap transition-all " + (filter === value ? 'bg-ink text-white shadow-lg' : 'bg-white/90 backdrop-blur-sm text-charcoal border border-rule hover:border-ink-muted')}
     >
       {label}
     </button>
   )
 
   return (
-    <main className="min-h-screen bg-charcoal">
+    <main className="min-h-screen bg-ink">
 <NavBar variant="admin" back={{ href: '/admin', label: 'Review Queue' }} />
 
       <section className="relative pt-32 pb-12 md:pt-36 md:pb-14 overflow-hidden animated-gradient">
@@ -354,14 +354,14 @@ export default function AdminSalesPage() {
                   type="date"
                   value={customFrom}
                   onChange={(e) => setCustomFrom(e.target.value)}
-                  className="px-3 py-2.5 rounded-full border-2 border-gray-200 text-sm font-semibold text-charcoal focus:outline-none focus:border-gold transition-colors"
+                  className="px-3 py-2.5 rounded-full border-2 border-rule text-sm font-semibold text-charcoal focus:outline-none focus:border-gold transition-colors"
                 />
-                <span className="text-xs text-gray-500">to</span>
+                <span className="text-xs text-ink-muted">to</span>
                 <input
                   type="date"
                   value={customTo}
                   onChange={(e) => setCustomTo(e.target.value)}
-                  className="px-3 py-2.5 rounded-full border-2 border-gray-200 text-sm font-semibold text-charcoal focus:outline-none focus:border-gold transition-colors"
+                  className="px-3 py-2.5 rounded-full border-2 border-rule text-sm font-semibold text-charcoal focus:outline-none focus:border-gold transition-colors"
                 />
               </div>
             )}
@@ -376,7 +376,7 @@ export default function AdminSalesPage() {
                 <button
                   key={status}
                   onClick={() => setStatusFilter(status)}
-                  className={'px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap transition-all ' + (statusFilter === status ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200 hover:border-gray-400')}
+                  className={'px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap transition-all ' + (statusFilter === status ? 'bg-ink text-white shadow-lg' : 'bg-white/90 backdrop-blur-sm text-charcoal border border-rule hover:border-ink-muted')}
                 >
                   {labels[status]} ({count})
                 </button>
@@ -386,71 +386,71 @@ export default function AdminSalesPage() {
 
           {/* Transaction count breakdown */}
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100 text-center">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule text-center">
               <div className="text-2xl font-bold text-green-600">{allTxns.filter((t) => t.status === 'completed').length}</div>
-              <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">Completed</div>
+              <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Completed</div>
             </div>
-            <div className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100 text-center">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule text-center">
               <div className="text-2xl font-bold text-amber-600">{allTxns.filter((t) => t.status === 'pending').length}</div>
-              <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">Pending</div>
+              <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Pending</div>
             </div>
-            <div className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100 text-center">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule text-center">
               <div className="text-2xl font-bold text-red-600">{allTxns.filter((t) => t.status === 'cancelled').length}</div>
-              <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">Cancelled</div>
+              <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Cancelled</div>
             </div>
           </div>
 
           {/* Overview */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
               <div className="text-2xl mb-2">💰</div>
               <div className="text-2xl font-bold text-charcoal">{formatPrice(totalFacilitated)}</div>
-              <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">Total Facilitated</div>
+              <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Total Facilitated</div>
             </div>
-            <div className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
               <div className="text-2xl mb-2">🧾</div>
               <div className="text-2xl font-bold text-charcoal">
                 {completedBookings.length + completedSales.length}
-                <span className="text-sm font-semibold text-gray-400"> ({completedBookings.length} + {completedSales.length})</span>
+                <span className="text-sm font-semibold text-ink-muted"> ({completedBookings.length} + {completedSales.length})</span>
               </div>
-              <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">Completed Transactions</div>
+              <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Completed Transactions</div>
             </div>
-            <div className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
               <div className="text-2xl mb-2">💼</div>
               <div className="text-2xl font-bold text-charcoal">{completedBookings.length}</div>
-              <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">Service Bookings</div>
+              <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Service Bookings</div>
               <div className="text-sm font-bold text-gold-dark mt-1">{formatPrice(serviceAmount)}</div>
             </div>
-            <div className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
               <div className="text-2xl mb-2">📦</div>
               <div className="text-2xl font-bold text-charcoal">{completedSales.length}</div>
-              <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">Product Sales</div>
+              <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Product Sales</div>
               <div className="text-sm font-bold text-gold-dark mt-1">{formatPrice(productAmount)}</div>
             </div>
           </div>
 
           {/* Refunded line */}
-          <div className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100 mb-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule mb-6">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
               <span className="text-2xl">↩️</span>
               <div>
                 <div className="text-sm font-semibold text-amber-700">Refunded: {formatPrice(refundedAmount)} ({refundedSales.length} transaction{refundedSales.length === 1 ? '' : 's'})</div>
-                <div className="text-xs text-gray-500 mt-0.5">Excluded from headline revenue — track this to spot refund patterns.</div>
+                <div className="text-xs text-ink-muted mt-0.5">Excluded from headline revenue — track this to spot refund patterns.</div>
               </div>
             </div>
           </div>
 
           {/* Commission preview */}
-          <div className="bg-white rounded-3xl p-6 shadow-lg border border-gold/40 mb-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-gold/40 mb-6">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-xl">📈</span>
               <h2 className="font-bold text-charcoal">Hypothetical Commission</h2>
-              <span className="text-xs text-gray-400 font-normal">(for planning only)</span>
+              <span className="text-xs text-ink-muted font-normal">(for planning only)</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {[0.05, 0.1, 0.15].map((rate) => (
-                <div key={rate} className="rounded-2xl bg-gray-50 p-4">
-                  <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">At {Math.round(rate * 100)}%</div>
+                <div key={rate} className="rounded-2xl bg-paper-deep p-4">
+                  <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider">At {Math.round(rate * 100)}%</div>
                   <div className="text-2xl font-bold text-gold-dark mt-1">{formatPrice(totalFacilitated * rate)}</div>
                 </div>
               ))}
@@ -459,18 +459,18 @@ export default function AdminSalesPage() {
 
           {/* Top sellers + top categories */}
           <div className="grid lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white rounded-3xl p-6 shadow-lg border border-gray-100">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-rule">
               <h2 className="font-bold text-charcoal mb-4">🏆 Top Sellers by Revenue</h2>
               {topSellers.length === 0 ? (
-                <p className="text-sm text-gray-400">No completed sales in this period yet.</p>
+                <p className="text-sm text-ink-muted">No completed sales in this period yet.</p>
               ) : (
                 <div className="space-y-3">
                   {topSellers.map((s, idx) => (
                     <div key={s.name} className="flex items-center gap-3">
-                      <span className={"w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 " + (idx === 0 ? 'bg-gold text-charcoal' : 'bg-gray-100 text-gray-600')}>{idx + 1}</span>
+                      <span className={"w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 " + (idx === 0 ? 'bg-gold text-charcoal' : 'bg-paper-deep text-ink-muted')}>{idx + 1}</span>
                       <div className="min-w-0 flex-1">
                         <p className="font-semibold text-charcoal text-sm truncate">{s.name}</p>
-                        <p className="text-xs text-gray-500">{s.count} transaction{s.count === 1 ? '' : 's'}</p>
+                        <p className="text-xs text-ink-muted">{s.count} transaction{s.count === 1 ? '' : 's'}</p>
                       </div>
                       <span className="font-bold text-gold-dark text-sm whitespace-nowrap">{formatPrice(s.amount)}</span>
                     </div>
@@ -479,15 +479,15 @@ export default function AdminSalesPage() {
               )}
             </div>
 
-            <div className="bg-white rounded-3xl p-6 shadow-lg border border-gray-100">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-rule">
               <h2 className="font-bold text-charcoal mb-4">🗂️ Top Categories by Revenue</h2>
               {topCategories.length === 0 ? (
-                <p className="text-sm text-gray-400">No completed sales in this period yet.</p>
+                <p className="text-sm text-ink-muted">No completed sales in this period yet.</p>
               ) : (
                 <div className="space-y-3">
                   {topCategories.map(([label, amount], idx) => (
                     <div key={label} className="flex items-center gap-3">
-                      <span className={"w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 " + (idx === 0 ? 'bg-gold text-charcoal' : 'bg-gray-100 text-gray-600')}>{idx + 1}</span>
+                      <span className={"w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 " + (idx === 0 ? 'bg-gold text-charcoal' : 'bg-paper-deep text-ink-muted')}>{idx + 1}</span>
                       <p className="font-semibold text-charcoal text-sm flex-1 truncate">{label}</p>
                       <span className="font-bold text-gold-dark text-sm whitespace-nowrap">{formatPrice(amount)}</span>
                     </div>
@@ -502,44 +502,44 @@ export default function AdminSalesPage() {
             <h2 className="text-2xl font-bold text-charcoal">Recent Transactions</h2>
             <button
               onClick={exportCsv}
-              className="inline-flex items-center gap-2 bg-charcoal text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-colors"
+              className="inline-flex items-center gap-2 bg-ink text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-colors"
             >
               📥 Export CSV
             </button>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-lg border border-gray-100 overflow-x-auto">
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-rule overflow-x-auto">
             {filteredTxns.length === 0 ? (
               <div className="p-12 text-center">
                 <div className="text-5xl mb-4">🗃️</div>
                 <p className="text-xl font-bold text-charcoal">No transactions in this period</p>
-                <p className="text-gray-500 mt-2">Adjust the time filter or wait for sellers to record activity.</p>
+                <p className="text-ink-muted mt-2">Adjust the time filter or wait for sellers to record activity.</p>
               </div>
             ) : (
               <table className="w-full text-sm min-w-[720px]">
                 <thead>
-                  <tr className="border-b border-gray-100 text-left">
-                    <th className="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Date</th>
-                    <th className="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Seller</th>
-                    <th className="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Type</th>
-                    <th className="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Listing</th>
-                    <th className="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Category</th>
-                    <th className="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Amount</th>
-                    <th className="px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                  <tr className="border-b border-rule text-left">
+                    <th className="px-5 py-3 text-xs font-bold text-ink-muted uppercase tracking-wider">Date</th>
+                    <th className="px-5 py-3 text-xs font-bold text-ink-muted uppercase tracking-wider">Seller</th>
+                    <th className="px-5 py-3 text-xs font-bold text-ink-muted uppercase tracking-wider">Type</th>
+                    <th className="px-5 py-3 text-xs font-bold text-ink-muted uppercase tracking-wider">Listing</th>
+                    <th className="px-5 py-3 text-xs font-bold text-ink-muted uppercase tracking-wider">Category</th>
+                    <th className="px-5 py-3 text-xs font-bold text-ink-muted uppercase tracking-wider text-right">Amount</th>
+                    <th className="px-5 py-3 text-xs font-bold text-ink-muted uppercase tracking-wider">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-rule">
                   {filteredTxns.slice(0, 100).map((t) => (
-                    <tr key={t.type + '-' + t.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-5 py-3 text-gray-600 whitespace-nowrap">{formatDateTime(t.date)}</td>
+                    <tr key={t.type + '-' + t.id} className="hover:bg-paper-deep transition-colors">
+                      <td className="px-5 py-3 text-ink-muted whitespace-nowrap">{formatDateTime(t.date)}</td>
                       <td className="px-5 py-3 font-semibold text-charcoal truncate max-w-[140px]">{t.sellerName}</td>
                       <td className="px-5 py-3">
                         <span className={"inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold " + (t.type === 'booking' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700')}>
                           {t.type === 'booking' ? '💼 Booking' : '📦 Sale'}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-gray-700 truncate max-w-[180px]">{t.listingTitle}</td>
-                      <td className="px-5 py-3 text-gray-500 whitespace-nowrap">{t.category}</td>
+                      <td className="px-5 py-3 text-ink truncate max-w-[180px]">{t.listingTitle}</td>
+                      <td className="px-5 py-3 text-ink-muted whitespace-nowrap">{t.category}</td>
                       <td className="px-5 py-3 font-bold text-gold-dark text-right whitespace-nowrap">{formatPrice(t.amount)}</td>
                       <td className="px-5 py-3">{statusChip(t.status)}</td>
                     </tr>
@@ -548,7 +548,7 @@ export default function AdminSalesPage() {
               </table>
             )}
             {filteredTxns.length > 100 && (
-              <p className="px-5 py-3 text-xs text-gray-400 border-t border-gray-100">
+              <p className="px-5 py-3 text-xs text-ink-muted border-t border-rule">
                 Showing the latest 100 of {filteredTxns.length} transactions — the CSV export includes everything.
               </p>
             )}

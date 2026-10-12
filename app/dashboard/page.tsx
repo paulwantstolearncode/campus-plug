@@ -319,7 +319,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-charcoal">
+      <main className="min-h-screen bg-ink">
         <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6">
             <div className="h-4 bg-white/10 rounded-full w-32 mb-4 animate-pulse" />
@@ -472,7 +472,7 @@ export default function DashboardPage() {
   // buyer name is rendered through the shared formatName() helper (see
   // lib/formatName.ts) which never prints a full email address.
   return (
-    <main className="min-h-screen bg-charcoal">
+    <main className="min-h-screen bg-ink">
 <NavBar variant="dashboard" back={{ href: '/', label: 'Back to app' }} />
 
       <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
@@ -514,7 +514,7 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="flex-1">
                   <h2 className="text-xl font-bold text-charcoal mb-1 flex items-center gap-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Promote Your Campus Shop</h2>
-                  <p className="text-sm text-gray-600">Share your shop link on your WhatsApp Status so students can browse your inventory.</p>
+                  <p className="text-sm text-ink-muted">Share your shop link on your WhatsApp Status so students can browse your inventory.</p>
                   <p className="text-xs text-charcoal font-mono mt-2">campuspluggh.com/shop/{userId}</p>
                 </div>
                 <div className="flex flex-col gap-2 shrink-0 w-full sm:w-auto">
@@ -539,12 +539,12 @@ export default function DashboardPage() {
                           alert('Could not copy — long-press the link instead.')
                         }
                       }}
-                      className="relative bg-white text-charcoal px-4 py-2.5 rounded-full text-sm font-semibold border-2 border-gold/50 hover:bg-gold/10 hover:border-gold transition-colors min-h-[44px]"
+                      className="relative bg-surface text-charcoal px-4 py-2.5 rounded-full text-sm font-semibold border-2 border-gold/50 hover:bg-gold/10 hover:border-gold transition-colors min-h-[44px]"
                     >
                       {copied ? 'Link copied!' : 'Copy Shop Link'}
                     </button>
                   </div>
-                  <p className="text-[11px] text-gray-500 sm:text-right max-w-sm">
+                  <p className="text-[11px] text-ink-muted sm:text-right max-w-sm">
                     Paste your shop link in your WhatsApp About, Status, or Instagram bio so customers can browse your full catalog.
                   </p>
                 </div>
@@ -557,35 +557,35 @@ export default function DashboardPage() {
             {[
               { label: 'Total listings', value: listings.length, icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg> },
               { label: 'Approved', value: approved, icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> },
-              { label: 'Pending review', value: pending, icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-amber-500"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
+              { label: 'Pending review', value: pending, icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
               { label: 'Sold', value: sold, icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> },
             ].map((stat) => (
-              <div key={stat.label} className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100">
+              <div key={stat.label} className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
                 <div className="mb-2">{stat.icon}</div>
                 <div className="text-3xl font-bold text-charcoal">{stat.value}</div>
-                <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider mt-1">{stat.label}</div>
+                <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">{stat.label}</div>
               </div>
             ))}
           </div>
 
           {/* SALES STATS */}
-          <div className="bg-white rounded-3xl p-6 shadow-lg border border-gold/40 mb-12">
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-gold/40 mb-12">
             <div className="flex items-center gap-2 mb-4">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
               <h2 className="font-bold text-charcoal">Your Sales Stats</h2>
-              <span className="text-xs text-gray-400 font-normal">(private to you)</span>
+              <span className="text-xs text-ink-muted font-normal">(private to you)</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Total Bookings Completed</div>
+              <div className="rounded-2xl bg-paper-deep p-4">
+                <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider">Total Bookings Completed</div>
                 <div className="text-2xl font-bold text-charcoal mt-1">{completedBookings.length}</div>
               </div>
-              <div className="rounded-2xl bg-gray-50 p-4">
-                <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Total Product Sales</div>
+              <div className="rounded-2xl bg-paper-deep p-4">
+                <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider">Total Product Sales</div>
                 <div className="text-2xl font-bold text-charcoal mt-1">{completedSales.length}</div>
               </div>
               <div className="rounded-2xl bg-gradient-to-br from-gold/15 to-gold/5 p-4 border border-gold/20">
-                <div className="text-xs text-gray-600 font-semibold uppercase tracking-wider">Total Revenue</div>
+                <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider">Total Revenue</div>
                 <div className="text-2xl font-bold text-gold-dark mt-1">{formatPrice(totalRevenue)}</div>
               </div>
             </div>
@@ -597,21 +597,21 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2 mb-4">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
                 <h2 className="text-2xl font-bold text-charcoal">Listing Analytics</h2>
-                <span className="text-xs text-gray-400 font-normal">(views & WhatsApp clicks)</span>
+                <span className="text-xs text-ink-muted font-normal">(views & WhatsApp clicks)</span>
               </div>
 
               {/* Summary stats */}
               <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
-                  <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Total Views</div>
+                <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-rule">
+                  <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider">Total Views</div>
                   <div className="text-2xl font-bold text-charcoal mt-1">{analytics.reduce((s, a) => s + a.views, 0).toLocaleString()}</div>
                 </div>
-                <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-100">
-                  <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">WhatsApp Clicks</div>
+                <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-rule">
+                  <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider">WhatsApp Clicks</div>
                   <div className="text-2xl font-bold text-whatsapp mt-1">{analytics.reduce((s, a) => s + a.clicks, 0).toLocaleString()}</div>
                 </div>
-                <div className="bg-white rounded-2xl p-4 shadow-lg border border-gold/30">
-                  <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Conversion Rate</div>
+                <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-gold/30">
+                  <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider">Conversion Rate</div>
                   <div className="text-2xl font-bold text-gold-dark mt-1">
                     {analytics.reduce((s, a) => s + a.views, 0) > 0
                       ? ((analytics.reduce((s, a) => s + a.clicks, 0) / analytics.reduce((s, a) => s + a.views, 0)) * 100).toFixed(1)
@@ -621,7 +621,7 @@ export default function DashboardPage() {
               </div>
 
               {/* Per-listing breakdown */}
-              <div className="bg-white rounded-3xl shadow-lg border border-gray-100 divide-y divide-gray-100">
+              <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-rule divide-y divide-rule">
                 {analytics.slice(0, 10).map((item) => (
                   <div key={item.id} className="flex items-center gap-4 px-5 py-3">
                     <div className="flex-1 min-w-0">
@@ -630,15 +630,15 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-5 text-xs">
                       <div className="text-right">
                         <div className="font-bold text-charcoal">{item.views}</div>
-                        <div className="text-gray-400">views</div>
+                        <div className="text-ink-muted">views</div>
                       </div>
                       <div className="text-right">
                         <div className="font-bold text-whatsapp">{item.clicks}</div>
-                        <div className="text-gray-400">clicks</div>
+                        <div className="text-ink-muted">clicks</div>
                       </div>
                       <div className="text-right w-14">
                         <div className="font-bold text-gold-dark">{item.conversion}%</div>
-                        <div className="text-gray-400">CVR</div>
+                        <div className="text-ink-muted">CVR</div>
                       </div>
                     </div>
                   </div>
@@ -650,37 +650,37 @@ export default function DashboardPage() {
           {/* MY LISTINGS */}
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-charcoal">My Listings</h2>
-            <Link href="/new" className="bg-charcoal text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-colors">＋ New Listing</Link>
+            <Link href="/new" className="bg-ink text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-colors">＋ New Listing</Link>
           </div>
 
           {listings.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-gray-100 mb-12">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule mb-12">
               <div className="text-5xl mb-4">🏠</div>
               <p className="text-xl font-bold text-charcoal">No listings yet</p>
-              <p className="text-gray-500 mt-2 mb-6">Create your first listing and start selling on campus.</p>
-              <Link href="/new" className="inline-flex items-center gap-2 bg-charcoal text-white px-6 py-3 rounded-full font-semibold hover:bg-black transition-colors">＋ Post a listing</Link>
+              <p className="text-ink-muted mt-2 mb-6">Create your first listing and start selling on campus.</p>
+              <Link href="/new" className="inline-flex items-center gap-2 bg-ink text-white px-6 py-3 rounded-full font-semibold hover:bg-black transition-colors">＋ Post a listing</Link>
             </div>
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-12">
               {listings.map((listing) => (
-                <div key={listing.id} className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100">
+                <div key={listing.id} className="bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg border border-rule">
                   {listing.image_url ? (
                     <Image src={listing.image_url} alt={listing.title} width={400} height={160} className="w-full h-40 object-cover" />
                   ) : (
-                    <div className="w-full h-40 bg-gradient-to-br from-charcoal to-gray-800 flex items-center justify-center">
+                    <div className="w-full h-40 bg-gradient-to-br from-ink to-ink-soft flex items-center justify-center">
                       <span className="text-4xl opacity-40">{listing.listing_type === 'service' ? '💼' : '📦'}</span>
                     </div>
                   )}
                   <div className="p-5">
                     <div className="flex items-center justify-between gap-2 mb-2">
-                      <span className="text-xs text-gray-500">{formatDate(listing.created_at)}</span>
+                      <span className="text-xs text-ink-muted">{formatDate(listing.created_at)}</span>
                       {statusChip(listing.approval_status)}
                     </div>
                     <h3 className="font-bold text-charcoal text-lg line-clamp-1">{listing.title}</h3>
                     <p className="text-xl font-bold text-gold-dark mb-4">{formatPrice(listing.price)}</p>
                     <div className="flex gap-2">
-                      <Link href={"/new?edit=" + listing.id} className="flex-1 flex items-center justify-center gap-1.5 bg-charcoal text-white py-2.5 rounded-full font-semibold hover:bg-black transition-colors text-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit</Link>
-                      <Link href={"/listing/" + listing.id} className="flex-1 flex items-center justify-center gap-1.5 bg-white text-charcoal py-2.5 rounded-full font-semibold border border-gray-200 hover:border-charcoal transition-colors text-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View</Link>
+                      <Link href={"/new?edit=" + listing.id} className="flex-1 flex items-center justify-center gap-1.5 bg-ink text-white py-2.5 rounded-full font-semibold hover:bg-black transition-colors text-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit</Link>
+                      <Link href={"/listing/" + listing.id} className="flex-1 flex items-center justify-center gap-1.5 bg-surface text-charcoal py-2.5 rounded-full font-semibold border border-rule hover:border-charcoal transition-colors text-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View</Link>
                     </div>
                     {listing.approval_status === 'approved' && !listing.sold_at && (
                       <button
@@ -746,7 +746,7 @@ export default function DashboardPage() {
 
           {/* RECENT BOOKINGS */}
           <h2 className="text-2xl font-bold text-charcoal mb-1">Recent Bookings</h2>
-          <p className="text-xs text-gray-500 mb-4">
+          <p className="text-xs text-ink-muted mb-4">
             Buyer privacy protected <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Share your WhatsApp on your listings — buyers will reach out to you.
           </p>
 
@@ -757,13 +757,13 @@ export default function DashboardPage() {
           )}
 
           {bookings.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
               <div className="text-5xl mb-4">📅</div>
               <p className="text-xl font-bold text-charcoal">No bookings yet</p>
-              <p className="text-gray-500 mt-2">When buyers book your services, they&apos;ll show up here.</p>
+              <p className="text-ink-muted mt-2">When buyers book your services, they&apos;ll show up here.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-3xl shadow-lg border border-gray-100 divide-y divide-gray-100">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-rule divide-y divide-rule">
               {bookings.map((booking) => (
                 <div key={booking.id} className="p-5">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -773,12 +773,12 @@ export default function DashboardPage() {
                     )}
                     {bookingStatusChip(booking.status)}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-ink-muted mt-1">
                     <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{formatDate(booking.booking_date)}</span> · <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{booking.booking_time || '—'}</span> · <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Booking from: {formatName(booking.buyer?.full_name)}</span>
                   </p>
-                  {booking.notes && <p className="text-xs text-gray-600 mt-1 italic">&quot;{booking.notes}&quot;</p>}
+                  {booking.notes && <p className="text-xs text-ink-muted mt-1 italic">&quot;{booking.notes}&quot;</p>}
                   {booking.status === 'completed' && booking.actual_amount != null && (
-                    <p className="text-xs text-gray-600 mt-1 font-semibold inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>Received: {formatPrice(booking.actual_amount)}</p>
+                    <p className="text-xs text-ink-muted mt-1 font-semibold inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>Received: {formatPrice(booking.actual_amount)}</p>
                   )}
 
                   {booking.status !== 'completed' && booking.status !== 'cancelled' && (
@@ -791,7 +791,7 @@ export default function DashboardPage() {
                       </button>
                       <button
                         onClick={() => cancelBooking(booking.id)}
-                        className="inline-flex items-center gap-1.5 bg-white text-red-600 px-4 py-2 rounded-full font-semibold text-xs border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors"
+                        className="inline-flex items-center gap-1.5 bg-surface text-red-600 px-4 py-2 rounded-full font-semibold text-xs border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Cancel
                       </button>
@@ -806,9 +806,9 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between mb-4 mt-14">
             <div>
               <h2 className="text-2xl font-bold text-charcoal">Product Sales</h2>
-              <p className="text-xs text-gray-500 mt-1">Record your product transactions — you can edit them within 24 hours.</p>
+              <p className="text-xs text-ink-muted mt-1">Record your product transactions — you can edit them within 24 hours.</p>
             </div>
-            <Link href="/dashboard/record-sale" className="inline-flex items-center gap-1.5 bg-charcoal text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-colors whitespace-nowrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Record New Sale</Link>
+            <Link href="/dashboard/record-sale" className="inline-flex items-center gap-1.5 bg-ink text-white px-5 py-2.5 rounded-full text-sm font-semibold hover:bg-black transition-colors whitespace-nowrap"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Record New Sale</Link>
           </div>
 
           {salesError && (
@@ -818,13 +818,13 @@ export default function DashboardPage() {
           )}
 
           {sales.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
               <div className="text-5xl mb-4">🛍️</div>
               <p className="text-xl font-bold text-charcoal">No product sales recorded yet</p>
-              <p className="text-gray-500 mt-2">Sold something? Record it here to build your stats.</p>
+              <p className="text-ink-muted mt-2">Sold something? Record it here to build your stats.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-3xl shadow-lg border border-gray-100 divide-y divide-gray-100">
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-rule divide-y divide-rule">
               {sales.map((sale) => (
                 <div key={sale.id} className="p-5">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -832,7 +832,7 @@ export default function DashboardPage() {
                     <span className="font-bold text-gold-dark text-sm ml-auto">{formatPrice(sale.total_amount)}</span>
                     {saleStatusChip(sale.status)}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-ink-muted mt-1">
                     <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{formatDateTime(sale.created_at)}</span>
                     {sale.buyer_name ? <>{' · '}<span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>{formatName(sale.buyer_name)}</span></> : ''}
                   </p>
@@ -840,14 +840,14 @@ export default function DashboardPage() {
                   <div className="flex flex-wrap gap-2 mt-3">
                     <Link
                       href={"/dashboard/sales/" + sale.id}
-                      className="inline-flex items-center gap-1.5 bg-charcoal text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors"
+                      className="inline-flex items-center gap-1.5 bg-ink text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors"
                     >
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View Details
                     </Link>
                     {isWithinEditWindow(sale.created_at) ? (
                       <Link
                         href={"/dashboard/sales/" + sale.id}
-                        className="inline-flex items-center gap-1.5 bg-white text-charcoal px-4 py-2 rounded-full font-semibold text-xs border border-gray-200 hover:border-charcoal transition-colors"
+                        className="inline-flex items-center gap-1.5 bg-surface text-charcoal px-4 py-2 rounded-full font-semibold text-xs border border-rule hover:border-charcoal transition-colors"
                       >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit
                       </Link>
@@ -861,7 +861,7 @@ export default function DashboardPage() {
                         </button>
                         <button
                           onClick={() => changeSaleStatus(sale.id, 'cancelled')}
-                          className="inline-flex items-center gap-1.5 bg-white text-red-600 px-4 py-2 rounded-full font-semibold text-xs border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors"
+                          className="inline-flex items-center gap-1.5 bg-surface text-red-600 px-4 py-2 rounded-full font-semibold text-xs border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Mark Cancelled
                         </button>
@@ -885,15 +885,15 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-2xl font-bold text-charcoal">Your Reviews</h2>
-                    <p className="text-xs text-gray-500 mt-1">Reviews you&apos;ve left and transactions you can review.</p>
+                    <p className="text-xs text-ink-muted mt-1">Reviews you&apos;ve left and transactions you can review.</p>
                   </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                   {reviewable.map((b) => (
-                    <div key={b.id} className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100">
+                    <div key={b.id} className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
                       <p className="font-semibold text-charcoal truncate">{b.listing?.title || 'Unknown listing'}</p>
-                      <p className="text-xs text-gray-500 mt-1 mb-4">
+                      <p className="text-xs text-ink-muted mt-1 mb-4">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> You completed a booking for this — share your experience with the seller.
                       </p>
                       <Link
@@ -906,30 +906,30 @@ export default function DashboardPage() {
                   ))}
 
                   {writtenReviews.map((w) => (
-                    <div key={w.id} className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100">
+                    <div key={w.id} className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <p className="text-xs font-bold text-charcoal truncate">
                           {w.seller?.full_name ? formatName(w.seller.full_name) : 'Seller'}
                         </p>
-                        <span className="text-[10px] text-gray-400">{formatDate(w.created_at)}</span>
+                        <span className="text-[10px] text-ink-muted">{formatDate(w.created_at)}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <StarRating rating={w.rating} size="sm" />
                         <span className="text-[10px] text-green-600 font-semibold inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Verified buyer</span>
                       </div>
                       {w.review_text && (
-                        <p className="text-sm text-gray-700 mt-2 leading-relaxed line-clamp-3">{w.review_text}</p>
+                        <p className="text-sm text-ink mt-2 leading-relaxed line-clamp-3">{w.review_text}</p>
                       )}
                       <div className="flex gap-2 mt-3">
                         <Link
                           href={'/reviews/new?reviewId=' + w.id}
-                          className="inline-flex items-center gap-1.5 bg-charcoal text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors"
+                          className="inline-flex items-center gap-1.5 bg-ink text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit
                         </Link>
                         <button
                           onClick={() => deleteWrittenReview(w.id)}
-                          className="inline-flex items-center gap-1.5 bg-white text-red-600 px-4 py-2 rounded-full font-semibold text-xs border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors"
+                          className="inline-flex items-center gap-1.5 bg-surface text-red-600 px-4 py-2 rounded-full font-semibold text-xs border border-red-200 hover:border-red-400 hover:bg-red-50 transition-colors"
                         >
                           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg> Delete
                         </button>
@@ -946,7 +946,7 @@ export default function DashboardPage() {
             <div className="flex flex-wrap items-center gap-3 mb-4">
               <h2 className="text-2xl font-bold text-charcoal">Reviews About You</h2>
               {myRating && myRating.review_count > 0 && (
-                <span className="inline-flex items-center gap-2 bg-white border border-gray-200 px-3 py-1.5 rounded-full text-sm font-bold text-charcoal shadow-sm">
+                <span className="inline-flex items-center gap-2 bg-white/90 border border-rule px-3 py-1.5 rounded-full text-sm font-bold text-charcoal shadow-sm">
                   <StarRating rating={Number(myRating.average_rating) || 0} size="sm" />
                   {Number(myRating.average_rating).toFixed(1)} ({myRating.review_count})
                 </span>
@@ -965,13 +965,13 @@ export default function DashboardPage() {
             )}
 
             {reviews.length === 0 ? (
-              <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
+              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
                 <div className="text-5xl mb-4">⭐</div>
                 <p className="text-xl font-bold text-charcoal">No reviews yet</p>
-                <p className="text-gray-500 mt-2">When buyers complete transactions, their verified reviews show up here.</p>
+                <p className="text-ink-muted mt-2">When buyers complete transactions, their verified reviews show up here.</p>
               </div>
             ) : (
-              <div className="bg-white rounded-3xl shadow-lg border border-gray-100 divide-y divide-gray-100">
+              <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-rule divide-y divide-rule">
                 {reviews.map((r) => {
                   const reviewerName = r.reviewer?.full_name
                     ? formatName(r.reviewer.full_name)
@@ -982,12 +982,12 @@ export default function DashboardPage() {
                         <p className="font-semibold text-charcoal text-sm">{reviewerName}</p>
                         <span className="inline-flex items-center gap-2">
                           <StarRating rating={r.rating} size="sm" />
-                          <span className="text-[10px] text-gray-400">{formatDate(r.created_at)}</span>
+                          <span className="text-[10px] text-ink-muted">{formatDate(r.created_at)}</span>
                         </span>
                       </div>
                       <p className="text-[10px] text-green-600 font-semibold mt-1 inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Verified buyer</p>
                       {r.review_text && (
-                        <p className="text-sm text-gray-700 mt-2 leading-relaxed">{r.review_text}</p>
+                        <p className="text-sm text-ink mt-2 leading-relaxed">{r.review_text}</p>
                       )}
                       {r.is_flagged && (
                         <p className="inline-flex items-center gap-1 mt-2 text-[10px] font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
@@ -1006,7 +1006,7 @@ export default function DashboardPage() {
                                   setEditingResponse(editingResponse === r.id ? null : r.id)
                                   setEditingResponseText(r.response?.response_text || '')
                                 }}
-                                className="text-[10px] text-gray-500 hover:text-charcoal underline underline-offset-2"
+                                className="text-[10px] text-ink-muted hover:text-charcoal underline underline-offset-2"
                               >
                                 {editingResponse === r.id ? 'Cancel' : (<><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit</>)}
                               </button>
@@ -1019,18 +1019,18 @@ export default function DashboardPage() {
                                 maxLength={500}
                                 value={editingResponseText}
                                 onChange={(e) => setEditingResponseText(e.target.value)}
-                                className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-sm resize-none"
+                                className="w-full px-3 py-2 rounded-xl border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-colors text-sm resize-none"
                               />
                               <button
                                 onClick={() => submitResponseEdit(r.id)}
                                 disabled={submittingReply}
-                                className="mt-2 inline-flex items-center gap-1.5 bg-charcoal text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors disabled:opacity-50"
+                                className="mt-2 inline-flex items-center gap-1.5 bg-ink text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors disabled:opacity-50"
                               >
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Save
                               </button>
                             </div>
                           ) : (
-                            <p className="text-xs text-gray-600 mt-1 leading-relaxed">{r.response.response_text}</p>
+                            <p className="text-xs text-ink-muted mt-1 leading-relaxed">{r.response.response_text}</p>
                           )}
                         </div>
                       ) : (
@@ -1043,19 +1043,19 @@ export default function DashboardPage() {
                                 value={replyText}
                                 onChange={(e) => setReplyText(e.target.value)}
                                 placeholder="Thank the buyer and share anything useful..."
-                                className="w-full px-3 py-2 rounded-xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-sm resize-none"
+                                className="w-full px-3 py-2 rounded-xl border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-colors text-sm resize-none"
                               />
                               <div className="flex gap-2 mt-2">
                                 <button
                                   onClick={() => submitReply(r.id)}
                                   disabled={submittingReply}
-                                  className="inline-flex items-center gap-1.5 bg-charcoal text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors disabled:opacity-50"
+                                  className="inline-flex items-center gap-1.5 bg-ink text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors disabled:opacity-50"
                                 >
                                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Post Reply
                                 </button>
                                 <button
                                   onClick={() => { setReplyingTo(null); setReplyText('') }}
-                                  className="inline-flex items-center px-4 py-2 rounded-full font-semibold text-xs text-gray-500 hover:bg-gray-100 transition-colors"
+                                  className="inline-flex items-center px-4 py-2 rounded-full font-semibold text-xs text-ink-muted hover:bg-paper-deep transition-colors"
                                 >
                                   Cancel
                                 </button>
@@ -1064,7 +1064,7 @@ export default function DashboardPage() {
                           ) : (
                             <button
                               onClick={() => { setReplyingTo(r.id); setReplyText('') }}
-                              className="inline-flex items-center gap-1.5 bg-white text-charcoal px-4 py-2 rounded-full font-semibold text-xs border border-gray-200 hover:border-charcoal transition-colors"
+                              className="inline-flex items-center gap-1.5 bg-surface text-charcoal px-4 py-2 rounded-full font-semibold text-xs border border-rule hover:border-charcoal transition-colors"
                             >
                               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg> Reply
                             </button>
@@ -1093,7 +1093,7 @@ export default function DashboardPage() {
                               </button>
                               <button
                                 onClick={() => { setFlaggingId(null); setFlagReason('') }}
-                                className="text-xs text-gray-500 hover:text-charcoal px-2 py-2"
+                                className="text-xs text-ink-muted hover:text-charcoal px-2 py-2"
                               >
                                 Cancel
                               </button>
@@ -1101,7 +1101,7 @@ export default function DashboardPage() {
                           ) : (
                             <button
                               onClick={() => { setFlaggingId(r.id); setFlagReason('') }}
-                              className="text-[11px] text-gray-400 hover:text-amber-600 transition-colors underline underline-offset-2"
+                              className="text-[11px] text-ink-muted hover:text-amber-600 transition-colors underline underline-offset-2"
                             >
                               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> Flag this review
                             </button>
@@ -1120,9 +1120,9 @@ export default function DashboardPage() {
       {/* MARK COMPLETED MODAL */}
       {completing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label="Complete booking">
-          <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full">
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full">
             <h3 className="text-xl font-bold text-charcoal mb-1">Complete this booking?</h3>
-            <p className="text-sm text-gray-500 mb-5">{completing.listing?.title || 'Unknown listing'}</p>
+            <p className="text-sm text-ink-muted mb-5">{completing.listing?.title || 'Unknown listing'}</p>
 
             <label className="block text-sm font-bold text-charcoal mb-2 uppercase tracking-widest">
               Actual amount received (GH₵) *
@@ -1131,19 +1131,19 @@ export default function DashboardPage() {
               type="number"
               min="0"
               step="0.01"
-              className="w-full px-5 py-3 rounded-2xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
+              className="w-full px-5 py-3 rounded-2xl border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
               value={completeAmount}
               onChange={(e) => setCompleteAmount(e.target.value)}
               autoFocus
             />
 
             <label className="block text-sm font-bold text-charcoal mb-2 mt-4 uppercase tracking-widest">
-              Notes <span className="text-gray-400 font-normal normal-case">(optional)</span>
+              Notes <span className="text-ink-muted font-normal normal-case">(optional)</span>
             </label>
             <textarea
               rows={3}
               placeholder="Anything worth remembering about the session..."
-              className="w-full px-5 py-3 rounded-2xl border-2 border-gray-200 text-charcoal placeholder:text-gray-400 focus:outline-none focus:border-gold transition-colors resize-none"
+              className="w-full px-5 py-3 rounded-2xl border-2 border-rule text-charcoal placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors resize-none"
               value={completeNotes}
               onChange={(e) => setCompleteNotes(e.target.value)}
             />
@@ -1157,7 +1157,7 @@ export default function DashboardPage() {
               </button>
               <button
                 onClick={() => setCompleting(null)}
-                className="flex-1 bg-white text-charcoal py-3 rounded-full font-semibold border border-gray-200 hover:border-charcoal transition-colors"
+                className="flex-1 bg-surface text-charcoal py-3 rounded-full font-semibold border border-rule hover:border-charcoal transition-colors"
               >
                 Cancel
               </button>
