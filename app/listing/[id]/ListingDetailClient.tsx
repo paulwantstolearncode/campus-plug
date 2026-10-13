@@ -6,7 +6,7 @@ import { logAnalyticsEvent, logWhatsappOutcome, logWhatsappShare, type WhatsappO
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
-import { formatPrice, formatPriceRange, getPriceRange } from '@/lib/format'
+import { formatPrice, formatPriceRange, formatListingPrice, getPriceRange } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
 import { getCategoryDisplay } from '@/lib/categories'
 import StarRating from '@/app/StarRating'
@@ -39,6 +39,7 @@ interface ListingData {
   title: string
   description: string | null
   price: number
+  max_price: number | null
   image_url: string | null
   listing_type: string
   category: string | null
@@ -334,7 +335,7 @@ export default function ListingDetailClient() {
   const isService = listing.listing_type === 'service'
   const categoryDisplay = getCategoryDisplay(listing.category)
   const backHref = isService ? '/services' : '/'
-  const priceLabel = formatPriceRange(listing.listing_items) || formatPrice(listing.price)
+  const priceLabel = formatPriceRange(listing.listing_items) || formatListingPrice(listing.price, listing.max_price)
   const itemCount = listing.listing_items?.length || 0
   const priceRange = getPriceRange(listing.listing_items)
   const sellerName = listing.seller?.full_name ? formatName(listing.seller.full_name) : 'Unknown seller'

@@ -93,8 +93,13 @@ export default function LandingPage() {
       // hide the whole section. If the primary load comes back empty, retry
       // without the column — locations just won't show until the migration.
       const listingSelect =
-        'id, title, description, price, image_url, listing_type, category, campus_location, approval_status, seller_id, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)'
-      const legacySelect = listingSelect.replace(', campus_location', '')
+        'id, title, description, price, max_price, image_url, listing_type, category, campus_location, approval_status, seller_id, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)'
+      // Pre-migration safety: strip optional columns added by later
+      // migrations (campus_location, max_price) if the load comes back
+      // empty — sections degrade gracefully instead of 400ing.
+      const legacySelect = listingSelect
+        .replace(', max_price', '')
+        .replace(', campus_location', '')
 
       async function loadWith(select: string): Promise<ListingCardData[]> {
         // 1) Admin-curated slots, in order. A slot only counts if its listing

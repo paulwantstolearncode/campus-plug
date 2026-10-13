@@ -15,6 +15,7 @@ export interface SellerWithListings extends SellerProfile {
     title: string
     description: string | null
     price: number
+    max_price: number | null
     image_url: string | null
     listing_type: string
     category: string | null

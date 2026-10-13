@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const { data: listing } = await supabase
       .from('listings')
-      .select('title, description, price, campus_location, category, image_url, images, listing_type')
+      .select('title, description, price, max_price, campus_location, category, image_url, images, listing_type')
       .eq('id', id)
       .eq('approval_status', 'approved')
       .is('deleted_at', null)
@@ -41,7 +41,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       }
     }
 
-    const priceLabel = listing.price ? 'GH₵' + Number(listing.price).toLocaleString() : ''
+    const maxPrice = (listing as { max_price?: number | null }).max_price
+    const priceLabel = listing.price
+      ? maxPrice && maxPrice > listing.price
+        ? `GH₵${Number(listing.price).toLocaleString()} – ${Number(maxPrice).toLocaleString()}`
+        : 'GH₵' + Number(listing.price).toLocaleString()
+      : ''
     const title = priceLabel ? `${listing.title} — ${priceLabel}` : listing.title
     const description = listing.campus_location
       ? `Available at ${listing.campus_location} • Verified on Campus Plug`

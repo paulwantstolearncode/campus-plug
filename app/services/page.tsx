@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import { formatPriceRange } from '@/lib/format'
+import { formatPriceRange, formatListingPrice } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
 import { CATEGORIES, getCategoriesByType, getCategoryDisplay } from '@/lib/categories'
 import { CAMPUS_LOCATIONS } from '@/lib/campusLocations'
@@ -17,6 +17,7 @@ interface Service {
   title: string
   description: string | null
   price: number
+  max_price: number | null
   image_url: string | null
   service_duration: string | null
   service_location: string | null
@@ -397,7 +398,7 @@ export default function ServicesPage() {
                           {service.listing_type === 'service' ? 'Service' : 'Product'}
                         </div>
                         <div className="absolute top-4 right-4 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
-                          {formatPriceRange(service.listing_items) || 'GH₵ ' + Number(service.price).toLocaleString()}
+                          {formatPriceRange(service.listing_items) || formatListingPrice(service.price, service.max_price)}
                         </div>
                         {sellerRatings[service.seller_id]?.is_top_rated && (
                           <div className="absolute top-16 left-4 bg-gold text-charcoal px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1">
@@ -445,7 +446,7 @@ export default function ServicesPage() {
                           </Link>
                         )}
                         {service.seller?.whatsapp_number && (
-                          <a href={"https://wa.me/" + service.seller.whatsapp_number + "?text=" + encodeURIComponent('Hi ' + (service.seller?.full_name ? formatName(service.seller.full_name) : 'there') + '! I saw your listing for "' + service.title + '" (GH\u20B5' + Number(service.price || 0).toLocaleString() + ') on Campus Plug: https://campuspluggh.com/listing/' + service.id + '. Is this still available?')} target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center bg-green-500 text-white rounded-full hover:bg-green-600 transition-all hover:scale-110" title="Message on WhatsApp"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
+                          <a href={"https://wa.me/" + service.seller.whatsapp_number + "?text=" + encodeURIComponent('Hi ' + (service.seller?.full_name ? formatName(service.seller.full_name) : 'there') + '! I saw your listing for "' + service.title + '" (' + formatListingPrice(service.price, service.max_price) + ') on Campus Plug: https://campuspluggh.com/listing/' + service.id + '. Is this still available?')} target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center bg-green-500 text-white rounded-full hover:bg-green-600 transition-all hover:scale-110" title="Message on WhatsApp"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
                         )}
                       </div>
                     </div>

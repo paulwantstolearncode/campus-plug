@@ -3,7 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { formatPriceRange } from '@/lib/format'
+import { formatPriceRange, formatListingPrice } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
 import { getCategoryDisplay } from '@/lib/categories'
 import type { SellerRating } from '@/lib/reviews'
@@ -15,6 +15,7 @@ export interface ListingCardData {
   title: string
   description: string | null
   price: number
+  max_price: number | null
   image_url: string | null
   listing_type: string
   category: string | null
@@ -84,7 +85,7 @@ export default function ListingCard({
   const cat = getCategoryDisplay(listing.category)
   const priceLabel =
     formatPriceRange(listing.listing_items) ||
-    'GH\u20B5 ' + Number(listing.price || 0).toLocaleString()
+    formatListingPrice(listing.price, listing.max_price)
   const rating = sellerRatings?.[listing.seller_id]
   const href = preview ? '/login' : '/listing/' + listing.id
   // Stagger capped every 10 cards so deep feeds don't fade in late.

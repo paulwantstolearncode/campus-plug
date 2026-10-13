@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
 import Image from 'next/image'
-import { formatPrice } from '@/lib/format'
+import { formatPrice, formatListingPrice } from '@/lib/format'
 import { StatCardSkeleton, DashboardListingSkeleton } from '@/app/components/Skeleton'
 import { formatName } from '@/lib/formatName'
 import { isWithinEditWindow, formatDateTime } from '@/lib/sales'
@@ -24,6 +24,7 @@ interface MyListing {
   id: string
   title: string
   price: number
+  max_price: number | null
   image_url: string | null
   listing_type: string
   approval_status: string
@@ -256,7 +257,7 @@ export default function DashboardPage() {
         // My listings, all statuses, newest first.
         const { data: listingData, error: listingError } = await supabase
           .from('listings')
-          .select('id, title, price, image_url, listing_type, approval_status, created_at, sold_at')
+          .select('id, title, price, max_price, image_url, listing_type, approval_status, created_at, sold_at')
           .eq('seller_id', user.id)
           .order('created_at', { ascending: false })
 
@@ -677,7 +678,7 @@ export default function DashboardPage() {
                       {statusChip(listing.approval_status)}
                     </div>
                     <h3 className="font-bold text-charcoal text-lg line-clamp-1">{listing.title}</h3>
-                    <p className="text-xl font-bold text-gold-dark mb-4">{formatPrice(listing.price)}</p>
+                    <p className="text-xl font-bold text-gold-dark mb-4">{formatListingPrice(listing.price, listing.max_price)}</p>
                     <div className="flex gap-2">
                       <Link href={"/new?edit=" + listing.id} className="flex-1 flex items-center justify-center gap-1.5 bg-ink text-white py-2.5 rounded-full font-semibold hover:bg-black transition-colors text-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit</Link>
                       <Link href={"/listing/" + listing.id} className="flex-1 flex items-center justify-center gap-1.5 bg-surface text-charcoal py-2.5 rounded-full font-semibold border border-rule hover:border-charcoal transition-colors text-sm"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View</Link>

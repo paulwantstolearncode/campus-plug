@@ -28,3 +28,17 @@ export function formatPriceRange(
   if (range.min === range.max) return formatPrice(range.min)
   return 'GH₵ ' + range.min.toLocaleString() + '–' + range.max.toLocaleString()
 }
+
+// Single-listing price label with optional range from listings.max_price.
+// "GH₵ 2,500 – 4,500" when maxPrice is set and above price; otherwise
+// the plain "GH₵ 2,500".
+export function formatListingPrice(
+  price: number | null | undefined,
+  maxPrice?: number | null
+): string {
+  if (price === null || price === undefined) return 'GH₵ 0'
+  if (maxPrice && maxPrice > price) {
+    return 'GH₵ ' + price.toLocaleString() + ' – ' + maxPrice.toLocaleString()
+  }
+  return 'GH₵ ' + price.toLocaleString()
+}

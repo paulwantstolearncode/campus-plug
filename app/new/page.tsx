@@ -26,6 +26,7 @@ interface ItemInput {
 function NewListingContent() {
   const [title, setTitle] = useState('')
   const [price, setPrice] = useState('')
+  const [maxPrice, setMaxPrice] = useState('')
   const [description, setDescription] = useState('')
   const [images, setImages] = useState<ImageInput[]>([])
   const [items, setItems] = useState<ItemInput[]>([])
@@ -109,10 +110,12 @@ function NewListingContent() {
             service_location: string | null
             listing_images: { id: string; image_url: string; display_order: number }[] | null
             listing_items: { name: string; price: number; description: string | null; duration: string | null; display_order: number }[] | null
+            max_price: number | null
           }
 
           setTitle(typed.title)
           setPrice(String(typed.price))
+          setMaxPrice(typed.max_price != null ? String(typed.max_price) : '')
           setDescription(typed.description || '')
           setListingType(typed.listing_type as 'product' | 'service')
           setCategory(typed.category || '')
@@ -240,6 +243,20 @@ function NewListingContent() {
       return
     }
 
+    // Optional max price: must be a valid number above the base price.
+    if (items.length === 0 && maxPrice.trim() !== '') {
+      const baseNum = Number(price)
+      const maxNum = Number(maxPrice)
+      if (Number.isNaN(maxNum) || maxNum <= 0) {
+        alert('Max price must be a valid positive amount')
+        return
+      }
+      if (maxNum <= baseNum) {
+        alert('Max price must be higher than the base price. Leave it empty if this is a single fixed price.')
+        return
+      }
+    }
+
     for (const item of items) {
       if (!item.name.trim()) {
         alert('Every bundle item needs a name')
@@ -296,6 +313,9 @@ function NewListingContent() {
       const payload = {
         title,
         price: finalPrice,
+        // Range support: only applies to single (non-bundle) listings —
+        // bundle pricing derives its range from the item menu.
+        max_price: derivedPrice === null && maxPrice.trim() !== '' ? Number(maxPrice) : null,
         description,
         image_url: finalImages.length > 0 ? finalImages[0].url : null,
         listing_type: listingType,
@@ -622,7 +642,7 @@ function NewListingContent() {
             {derivedPrice === null ? (
               <div>
                 <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">
-                  {listingType === 'service' ? 'Price per session *' : 'Price *'}
+                  Base / Starting Price (GH₵) *
                 </label>
                 <div className="relative">
                   <span className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-muted font-bold text-lg">GH₵</span>
@@ -635,6 +655,22 @@ function NewListingContent() {
                     required
                   />
                 </div>
+                <label className="block text-sm font-bold text-ink mt-5 mb-3 uppercase tracking-widest">
+                  Max Price (Optional — for price ranges)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-5 top-1/2 -translate-y-1/2 text-ink-muted font-bold text-lg">GH₵</span>
+                  <input
+                    type="number"
+                    placeholder="0.00"
+                    className="w-full pl-20 pr-5 py-4 rounded-2xl border-2 border-dashed border-rule text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors text-lg font-semibold"
+                    value={maxPrice}
+                    onChange={(e) => setMaxPrice(e.target.value)}
+                  />
+                </div>
+                <p className="text-xs text-ink-muted mt-2">
+                  Leave empty if single fixed price. Shoppers will see a range like "GH₵ 2,500 – 4,500".
+                </p>
               </div>
             ) : (
               <div className="p-5 rounded-2xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">

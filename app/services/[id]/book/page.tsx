@@ -5,12 +5,14 @@ import { supabase } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import NavBar from '@/app/components/NavBar'
 import { formatName } from '@/lib/formatName'
+import { formatListingPrice } from '@/lib/format'
 
 interface ServiceData {
   id: string
   title: string
   description: string | null
   price: number
+  max_price: number | null
   image_url: string | null
   service_duration: string | null
   service_location: string | null
@@ -138,7 +140,7 @@ export default function BookServicePage() {
         '📋 Service: ' + service.title + '\n' +
         '📅 Date: ' + bookingDate + '\n' +
         '⏰ Time: ' + bookingTime + '\n' +
-        '💰 Price: GH₵ ' + Number(service.price || 0).toLocaleString() + '\n' +
+        '💰 Price: ' + formatListingPrice(service.price, service.max_price) + '\n' +
         (notes ? '📝 Notes: ' + notes + '\n\n' : '\n') +
         'Please confirm the booking and let me know payment details.'
       )
@@ -236,7 +238,7 @@ export default function BookServicePage() {
                     </div>
 
                     <div className="absolute top-4 right-4 bg-gold text-ink px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
-                      GH₵ {Number(service.price || 0).toLocaleString()}
+                      {formatListingPrice(service.price, service.max_price)}
                     </div>
                   </div>
 
