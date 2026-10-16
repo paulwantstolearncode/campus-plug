@@ -6,8 +6,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
 import { toPng, toJpeg } from 'html-to-image'
+import { formatListingPrice } from '@/lib/format'
 
-type PosterType = 'general' | 'wanted' | 'seller'
+type PosterType = 'general' | 'wanted' | 'seller' | 'listing'
 type PosterFormat = 'a4' | 'a5' | 'mobile'
 type BgTheme = 'obsidian' | 'paper' | 'gold' | 'legon'
 type BgPattern = 'glow' | 'grid' | 'clean'
@@ -36,6 +37,28 @@ const POSTER_TEMPLATES: Record<PosterType, {
     subheading: 'Join verified student sellers at the University of Ghana.',
     stamp: '03 / SELLER RECRUITMENT',
   },
+  // Featured-listing poster: fields auto-fill from the picked listing
+  // (title → headline, location tag, photo, price range) and stay
+  // manually editable. targetUrl is built from the selected listing id.
+  listing: {
+    targetUrl: 'https://campuspluggh.com',
+    headline: 'Featured on Campus Plug',
+    subheading: 'Verified student seller · Direct WhatsApp deal',
+    stamp: '04 / FEATURED LISTING',
+  },
+}
+
+// Listing row shape used by the picker (price-range aware).
+interface PosterListing {
+  id: string
+  title: string
+  price: number
+  max_price: number | null
+  image_url: string | null
+  campus_location: string | null
+  category: string | null
+  listing_type: string
+  listing_images: { id: string; image_url: string; display_order: number }[] | null
 }
 
 const FORMAT_SIZES: Record<PosterFormat, { width: number; height: number; label: string }> = {
@@ -177,6 +200,13 @@ export default function PosterGeneratorPage() {
   const [customQrImage, setCustomQrImage] = useState<string | null>(null)
   const [isExporting, setIsExporting] = useState<'png' | 'jpeg' | null>(null)
 
+  // Featured-listing picker state.
+  const [listings, setListings] = useState<PosterListing[]>([])
+  const [listingsLoading, setListingsLoading] = useState(true)
+  const [listingsError, setListingsError] = useState<string | null>(null)
+  const [selectedListingId, setSelectedListingId] = useState('')
+  const [badgeTag, setBadgeTag] = useState('')
+
   const posterRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -205,8 +235,56 @@ export default function PosterGeneratorPage() {
     checkAdmin()
   }, [router])
 
+  // Fetch active listings for the featured-listing picker (once admin is
+  // verified). Active = not deleted, not sold, approved for the public
+  // marketplace — posters funnel real buyers to live listings.
+  useEffect(() => {
+    if (!isAdmin) return
+
+    async function loadListings() {
+      setListingsLoading(true)
+      try {
+        const { data, error: listingsError } = await supabase
+          .from('listings')
+          .select('id, title, price, max_price, image_url, campus_location, category, listing_type, listing_images (id, image_url, display_order)')
+          .eq('approval_status', 'approved')
+          .is('deleted_at', null)
+          .is('sold_at', null)
+          .order('created_at', { ascending: false })
+
+        if (listingsError) throw listingsError
+        setListings((data as unknown as PosterListing[]) || [])
+      } catch (err) {
+        console.error('Poster listings fetch failed:', err)
+        setListingsError('Could not load listings for the picker.')
+      } finally {
+        setListingsLoading(false)
+      }
+    }
+
+    loadListings()
+  }, [isAdmin])
+
+  const selectedListing = listings.find((l) => l.id === selectedListingId) || null
+
+  // Pick a listing → auto-fill poster fields. Every filled field stays
+  // manually editable afterwards (headline, subheading, location, badge).
+  function handleListingSelect(listingId: string) {
+    setSelectedListingId(listingId)
+
+    const listing = listings.find((l) => l.id === listingId)
+    if (!listing) return
+
+    setPosterType('listing')
+    setHeadline(listing.title)
+    setSubheading(POSTER_TEMPLATES.listing.subheading)
+    setLocationTag(listing.campus_location || 'University of Ghana · Legon Campus')
+    setCustomQrImage(null)
+  }
+
   function handlePosterTypeChange(type: PosterType) {
     setPosterType(type)
+    if (type !== 'listing') setSelectedListingId('')
     const t = POSTER_TEMPLATES[type]
     setHeadline(t.headline)
     setSubheading(t.subheading)
@@ -221,11 +299,29 @@ export default function PosterGeneratorPage() {
     reader.readAsDataURL(file)
   }
 
-  const targetUrl = POSTER_TEMPLATES[posterType].targetUrl
+  // Featured listing: QR + stamp point to the listing's public page so
+  // scans land on the real product, not just the homepage.
+  const targetUrl =
+    posterType === 'listing' && selectedListingId
+      ? `https://campuspluggh.com/listing/${selectedListingId}`
+      : POSTER_TEMPLATES[posterType].targetUrl
   const qrSrc = customQrImage || `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`
   const size = FORMAT_SIZES[format]
   const isStory = format === 'mobile'
   const theme = THEME_CONFIG[bgTheme]
+
+  // Poster photo: primary image_url, else the first gallery shot by
+  // display order. Plain URL — the canvas renders a standard <img>
+  // because html-to-image can't rasterize next/image.
+  const listingPhoto = selectedListing
+    ? selectedListing.image_url ||
+      [...(selectedListing.listing_images || [])]
+        .sort((a, b) => a.display_order - b.display_order || a.id.localeCompare(b.id))[0]?.image_url ||
+      null
+    : null
+  const listingPriceLabel = selectedListing
+    ? formatListingPrice(selectedListing.price, selectedListing.max_price)
+    : ''
   // Story preview: the canvas keeps its print-resolution layout (1080×1920)
   // and is zoomed DOWN to fit the preview shell. The factor is measured from
   // the shell so it stays exact on phones (where the shell is narrower than
@@ -338,6 +434,57 @@ export default function PosterGeneratorPage() {
             <h1 className="text-3xl md:text-4xl font-bold text-white">🎨 Print Posters</h1>
           </div>
 
+          {/* ── Featured Listing Picker ── */}
+          <div>
+            <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">
+              🏪 Featured Listing Picker
+            </label>
+            {listingsLoading ? (
+              <div className="px-4 py-3 rounded-2xl bg-white/10 border border-white/20 text-white/60 text-sm animate-pulse">
+                Loading listings…
+              </div>
+            ) : listingsError ? (
+              <div className="px-4 py-3 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 text-sm">
+                {listingsError}{' '}
+                <button
+                  onClick={() => { setListingsError(null); window.location.reload() }}
+                  className="underline font-semibold hover:text-red-200"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : listings.length === 0 ? (
+              <div className="px-4 py-3 rounded-2xl bg-white/10 border border-white/20 text-white/60 text-sm">
+                No active listings found — approve listings in the admin panel first.
+              </div>
+            ) : (
+              <select
+                value={selectedListingId}
+                onChange={(e) => handleListingSelect(e.target.value)}
+                className="w-full px-4 py-3 rounded-2xl bg-white/10 text-white border border-white/20 focus:outline-none focus:border-gold transition-colors text-sm"
+              >
+                <option value="" className="text-charcoal bg-white">
+                  — Pick a listing to feature (optional) —
+                </option>
+                {listings.map((l) => (
+                  <option key={l.id} value={l.id} className="text-charcoal bg-white">
+                    {l.title} · {formatListingPrice(l.price, l.max_price)}
+                    {l.listing_type === 'service' ? ' · Service' : ''}
+                  </option>
+                ))}
+              </select>
+            )}
+            {selectedListing && (
+              <p className="text-xs text-white/50 mt-1.5">
+                Auto-filled title, price{' '}
+                {selectedListing.max_price && selectedListing.max_price > selectedListing.price
+                  ? 'range '
+                  : ''}
+                and location — edit the fields below to customize.
+              </p>
+            )}
+          </div>
+
           {/* Poster Type Selector */}
           <div>
             <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-2">Poster Type</label>
@@ -346,6 +493,7 @@ export default function PosterGeneratorPage() {
                 ['general', '🏠 General Student Poster'],
                 ['wanted', '📋 Wanted Board Flyer'],
                 ['seller', '💰 Seller Recruitment'],
+                ['listing', '🏪 Featured Listing'],
               ] as const).map(([key, label]) => (
                 <button
                   key={key}
@@ -465,6 +613,16 @@ export default function PosterGeneratorPage() {
               />
             </div>
             <div>
+              <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-1">🏷️ Badge Tag (optional)</label>
+              <input
+                type="text"
+                value={badgeTag}
+                onChange={(e) => setBadgeTag(e.target.value)}
+                placeholder='e.g. "Level 100 Special" or "Hot Deal"'
+                className="w-full px-4 py-3 rounded-2xl bg-white/10 text-white border border-white/20 focus:outline-none focus:border-gold transition-colors text-sm placeholder:text-white/40"
+              />
+            </div>
+            <div>
               <label className="block text-xs font-bold text-white/50 uppercase tracking-widest mb-1">📸 Custom QR Code (optional)</label>
               <input
                 type="file"
@@ -572,7 +730,16 @@ export default function PosterGeneratorPage() {
                 <div className="flex-1 min-h-0 py-3 flex">
                   <div className={`${theme.contentCardClass} flex-1 flex flex-col justify-evenly min-h-0 my-0! py-4!`}>
                     <div className="text-center px-5 sm:px-8">
-                      <span className={`text-[10px] font-bold tracking-[0.25em] uppercase ${theme.stampClass}`}>{POSTER_TEMPLATES[posterType].stamp}</span>
+                      {badgeTag.trim() !== '' && (
+                        <span className="inline-block bg-gold text-[#0f0f0f] font-bold text-[11px] tracking-[0.2em] uppercase px-4 py-1.5 rounded-full mb-3">
+                          {badgeTag.trim()}
+                        </span>
+                      )}
+                      <span className={`text-[10px] font-bold tracking-[0.25em] uppercase ${theme.stampClass}`}>
+                        {posterType === 'listing' && selectedListing
+                          ? (selectedListing.listing_type === 'service' ? 'Service on Campus Plug' : 'Item on Campus Plug') + ' · ' + (selectedListing.category ? selectedListing.category.replace(/-/g, ' ') : 'Marketplace')
+                          : POSTER_TEMPLATES[posterType].stamp}
+                      </span>
                       <h2 className={`mt-2 ${isStory ? 'text-4xl' : 'text-2xl'} font-bold leading-tight font-serif-accent ${theme.headlineClass}`} style={{ fontFamily: 'var(--font-serif), Georgia, serif' }}>
                         {headline.split(' ').map((word, i) => {
                           const lower = word.toLowerCase()
@@ -583,17 +750,48 @@ export default function PosterGeneratorPage() {
                         })}
                       </h2>
                       <p className={`mt-2 ${isStory ? 'text-base' : 'text-sm'} leading-relaxed ${theme.subheadingClass}`}>{subheading}</p>
+
+                      {/* Featured listing: price range + photo card. Standard
+                          <img> on purpose — html-to-image rasterizes plain
+                          image tags, not next/image. */}
+                      {posterType === 'listing' && selectedListing && (
+                        <div className="mt-4 space-y-3">
+                          <p className={`${isStory ? 'text-4xl' : 'text-2xl'} font-bold text-gold tracking-tight`}>
+                            {listingPriceLabel}
+                          </p>
+                          {listingPhoto ? (
+                            <div className={`relative mx-auto rounded-2xl overflow-hidden border-2 ${theme.bracketClass}`} style={{ maxWidth: isStory ? 420 : 340 }}>
+                              <img
+                                src={listingPhoto}
+                                alt={selectedListing.title}
+                                className="w-full aspect-[4/3] object-cover block"
+                                crossOrigin="anonymous"
+                              />
+                            </div>
+                          ) : (
+                            <div className={`mx-auto rounded-2xl border-2 border-dashed ${theme.bracketClass} flex items-center justify-center`} style={{ maxWidth: isStory ? 420 : 340 }}>
+                              <span className={`${isStory ? 'text-6xl' : 'text-4xl'} py-10 opacity-60`}>🛍️</span>
+                            </div>
+                          )}
+                          <p className={`${isStory ? 'text-sm' : 'text-[11px]'} font-semibold ${theme.stampClass} tracking-wide`}>
+                            ⚡ Message the seller on WhatsApp — no agents, no fees
+                          </p>
+                        </div>
+                      )}
                     </div>
 
-                    {/* Category highlights strip — what students can actually find */}
-                    <div className="grid grid-cols-1 gap-1.5 px-5 sm:px-8">
-                      {CATEGORY_PILLARS.map((pillar) => (
-                        <div key={pillar.text} className={`flex items-center gap-2.5 rounded-lg px-3 py-2 ${theme.featureCardClass}`}>
-                          <span className="text-base leading-none">{pillar.emoji}</span>
-                          <span className={`${isStory ? 'text-[13px]' : 'text-[11px]'} font-semibold ${theme.featureTextClass}`}>{pillar.text}</span>
-                        </div>
-                      ))}
-                    </div>
+                    {/* Category highlights strip — only for template posters
+                        (featured listings show their own photo + price above) */}
+                    {(posterType !== 'listing' || !selectedListing) && (
+                      <div className="grid grid-cols-1 gap-1.5 px-5 sm:px-8">
+                        {CATEGORY_PILLARS.map((pillar) => (
+                          <div key={pillar.text} className={`flex items-center gap-2.5 rounded-lg px-3 py-2 ${theme.featureCardClass}`}>
+                            <span className="text-base leading-none">{pillar.emoji}</span>
+                            <span className={`${isStory ? 'text-[13px]' : 'text-[11px]'} font-semibold ${theme.featureTextClass}`}>{pillar.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {/* QR code — prominent, centered, glowing for instant scans */}
                     <div className="flex flex-col items-center px-5 sm:px-8">
