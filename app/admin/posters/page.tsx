@@ -830,13 +830,13 @@ export default function PosterGeneratorPage() {
                     {/* QR code — prominent, centered, glowing for instant scans.
                         A6 keeps it scannable but proportional (110px). */}
                     <div className={`flex flex-col items-center ${isMini ? 'px-4' : 'px-5 sm:px-8'}`}>
-                      <div className={isMini ? theme.qrShellClass.replace('p-4', 'p-2') : theme.qrShellClass}>
+                      <div className={isMini ? theme.qrShellClass.replace('p-4', 'p-2.5') : theme.qrShellClass}>
                         <img
                           src={qrSrc}
                           alt="QR Code — scan to visit Campus Plug"
                           width={240}
                           height={240}
-                          className={isStory ? 'w-[240px] h-[240px]' : isMini ? 'w-[110px] h-[110px]' : 'w-[200px] h-[200px]'}
+                          className={isStory ? 'w-[240px] h-[240px]' : isMini ? 'w-[140px] h-[140px]' : 'w-[200px] h-[200px]'}
                         />
                       </div>
                       <p className={`${isStory ? 'text-[13px]' : isMini ? 'text-[8px]' : 'text-[11px]'} font-semibold mt-2 tracking-wide ${theme.stampClass}`}>
