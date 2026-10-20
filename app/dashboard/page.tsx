@@ -96,6 +96,11 @@ export default function DashboardPage() {
   const [analytics, setAnalytics] = useState<ListingAnalytics[]>([])
   const [boostingId, setBoostingId] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
+  // Account deletion (Danger Zone) state.
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const router = useRouter()
 
   // ── Reviews system ──────────────────────────────────────────────────────
@@ -317,6 +322,36 @@ export default function DashboardPage() {
 
     loadDashboard()
   }, [router])
+
+  // ── Account deletion ─────────────────────────────────────────────────
+  // Calls the server-side sweep (/api/account/delete, service-role key),
+  // then clears the local session. Guarded in the UI by a modal + typing
+  // DELETE.
+  const confirmAccountDeletion = async () => {
+    setDeleting(true)
+    setDeleteError(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Your session expired. Please log in again.')
+
+      const res = await fetch('/api/account/delete', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      })
+      const body = (await res.json().catch(() => ({}))) as { error?: string }
+      if (!res.ok) {
+        throw new Error(body.error || 'Could not delete your account. Please try again.')
+      }
+
+      await supabase.auth.signOut()
+      router.push('/')
+    } catch (err) {
+      setDeleteError(
+        err instanceof Error ? err.message : 'Could not delete your account. Please try again.'
+      )
+      setDeleting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -1118,6 +1153,31 @@ export default function DashboardPage() {
         </div>
       </section>
 
+      {/* DANGER ZONE — permanent account deletion */}
+      <section className="pb-24 md:pb-32 bg-off-white">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6">
+          <div className="rounded-3xl border-2 border-red-200 bg-white p-6 md:p-8">
+            <h2 className="text-lg font-bold text-charcoal mb-1">Danger Zone</h2>
+            <p className="text-sm text-ink-muted mb-5">
+              Permanently delete your Campus Plug account. This removes your profile, all
+              listings and their photos, bookings, sales, favorites and reviews. This cannot
+              be undone.
+            </p>
+            {deleteError && (
+              <p className="text-sm font-semibold text-red-600 mb-4" role="alert">
+                {deleteError}
+              </p>
+            )}
+            <button
+              onClick={() => { setDeleteModalOpen(true); setDeleteConfirmText(''); setDeleteError(null) }}
+              className="bg-red-500 text-white px-5 py-2.5 rounded-full font-semibold text-sm hover:bg-red-600 transition-colors"
+            >
+              Delete my account
+            </button>
+          </div>
+        </div>
+      </section>
+
       {/* MARK COMPLETED MODAL */}
       {completing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label="Complete booking">
@@ -1159,6 +1219,49 @@ export default function DashboardPage() {
               <button
                 onClick={() => setCompleting(null)}
                 className="flex-1 bg-surface text-charcoal py-3 rounded-full font-semibold border border-rule hover:border-charcoal transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE ACCOUNT MODAL */}
+      {deleteModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label="Delete account">
+          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full">
+            <h3 className="text-xl font-bold text-charcoal mb-2">Delete your account?</h3>
+            <p className="text-sm text-ink-muted mb-4">
+              Your profile, {listings.length} listing{listings.length === 1 ? '' : 's'} and their
+              photos, bookings, sales, favorites and reviews will be removed immediately. This
+              cannot be undone.
+            </p>
+
+            <label className="block text-sm font-bold text-charcoal mb-2 uppercase tracking-widest">
+              Type DELETE to confirm
+            </label>
+            <input
+              type="text"
+              value={deleteConfirmText}
+              onChange={(e) => setDeleteConfirmText(e.target.value)}
+              placeholder="DELETE"
+              autoFocus
+              className="w-full px-5 py-3 rounded-2xl border-2 border-rule text-charcoal focus:outline-none focus:border-red-500 transition-colors text-lg font-semibold"
+            />
+
+            <div className="flex gap-2 mt-6">
+              <button
+                onClick={confirmAccountDeletion}
+                disabled={deleting || deleteConfirmText !== 'DELETE'}
+                className="flex-1 bg-red-500 text-white py-3 rounded-full font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
+              >
+                {deleting ? 'Deleting…' : 'Delete forever'}
+              </button>
+              <button
+                onClick={() => setDeleteModalOpen(false)}
+                disabled={deleting}
+                className="flex-1 bg-surface text-charcoal py-3 rounded-full font-semibold border border-rule hover:border-charcoal transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
