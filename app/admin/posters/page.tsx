@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { supabase } from '@/lib/supabase'
+import { CATEGORIES, type Category } from '@/lib/categories'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
@@ -68,12 +69,15 @@ const FORMAT_SIZES: Record<PosterFormat, { width: number; height: number; label:
 }
 
 // Category feature strip — fills the middle of tall formats so posters read
-// top-to-bottom with no dead space.
-const CATEGORY_PILLARS = [
-  { emoji: '🏠', text: 'Hostel Setup (Kettles, Fans, Bedding)' },
-  { emoji: '💻', text: 'Laptops & Power Banks' },
-  { emoji: '📚', text: 'Past Questions & Handouts' },
-  { emoji: '✨', text: 'Laundry & Campus Services' },
+// top-to-bottom with no dead space. Accommodations is pinned first; the
+// remaining rows are derived from what's actually live on the board (see
+// categoryPillars below), falling back to the biggest current categories
+// while listings load.
+const ACCOMMODATION_PILLAR = { emoji: '🏠', text: 'Accommodations (Hostel Rooms & Stays)' }
+const FALLBACK_PILLARS = [
+  { emoji: '👗', text: 'Clothing & Fashion (Sneakers, Thrift Wear)' },
+  { emoji: '💇', text: 'Hair & Beauty (Braids, Barbing, Nails)' },
+  { emoji: '💄', text: 'Beauty Products (Skincare, Cosmetics)' },
 ]
 
 const HALL_CHIPS = ['📍 Pentagon', '📍 Evandy', '📍 TF Hostels', '📍 Main Campus']
@@ -266,6 +270,28 @@ export default function PosterGeneratorPage() {
   }, [isAdmin])
 
   const selectedListing = listings.find((l) => l.id === selectedListingId) || null
+
+  // Category pillars: accommodations first, then the top categories from
+  // what's actually live on the board right now (listings are already
+  // fetched for the picker). Falls back to the biggest current categories
+  // while the fetch is pending or fails.
+  const categoryPillars = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const l of listings) {
+      if (!l.category) continue
+      counts.set(l.category, (counts.get(l.category) || 0) + 1)
+    }
+    const derived = [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([slug]) => CATEGORIES.find((c) => c.slug === slug))
+      .filter((c): c is Category => Boolean(c))
+      .map((c) => ({
+        emoji: c.emoji,
+        text: `${c.label} (${c.sampleItems.slice(0, 2).join(', ')})`,
+      }))
+    return [ACCOMMODATION_PILLAR, ...(derived.length > 0 ? derived : FALLBACK_PILLARS)]
+  }, [listings])
 
   // Pick a listing → auto-fill poster fields. Every filled field stays
   // manually editable afterwards (headline, subheading, location, badge).
@@ -784,7 +810,7 @@ export default function PosterGeneratorPage() {
                         (featured listings show their own photo + price above) */}
                     {(posterType !== 'listing' || !selectedListing) && (
                       <div className="grid grid-cols-1 gap-1.5 px-5 sm:px-8">
-                        {CATEGORY_PILLARS.map((pillar) => (
+                        {categoryPillars.map((pillar) => (
                           <div key={pillar.text} className={`flex items-center gap-2.5 rounded-lg px-3 py-2 ${theme.featureCardClass}`}>
                             <span className="text-base leading-none">{pillar.emoji}</span>
                             <span className={`${isStory ? 'text-[13px]' : 'text-[11px]'} font-semibold ${theme.featureTextClass}`}>{pillar.text}</span>
