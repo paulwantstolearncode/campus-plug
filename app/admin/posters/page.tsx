@@ -10,7 +10,7 @@ import { toPng, toJpeg } from 'html-to-image'
 import { formatListingPrice } from '@/lib/format'
 
 type PosterType = 'general' | 'wanted' | 'seller' | 'listing'
-type PosterFormat = 'a4' | 'a5' | 'mobile'
+type PosterFormat = 'a4' | 'a5' | 'a6' | 'mobile'
 type BgTheme = 'obsidian' | 'paper' | 'gold' | 'legon'
 type BgPattern = 'glow' | 'grid' | 'clean'
 
@@ -65,6 +65,7 @@ interface PosterListing {
 const FORMAT_SIZES: Record<PosterFormat, { width: number; height: number; label: string }> = {
   a4: { width: 794, height: 1123, label: 'A4 Print' },
   a5: { width: 559, height: 794, label: 'A5 Flyer' },
+  a6: { width: 397, height: 559, label: 'A6 Mini Flyer' },
   mobile: { width: 1080, height: 1920, label: 'Mobile Story' },
 }
 
@@ -334,6 +335,10 @@ export default function PosterGeneratorPage() {
   const qrSrc = customQrImage || `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`
   const size = FORMAT_SIZES[format]
   const isStory = format === 'mobile'
+  // A6 is the smallest ISO format we print — the editorial layout gets a
+  // proportionate scale-down (type, QR, brackets, bands) so it reads like
+  // a proper mini flyer, not a shrunken A4.
+  const isMini = format === 'a6'
   const theme = THEME_CONFIG[bgTheme]
 
   // Poster photo: primary image_url, else the first gallery shot by
@@ -544,6 +549,7 @@ export default function PosterGeneratorPage() {
               {([
                 ['a4', '📄 A4 Print'],
                 ['a5', '📑 A5 Flyer'],
+                ['a6', '🧾 A6 Mini Flyer'],
                 ['mobile', '📱 Mobile Story (1080×1920)'],
               ] as const).map(([key, label]) => (
                 <button
@@ -721,10 +727,10 @@ export default function PosterGeneratorPage() {
               <div className="absolute inset-0 pointer-events-none" style={PATTERN_CONFIG[bgPattern].style} />
 
               {/* Gold L-shaped corner brackets */}
-              <span className={`absolute top-3 left-3 w-9 h-9 border-t-[3px] border-l-[3px] ${theme.bracketClass}`} aria-hidden="true" />
-              <span className={`absolute top-3 right-3 w-9 h-9 border-t-[3px] border-r-[3px] ${theme.bracketClass}`} aria-hidden="true" />
-              <span className={`absolute bottom-3 left-3 w-9 h-9 border-b-[3px] border-l-[3px] ${theme.bracketClass}`} aria-hidden="true" />
-              <span className={`absolute bottom-3 right-3 w-9 h-9 border-b-[3px] border-r-[3px] ${theme.bracketClass}`} aria-hidden="true" />
+              <span className={`absolute ${isMini ? 'top-1.5 left-1.5 w-6 h-6 border-t-2 border-l-2' : 'top-3 left-3 w-9 h-9 border-t-[3px] border-l-[3px]'} ${theme.bracketClass}`} aria-hidden="true" />
+              <span className={`absolute ${isMini ? 'top-1.5 right-1.5 w-6 h-6 border-t-2 border-r-2' : 'top-3 right-3 w-9 h-9 border-t-[3px] border-r-[3px]'} ${theme.bracketClass}`} aria-hidden="true" />
+              <span className={`absolute ${isMini ? 'bottom-1.5 left-1.5 w-6 h-6 border-b-2 border-l-2' : 'bottom-3 left-3 w-9 h-9 border-b-[3px] border-l-[3px]'} ${theme.bracketClass}`} aria-hidden="true" />
+              <span className={`absolute ${isMini ? 'bottom-1.5 right-1.5 w-6 h-6 border-b-2 border-r-2' : 'bottom-3 right-3 w-9 h-9 border-b-[3px] border-r-[3px]'} ${theme.bracketClass}`} aria-hidden="true" />
 
 
 
@@ -734,18 +740,18 @@ export default function PosterGeneratorPage() {
                 {/* Top bands: editorial tag → masthead → gold rule (full-bleed) */}
                 <div>
                   <div className={`px-8 py-2.5 text-center ${theme.topTagClass}`}>
-                    <p className="text-[9px] font-bold tracking-[0.35em] uppercase">
+                    <p className={`${isMini ? 'text-[7px]' : 'text-[9px]'} font-bold tracking-[0.35em] uppercase`}>
                       Official Campus Marketplace • University of Ghana
                     </p>
                   </div>
 
-                  <div className={`px-8 py-5 text-center ${theme.mastheadClass}`}>
+                  <div className={`px-8 ${isMini ? 'py-2.5' : 'py-5'} text-center ${theme.mastheadClass}`}>
                     <div className="flex items-center justify-center gap-3 mb-1.5">
-                      <span className="text-2xl">⚡</span>
-                      <span className="text-white font-bold text-xl tracking-[0.15em] uppercase">Campus Plug</span>
-                      <span className="text-2xl">⚡</span>
+                      <span className={isMini ? 'text-base' : 'text-2xl'}>⚡</span>
+                      <span className={`text-white font-bold ${isMini ? 'text-base' : 'text-xl'} tracking-[0.15em] uppercase`}>Campus Plug</span>
+                      <span className={isMini ? 'text-base' : 'text-2xl'}>⚡</span>
                     </div>
-                    <p className="text-gold text-[11px] font-bold tracking-[0.3em] uppercase">University of Ghana · Legon</p>
+                    <p className={`text-gold ${isMini ? 'text-[8px]' : 'text-[11px]'} font-bold tracking-[0.3em] uppercase`}>University of Ghana · Legon</p>
                   </div>
 
                   <div className={`h-1 ${theme.ruleClass}`} />
@@ -754,19 +760,19 @@ export default function PosterGeneratorPage() {
                 {/* ── Middle: stretches to fill every spare pixel — headline,
                     subheading, category strip, glowing QR ── */}
                 <div className="flex-1 min-h-0 py-3 flex">
-                  <div className={`${theme.contentCardClass} flex-1 flex flex-col justify-evenly min-h-0 my-0! py-4!`}>
-                    <div className="text-center px-5 sm:px-8">
+                  <div className={`${theme.contentCardClass} flex-1 flex flex-col justify-evenly min-h-0 my-0! ${isMini ? 'py-2!' : 'py-4!'}`}>
+                    <div className={`text-center ${isMini ? 'px-4' : 'px-5 sm:px-8'}`}>
                       {badgeTag.trim() !== '' && (
-                        <span className="inline-block bg-gold text-[#0f0f0f] font-bold text-[11px] tracking-[0.2em] uppercase px-4 py-1.5 rounded-full mb-3">
+                        <span className={`inline-block bg-gold text-[#0f0f0f] font-bold ${isMini ? 'text-[8px] tracking-[0.15em] px-3 py-1 mb-2' : 'text-[11px] tracking-[0.2em] px-4 py-1.5 mb-3'} uppercase rounded-full`}>
                           {badgeTag.trim()}
                         </span>
                       )}
-                      <span className={`text-[10px] font-bold tracking-[0.25em] uppercase ${theme.stampClass}`}>
+                      <span className={`${isMini ? 'text-[7px]' : 'text-[10px]'} font-bold tracking-[0.25em] uppercase ${theme.stampClass}`}>
                         {posterType === 'listing' && selectedListing
                           ? (selectedListing.listing_type === 'service' ? 'Service on Campus Plug' : 'Item on Campus Plug') + ' · ' + (selectedListing.category ? selectedListing.category.replace(/-/g, ' ') : 'Marketplace')
                           : POSTER_TEMPLATES[posterType].stamp}
                       </span>
-                      <h2 className={`mt-2 ${isStory ? 'text-4xl' : 'text-2xl'} font-bold leading-tight font-serif-accent ${theme.headlineClass}`} style={{ fontFamily: 'var(--font-serif), Georgia, serif' }}>
+                      <h2 className={`mt-2 ${isStory ? 'text-4xl' : isMini ? 'text-lg' : 'text-2xl'} font-bold leading-tight font-serif-accent ${theme.headlineClass}`} style={{ fontFamily: 'var(--font-serif), Georgia, serif' }}>
                         {headline.split(' ').map((word, i) => {
                           const lower = word.toLowerCase()
                           if (['sell', 'free', 'students', 'sell?', 'campus', 'plug', 'start'].includes(lower)) {
@@ -775,18 +781,18 @@ export default function PosterGeneratorPage() {
                           return <span key={i}>{word} </span>
                         })}
                       </h2>
-                      <p className={`mt-2 ${isStory ? 'text-base' : 'text-sm'} leading-relaxed ${theme.subheadingClass}`}>{subheading}</p>
+                      <p className={`mt-2 ${isStory ? 'text-base' : isMini ? 'text-[10px]' : 'text-sm'} leading-relaxed ${theme.subheadingClass}`}>{subheading}</p>
 
                       {/* Featured listing: price range + photo card. Standard
                           <img> on purpose — html-to-image rasterizes plain
                           image tags, not next/image. */}
                       {posterType === 'listing' && selectedListing && (
                         <div className="mt-4 space-y-3">
-                          <p className={`${isStory ? 'text-4xl' : 'text-2xl'} font-bold text-gold tracking-tight`}>
+                          <p className={`${isStory ? 'text-4xl' : isMini ? 'text-xl' : 'text-2xl'} font-bold text-gold tracking-tight`}>
                             {listingPriceLabel}
                           </p>
                           {listingPhoto ? (
-                            <div className={`relative mx-auto rounded-2xl overflow-hidden border-2 ${theme.bracketClass}`} style={{ maxWidth: isStory ? 420 : 340 }}>
+                            <div className={`relative mx-auto rounded-2xl overflow-hidden border-2 ${theme.bracketClass}`} style={{ maxWidth: isStory ? 420 : isMini ? 190 : 340 }}>
                               <img
                                 src={listingPhoto}
                                 alt={selectedListing.title}
@@ -795,11 +801,11 @@ export default function PosterGeneratorPage() {
                               />
                             </div>
                           ) : (
-                            <div className={`mx-auto rounded-2xl border-2 border-dashed ${theme.bracketClass} flex items-center justify-center`} style={{ maxWidth: isStory ? 420 : 340 }}>
-                              <span className={`${isStory ? 'text-6xl' : 'text-4xl'} py-10 opacity-60`}>🛍️</span>
+                            <div className={`mx-auto rounded-2xl border-2 border-dashed ${theme.bracketClass} flex items-center justify-center`} style={{ maxWidth: isStory ? 420 : isMini ? 190 : 340 }}>
+                              <span className={`${isStory ? 'text-6xl' : isMini ? 'text-3xl' : 'text-4xl'} py-10 opacity-60`}>🛍️</span>
                             </div>
                           )}
-                          <p className={`${isStory ? 'text-sm' : 'text-[11px]'} font-semibold ${theme.stampClass} tracking-wide`}>
+                          <p className={`${isStory ? 'text-sm' : isMini ? 'text-[8px]' : 'text-[11px]'} font-semibold ${theme.stampClass} tracking-wide`}>
                             ⚡ Message the seller on WhatsApp — no agents, no fees
                           </p>
                         </div>
@@ -807,30 +813,33 @@ export default function PosterGeneratorPage() {
                     </div>
 
                     {/* Category highlights strip — only for template posters
-                        (featured listings show their own photo + price above) */}
+                        (featured listings show their own photo + price above).
+                        A6 packs the 4 pillars into a 2-up grid so the mini
+                        canvas keeps breathing. */}
                     {(posterType !== 'listing' || !selectedListing) && (
-                      <div className="grid grid-cols-1 gap-1.5 px-5 sm:px-8">
+                      <div className={`grid ${isMini ? 'grid-cols-2 gap-1 px-4' : 'grid-cols-1 gap-1.5 px-5 sm:px-8'}`}>
                         {categoryPillars.map((pillar) => (
-                          <div key={pillar.text} className={`flex items-center gap-2.5 rounded-lg px-3 py-2 ${theme.featureCardClass}`}>
-                            <span className="text-base leading-none">{pillar.emoji}</span>
-                            <span className={`${isStory ? 'text-[13px]' : 'text-[11px]'} font-semibold ${theme.featureTextClass}`}>{pillar.text}</span>
+                          <div key={pillar.text} className={`flex items-center ${isMini ? 'gap-1.5 rounded-md px-2 py-1.5' : 'gap-2.5 rounded-lg px-3 py-2'} ${theme.featureCardClass}`}>
+                            <span className={`${isMini ? 'text-xs' : 'text-base'} leading-none`}>{pillar.emoji}</span>
+                            <span className={`${isMini ? 'text-[8px]' : isStory ? 'text-[13px]' : 'text-[11px]'} font-semibold ${theme.featureTextClass}`}>{pillar.text}</span>
                           </div>
                         ))}
                       </div>
                     )}
 
-                    {/* QR code — prominent, centered, glowing for instant scans */}
-                    <div className="flex flex-col items-center px-5 sm:px-8">
-                      <div className={theme.qrShellClass}>
+                    {/* QR code — prominent, centered, glowing for instant scans.
+                        A6 keeps it scannable but proportional (110px). */}
+                    <div className={`flex flex-col items-center ${isMini ? 'px-4' : 'px-5 sm:px-8'}`}>
+                      <div className={isMini ? theme.qrShellClass.replace('p-4', 'p-2') : theme.qrShellClass}>
                         <img
                           src={qrSrc}
                           alt="QR Code — scan to visit Campus Plug"
                           width={240}
                           height={240}
-                          className={isStory ? 'w-[240px] h-[240px]' : 'w-[200px] h-[200px]'}
+                          className={isStory ? 'w-[240px] h-[240px]' : isMini ? 'w-[110px] h-[110px]' : 'w-[200px] h-[200px]'}
                         />
                       </div>
-                      <p className={`${isStory ? 'text-[13px]' : 'text-[11px]'} font-semibold mt-2 tracking-wide ${theme.stampClass}`}>
+                      <p className={`${isStory ? 'text-[13px]' : isMini ? 'text-[8px]' : 'text-[11px]'} font-semibold mt-2 tracking-wide ${theme.stampClass}`}>
                         📸 Point your phone camera here to scan
                       </p>
                     </div>
@@ -839,29 +848,33 @@ export default function PosterGeneratorPage() {
 
                 {/* ── Bottom stack: location chip, hall badges, trust line, footer ── */}
                 <div>
-                  <div className="px-6 sm:px-8 pb-2 text-center">
-                    <span className={`inline-block font-mono ${isStory ? 'text-sm' : 'text-xs'} font-bold px-4 py-2 rounded-full ${theme.locationChipClass}`}>
+                  <div className={`${isMini ? 'px-4' : 'px-6 sm:px-8'} pb-2 text-center`}>
+                    <span className={`inline-block font-mono ${isStory ? 'text-sm' : isMini ? 'text-[9px]' : 'text-xs'} font-bold ${isMini ? 'px-3 py-1.5' : 'px-4 py-2'} rounded-full ${theme.locationChipClass}`}>
                       📍 {locationTag}
                     </span>
                   </div>
 
-                  <div className="px-6 sm:px-8 pb-3 flex flex-wrap justify-center gap-1.5">
-                    {HALL_CHIPS.map((hall) => (
-                      <span key={hall} className={`${isStory ? 'text-[12px]' : 'text-[10px]'} font-semibold px-2.5 py-1 rounded-full border ${theme.featureCardClass} ${theme.featureTextClass}`}>
-                        {hall}
-                      </span>
-                    ))}
-                  </div>
+                  {/* Hall chips don't fit the A6 canvas — locations already
+                      appear in the tag above, so minis drop the row. */}
+                  {!isMini && (
+                    <div className="px-6 sm:px-8 pb-3 flex flex-wrap justify-center gap-1.5">
+                      {HALL_CHIPS.map((hall) => (
+                        <span key={hall} className={`${isStory ? 'text-[12px]' : 'text-[10px]'} font-semibold px-2.5 py-1 rounded-full border ${theme.featureCardClass} ${theme.featureTextClass}`}>
+                          {hall}
+                        </span>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Footer — anchored flush to the bottom border of the frame.
                       Trust line lives here so it's always on the dark band,
                       regardless of canvas theme. */}
-                  <div className="bg-ink px-8 py-3.5 text-center">
-                    <p className="text-white/70 text-[11px] font-semibold tracking-wide">
+                  <div className={`bg-ink ${isMini ? 'px-4 py-2' : 'px-8 py-3.5'} text-center`}>
+                    <p className={`text-white/70 ${isMini ? 'text-[8px]' : 'text-[11px]'} font-semibold tracking-wide`}>
                       100% Free for Students · Direct WhatsApp · Legon Campus
                     </p>
-                    <p className="text-white text-xs font-bold tracking-[0.15em] uppercase mt-1.5">campuspluggh.com</p>
-                    <p className="text-gold text-[10px] mt-1 tracking-widest">⚡ THE LEGON NOTICEBOARD ⚡</p>
+                    <p className={`text-white ${isMini ? 'text-[9px]' : 'text-xs'} font-bold tracking-[0.15em] uppercase mt-1.5`}>campuspluggh.com</p>
+                    <p className={`text-gold ${isMini ? 'text-[7px]' : 'text-[10px]'} mt-1 tracking-widest`}>⚡ THE LEGON NOTICEBOARD ⚡</p>
                   </div>
                 </div>
               </div>
