@@ -83,7 +83,8 @@ function NewListingContent() {
           return
         }
 
-        // If editing, load the existing listing + its photos and bundle items
+        // If editing, load the existing listing + its photos and bundle items.
+        // Soft-deleted listings are treated as not found.
         if (editId) {
           setIsEditMode(true)
           const { data: listing } = await supabase
@@ -91,6 +92,7 @@ function NewListingContent() {
             .select('*, listing_images (id, image_url, display_order), listing_items (name, price, description, duration, display_order)')
             .eq('id', editId)
             .eq('seller_id', user.id)
+            .is('deleted_at', null)
             .single()
 
           if (!listing) {
@@ -328,12 +330,15 @@ function NewListingContent() {
       let listingId: string | null = null
 
       if (isEditMode && editId) {
-        // UPDATE existing listing — reset to pending review after edit
+        // UPDATE existing listing — reset to pending review after edit.
+        // The deleted_at guard blocks stale forms from editing a listing
+        // that was soft-deleted in another tab.
         const { error } = await supabase
           .from('listings')
           .update({ ...payload, approval_status: 'pending' })
           .eq('id', editId)
           .eq('seller_id', user.id)
+          .is('deleted_at', null)
 
         if (error) {
           alert(error.message)
@@ -669,7 +674,7 @@ function NewListingContent() {
                   />
                 </div>
                 <p className="text-xs text-ink-muted mt-2">
-                  Leave empty if single fixed price. Shoppers will see a range like "GH₵ 2,500 – 4,500".
+                  Leave empty if single fixed price. Shoppers will see a range like “GH₵ 2,500 – 4,500”.
                 </p>
               </div>
             ) : (

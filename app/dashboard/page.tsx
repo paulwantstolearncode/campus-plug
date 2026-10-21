@@ -301,11 +301,13 @@ export default function DashboardPage() {
 
         setIsSeller(true)
 
-        // My listings, all statuses, newest first.
+        // My listings, all statuses, newest first. Soft-deleted listings
+        // (deleted_at set) stay hidden — same rule as the public pages.
         const { data: listingData, error: listingError } = await supabase
           .from('listings')
           .select('id, title, price, max_price, image_url, listing_type, approval_status, created_at, sold_at')
           .eq('seller_id', user.id)
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
 
         if (listingError) {

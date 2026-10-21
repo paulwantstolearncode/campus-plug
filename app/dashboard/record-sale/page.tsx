@@ -64,11 +64,14 @@ export default function RecordSalePage() {
 
         // The seller's own product listings, with bundle items so we can tell
         // bundled listings (line-item picker) from simple ones (qty + price).
+        // Soft-deleted listings are excluded — you can't record a sale
+        // against a listing you deleted.
         const { data, error: listError } = await supabase
           .from('listings')
           .select('id, title, price, listing_items (id, name, price)')
           .eq('seller_id', user.id)
           .eq('listing_type', 'product')
+          .is('deleted_at', null)
           .order('created_at', { ascending: false })
 
         if (listError) {
