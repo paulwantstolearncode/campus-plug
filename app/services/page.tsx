@@ -231,7 +231,7 @@ export default function ServicesPage() {
                 </p>
 
                 {/* Search input with rotating placeholder */}
-                <div className="mt-4 relative max-w-lg">
+                <div className="mt-4 relative max-w-lg" data-tour="services-search">
                   <input
                     type="text"
                     value={searchQuery}
@@ -378,11 +378,16 @@ export default function ServicesPage() {
                   </div>
                 </div>
               ) : (
-              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-tour="services-grid">
                 {filteredServices.map((service, idx) => {
                   const cat = getCategoryDisplay(service.category)
                   return (
-                  <div key={service.id} className="group relative fade-up" style={{ animationDelay: ((idx % 10) * 45) + 'ms' }}>
+                  <div
+                    key={service.id}
+                    data-tour={idx === 0 ? 'listing-card' : undefined}
+                    className="group relative fade-up"
+                    style={{ animationDelay: ((idx % 10) * 45) + 'ms' }}
+                  >
                     <div className="relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
                       <Link href={"/listing/" + service.id} className="relative block aspect-[4/5] overflow-hidden bg-gray-100">
                         {service.image_url ? (

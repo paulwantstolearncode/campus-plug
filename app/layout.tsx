@@ -3,6 +3,7 @@ import "./globals.css";
 import HelpButton from "./HelpButton";
 import FeedbackButton from "./components/FeedbackButton";
 import PWAInstallPrompt from "./components/PWAInstallPrompt";
+import OnboardingTour from "./components/OnboardingTour";
 import { Analytics } from "@vercel/analytics/react";
 import { Space_Grotesk, Plus_Jakarta_Sans, Instrument_Serif } from "next/font/google";
 import { SITE_URL } from "@/lib/site";
@@ -89,6 +90,7 @@ export default function RootLayout({
         <HelpButton />
         <FeedbackButton />
         <PWAInstallPrompt />
+        <OnboardingTour />
         <Analytics />
       </body>
     </html>

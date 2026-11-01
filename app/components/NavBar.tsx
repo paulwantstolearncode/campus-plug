@@ -6,6 +6,7 @@ import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import BrandMark from '@/lib/brandMark'
 import NotificationBell from './NotificationBell'
+import { replayTour } from './OnboardingTour'
 
 interface NavBarProps {
   /** 'dark' = charcoal bg, 'light' = transparent→white scroll, 'admin' = charcoal + admin brand, 'dashboard' = charcoal + logout */
@@ -145,6 +146,7 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
             <div className="hidden md:flex gap-6">
               <Link
                 href="/services"
+                data-tour="nav-services"
                 className={`text-sm font-medium transition-colors pb-1 ${
                   isActive('/services')
                     ? `${textColor} border-b-2 ${activeBorder} pb-1`
@@ -155,6 +157,7 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
               </Link>
               <Link
                 href="/categories"
+                data-tour="nav-categories"
                 className={`text-sm font-medium transition-colors pb-1 ${
                   isActive('/categories')
                     ? `${textColor} border-b-2 ${activeBorder} pb-1`
@@ -165,6 +168,7 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
               </Link>
               <Link
                 href="/requests"
+                data-tour="nav-wanted"
                 className={`text-sm font-medium transition-colors pb-1 ${
                   isActive('/requests')
                     ? `${textColor} border-b-2 ${activeBorder} pb-1`
@@ -175,6 +179,7 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
               </Link>
               <Link
                 href="/fresher-kit"
+                data-tour="nav-fresher"
                 className={`text-sm font-medium transition-colors pb-1 ${
                   isActive('/fresher-kit')
                     ? `${textColor} border-b-2 ${activeBorder} pb-1`
@@ -186,6 +191,7 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
               {user && (
                 <Link
                   href="/favorites"
+                  data-tour="nav-favorites"
                   className={`text-sm font-medium transition-colors pb-1 ${
                     isActive('/favorites')
                       ? `${textColor} border-b-2 ${activeBorder} pb-1`
@@ -219,11 +225,11 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
               {user ? (
                 <>
                   {isSeller ? (
-                    <Link href="/new" className="bg-white text-charcoal px-5 py-2 rounded-full text-sm font-semibold hover:bg-gold transition-all hover:scale-105">
+                    <Link href="/new" data-tour="nav-sell" className="bg-white text-charcoal px-5 py-2 rounded-full text-sm font-semibold hover:bg-gold transition-all hover:scale-105">
                       + Post
                     </Link>
                   ) : (
-                    <Link href="/become-seller" className="shine-button text-charcoal px-5 py-2 rounded-full text-sm font-semibold hover:scale-105 transition-transform">
+                    <Link href="/become-seller" data-tour="nav-sell" className="shine-button text-charcoal px-5 py-2 rounded-full text-sm font-semibold hover:scale-105 transition-transform">
                       Sell
                     </Link>
                   )}
@@ -234,6 +240,7 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
                   <div className="relative" ref={dropdownRef}>
                     <button
                       onClick={() => setDropdownOpen(!dropdownOpen)}
+                      data-tour="nav-account"
                       className="w-9 h-9 rounded-full bg-gold/20 border border-gold/40 flex items-center justify-center text-sm font-bold text-gold hover:bg-gold/30 transition-colors"
                       aria-label="User menu"
                     >
@@ -281,6 +288,13 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
                         <div className="border-t border-gray-100 my-1" />
 
                         <button
+                          onClick={() => { setDropdownOpen(false); replayTour() }}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-charcoal hover:bg-gray-50 transition-colors text-left"
+                        >
+                          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg> Replay tour
+                        </button>
+
+                        <button
                           onClick={handleSwitchAccount}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-charcoal hover:bg-gray-50 transition-colors text-left"
                         >
@@ -310,9 +324,9 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
                 {user ? (
                   <>
                     {isSeller ? (
-                      <Link href="/new" className="bg-white text-charcoal px-4 py-2 rounded-full text-sm font-semibold">+ Post</Link>
+                      <Link href="/new" data-tour="nav-sell" className="bg-white text-charcoal px-4 py-2 rounded-full text-sm font-semibold">+ Post</Link>
                     ) : (
-                      <Link href="/become-seller" className="shine-button text-charcoal px-4 py-2 rounded-full text-sm font-semibold">Sell</Link>
+                      <Link href="/become-seller" data-tour="nav-sell" className="shine-button text-charcoal px-4 py-2 rounded-full text-sm font-semibold">Sell</Link>
                     )}
                     <NotificationBell />
                   </>
@@ -321,6 +335,7 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
                 )}
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  data-tour="nav-menu"
                   className={`${textColor} p-2 -mr-2`}
                   aria-label="Menu"
                 >
@@ -436,6 +451,12 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
 
             {user ? (
               <>
+                <button
+                  onClick={() => { setMobileMenuOpen(false); replayTour() }}
+                  className={`px-4 py-3 rounded-xl transition-colors flex items-center gap-3 text-left ${textColor} ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg> Replay tour
+                </button>
                 <button
                   onClick={() => { setMobileMenuOpen(false); handleSwitchAccount() }}
                   className={`px-4 py-3 rounded-xl transition-colors flex items-center gap-3 text-left ${textColor} ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
