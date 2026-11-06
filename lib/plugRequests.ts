@@ -1,5 +1,4 @@
 import { supabase } from '@/lib/supabase'
-import { broadcastNotification } from '@/lib/notifications'
 
 export interface PlugRequest {
   id: string
@@ -62,28 +61,6 @@ export async function createPlugRequest(request: {
   if (error) {
     console.error('Failed to create plug request:', error)
     return { success: false, error: error.message }
-  }
-
-  // Notify sellers in the same category (fire-and-forget)
-  try {
-    const { data: sellers } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('is_seller', true)
-      .neq('id', user.id)
-
-    if (sellers && sellers.length > 0) {
-      const sellerIds = sellers.map((s) => s.id)
-      await broadcastNotification(
-        sellerIds,
-        'New Wanted Board Request',
-        `Someone is looking for "${request.title.trim()}" on the Wanted Board${request.budget ? ` (GH₵ ${request.budget})` : ''}.`,
-        '/requests'
-      )
-    }
-  } catch (err) {
-    // Notification failure must never block request creation
-    console.error('Failed to send plug request notifications:', err)
   }
 
   return { success: true }
