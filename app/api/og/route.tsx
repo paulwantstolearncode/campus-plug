@@ -5,17 +5,6 @@ export const runtime = 'edge'
 
 // ---------------------------------------------------------------------------
 // Font loading — vendored, same-origin, rotation-proof.
-//
-// History: this route pinned versioned fonts.gstatic.com URLs that Google
-// later 404'd, then tried resolving css2 URLs at runtime — but Google now
-// serves WOFF2 to every UA and this satori build rejects 'wOF2' signatures.
-// The result was 500s and EMPTY PNGs on WhatsApp/social unfurls.
-//
-// Fix: Manrope 700 + DM Serif Display 400 are vendored as WOFF (satori-parseable)
-// under public/fonts/og/ (from @fontsource via jsDelivr) and fetched from the
-// request's own origin — no external dependency, no URL rotation risk.
-// Caching: per-isolate after first fetch; failures are NOT cached so the next
-// request retries instead of the isolate staying fontless until cold-start.
 // ---------------------------------------------------------------------------
 
 let fontCache: { manrope?: ArrayBuffer; serif?: ArrayBuffer } | null = null
@@ -55,8 +44,7 @@ export async function GET(request: NextRequest) {
   const category = searchParams.get('category') || ''
   const image = searchParams.get('image') || ''
 
-  // Vendored same-origin fonts (see note above) — both families registered so
-  // the serif accent renders in the italic headline spans.
+  // Vendored same-origin fonts
   const { manrope: fontData, serif: serifData } = await loadFonts(request.nextUrl.origin)
 
   return new ImageResponse(
@@ -66,29 +54,14 @@ export async function GET(request: NextRequest) {
           width: '1200px',
           height: '630px',
           display: 'flex',
-          flexDirection: 'column',
-          backgroundColor: '#F8F8F8',
+          flexDirection: 'row',
+          backgroundColor: '#0F0F0F', // Obsidian Dark
+          color: '#F8F8F8',
           fontFamily: 'Manrope',
-          color: '#0F0F0F',
           position: 'relative',
           overflow: 'hidden',
         }}
       >
-        {/* Subtle grid pattern */}
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundImage:
-              'radial-gradient(circle, #DCD9D2 0.8px, transparent 0.8px)',
-            backgroundSize: '24px 24px',
-            opacity: 0.4,
-          }}
-        />
-
         {/* Gold top accent line */}
         <div
           style={{
@@ -96,200 +69,127 @@ export async function GET(request: NextRequest) {
             top: 0,
             left: 0,
             right: 0,
-            height: '4px',
+            height: '6px',
             background: 'linear-gradient(90deg, #c9a227, #F4EBC9, #c9a227)',
+            zIndex: 10,
           }}
         />
 
-        {/* Brand header */}
+        {/* LEFT PANEL - Text Info */}
         <div
           style={{
             display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '28px 48px 0',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            flex: image ? 1.1 : 1,
+            padding: '60px',
             position: 'relative',
+            zIndex: 5,
           }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          {/* Brand Header */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
             <span style={{ fontSize: '32px' }}>🔌</span>
             <span
               style={{
-                fontSize: '20px',
+                fontSize: '22px',
                 fontWeight: 700,
-                letterSpacing: '-0.02em',
+                letterSpacing: '0.02em',
+                color: '#c9a227', // Gold
               }}
             >
               CAMPUS PLUG
             </span>
-            <span
-              style={{
-                fontSize: '14px',
-                color: '#5B5B5B',
-                fontWeight: 500,
-              }}
-            >
-              ·
-            </span>
-            <span
-              style={{
-                fontSize: '14px',
-                color: '#5B5B5B',
-                fontWeight: 500,
-              }}
-            >
-              University of Ghana
-            </span>
           </div>
-          {/* Category pill */}
+
+          {/* Category Pill */}
           {category && (
             <div
               style={{
                 display: 'flex',
-                alignItems: 'center',
-                padding: '6px 16px',
+                alignSelf: 'flex-start',
+                padding: '8px 16px',
                 borderRadius: '999px',
-                backgroundColor: '#c9a227',
-                color: '#0F0F0F',
-                fontSize: '13px',
+                backgroundColor: 'rgba(201, 162, 39, 0.15)', // Translucent Gold
+                border: '1px solid #c9a227',
+                color: '#c9a227',
+                fontSize: '14px',
                 fontWeight: 700,
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
+                marginBottom: '24px',
               }}
             >
               {category}
             </div>
           )}
-        </div>
 
-        {/* Main content area */}
-        <div
-          style={{
-            display: 'flex',
-            flex: 1,
-            padding: '24px 48px',
-            gap: image ? '40px' : '0',
-            position: 'relative',
-          }}
-        >
-          {/* Text column */}
+          {/* Title */}
           <div
             style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              flex: 1,
-              minWidth: 0,
+              fontSize: image ? '42px' : '52px',
+              fontWeight: 700,
+              lineHeight: 1.15,
+              letterSpacing: '-0.02em',
+              marginBottom: '24px',
+              color: '#F8F8F8',
+              display: '-webkit-box',
+              WebkitLineClamp: 3,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
             }}
           >
-            {/* Title */}
-            <div
-              style={{
-                fontSize: image ? '38px' : '48px',
-                fontWeight: 700,
-                lineHeight: 1.15,
-                letterSpacing: '-0.03em',
-                marginBottom: '20px',
-                color: '#0F0F0F',
-                overflow: 'hidden',
-                display: '-webkit-box',
-                WebkitLineClamp: 3,
-                WebkitBoxOrient: 'vertical',
-              }}
-            >
-              {title}
-            </div>
-
-            {/* Location tag */}
-            {location && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  fontSize: '16px',
-                  color: '#5B5B5B',
-                  fontWeight: 500,
-                  marginBottom: '16px',
-                }}
-              >
-                <span style={{ fontSize: '18px' }}>📍</span>
-                <span>{location}</span>
-              </div>
-            )}
-
-            {/* Price badge */}
-            {price && (
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  alignSelf: 'flex-start',
-                  padding: '10px 24px',
-                  borderRadius: '12px',
-                  backgroundColor: '#F4EBC9',
-                  color: '#0F0F0F',
-                  fontSize: '24px',
-                  fontWeight: 700,
-                  letterSpacing: '-0.01em',
-                }}
-              >
-                GH₵ {price}
-              </div>
-            )}
+            {title}
           </div>
 
-          {/* Image column */}
-          {image && (
+          {/* Location */}
+          {location && (
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center',
+                gap: '8px',
+                fontSize: '18px',
+                color: '#9C9C9C',
+                fontWeight: 500,
+                marginBottom: '32px',
               }}
             >
-              <div
-                style={{
-                  width: '360px',
-                  height: '360px',
-                  borderRadius: '24px',
-                  overflow: 'hidden',
-                  border: '3px solid #DCD9D2',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={image}
-                  alt={title}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                  }}
-                />
-              </div>
+              <span style={{ fontSize: '20px' }}>📍</span>
+              <span>{location}</span>
             </div>
           )}
-        </div>
 
-        {/* Footer */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '0 48px 28px',
-            position: 'relative',
-          }}
-        >
+          {/* Price Badge */}
+          {price && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                alignSelf: 'flex-start',
+                padding: '12px 28px',
+                borderRadius: '12px',
+                backgroundColor: '#c9a227', // Solid Gold
+                color: '#0F0F0F',
+                fontSize: '28px',
+                fontWeight: 700,
+                letterSpacing: '-0.01em',
+                boxShadow: '0 4px 16px rgba(201, 162, 39, 0.25)',
+              }}
+            >
+              GH₵ {price}
+            </div>
+          )}
+
+          {/* Footer Text */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '8px',
-              fontSize: '14px',
-              color: '#5B5B5B',
+              marginTop: 'auto',
+              fontSize: '16px',
+              color: '#9C9C9C',
               fontWeight: 500,
             }}
           >
@@ -298,28 +198,54 @@ export async function GET(request: NextRequest) {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                width: '28px',
-                height: '28px',
+                width: '24px',
+                height: '24px',
                 borderRadius: '50%',
                 backgroundColor: '#128C4A',
                 color: '#FFFFFF',
-                fontSize: '14px',
+                fontSize: '12px',
               }}
             >
               💬
             </span>
             Message seller directly on WhatsApp
           </div>
+        </div>
+
+        {/* RIGHT PANEL - Big Image */}
+        {image && (
           <div
             style={{
-              fontSize: '14px',
-              color: '#5B5B5B',
-              fontWeight: 600,
+              display: 'flex',
+              flex: 0.9,
+              position: 'relative',
+              height: '100%',
             }}
           >
-            campuspluggh.com
+            {/* Soft fade mask blending into the dark background */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                bottom: 0,
+                width: '120px',
+                background: 'linear-gradient(90deg, #0F0F0F 0%, rgba(15,15,15,0) 100%)',
+                zIndex: 2,
+              }}
+            />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={image}
+              alt={title}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+            />
           </div>
-        </div>
+        )}
 
         {/* Gold bottom accent line */}
         <div
@@ -328,8 +254,9 @@ export async function GET(request: NextRequest) {
             bottom: 0,
             left: 0,
             right: 0,
-            height: '4px',
+            height: '6px',
             background: 'linear-gradient(90deg, #c9a227, #F4EBC9, #c9a227)',
+            zIndex: 10,
           }}
         />
       </div>
@@ -338,9 +265,6 @@ export async function GET(request: NextRequest) {
       width: 1200,
       height: 630,
       fonts: [
-        // Both buffers may be undefined when Google Fonts is unreachable —
-        // omitting them lets satori render with its fallback font instead of
-        // crashing, so share unfurls never get an empty image again.
         ...(fontData
           ? [{ name: 'Manrope', data: fontData, style: 'normal' as const, weight: 700 as const }]
           : []),
