@@ -374,41 +374,114 @@ export default function PosterGeneratorPage() {
     return () => ro.disconnect()
   }, [isStory, size.width])
 
+  // html-to-image serializes the DOM into an SVG <foreignObject>, loads it
+  // as an <img>, then draws it onto a canvas. Two things break that pipeline
+  // in this app, both producing an all-black PNG:
+  //   1. Tailwind v4 emits modern color functions (lab(), oklch(),
+  //      color-mix()) for its palette tokens. Chromium refuses to rasterize
+  //      foreignObject content that uses them → solid black.
+  //   2. Cross-origin <img> tags (QR API, Supabase photos) taint the canvas.
+  // So before every export we build a sanitized off-DOM clone: images are
+  // swapped for same-origin blob URLs, CSS custom properties are resolved to
+  // literal rgb() values, and any remaining modern color syntax is converted.
+  // Convert lab()/lch()/oklab()/oklch()/color-mix() to rgb() using an
+  // off-screen element (the main document renders these fine — only the
+  // SVG-rasterized copy chokes on them).
+  function modernColorToRgb(color: string, probe: HTMLElement): string | null {
+    probe.style.color = ''
+    probe.style.color = color
+    if (!probe.style.color) return null
+    const m = probe.style.color.match(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/)
+    if (!m) return null
+    return `rgb(${Math.round(+m[1])}, ${Math.round(+m[2])}, ${Math.round(+m[3])})`
+  }
+
+  async function prepareExportClone(source: HTMLElement, width: number, height: number): Promise<{ clone: HTMLElement; cleanup: () => void }> {
+    const clone = source.cloneNode(true) as HTMLElement
+    clone.style.width = `${width}px`
+    clone.style.height = `${height}px`
+    clone.style.zoom = '1'
+    clone.style.transform = 'none'
+    clone.style.position = 'fixed'
+    clone.style.left = '-99999px'
+    clone.style.top = '0'
+    clone.style.margin = '0'
+    document.body.appendChild(clone)
+
+    const objectUrls: string[] = []
+    const probe = document.createElement('span')
+    probe.style.display = 'none'
+    document.body.appendChild(probe)
+
+    try {
+      // 1. Same-origin blob URLs for every image (kills canvas tainting).
+      const imgs = Array.from(clone.querySelectorAll('img')) as HTMLImageElement[]
+      await Promise.all(
+        imgs.map(async (img) => {
+          try {
+            const res = await fetch(img.src)
+            const url = URL.createObjectURL(await res.blob())
+            img.removeAttribute('crossorigin')
+            img.src = url
+            objectUrls.push(url)
+          } catch (err) {
+            console.warn('Image fetch failed during export, keeping original:', img.src, err)
+          }
+        }),
+      )
+
+      // 2. Walk the cloned tree (including nested shadow copies of style
+      // attributes) and rewrite computed styles to plain sRGB colors.
+      const nodes: Element[] = [clone, ...Array.from(clone.querySelectorAll('*'))]
+      for (const el of nodes) {
+        const computed = window.getComputedStyle(el)
+        let out = ''
+        for (let i = 0; i < computed.length; i++) {
+          const prop = computed[i]
+          let value = computed.getPropertyValue(prop)
+          if (!value) continue
+          if (/lab\(|lch\(|color-mix\(/i.test(value)) {
+            const rgb = modernColorToRgb(value, probe)
+            if (rgb) value = rgb
+          }
+          out += `${prop}:${value};`
+        }
+        el.setAttribute('style', out)
+      }
+    } finally {
+      probe.remove()
+    }
+
+    return {
+      clone,
+      cleanup: () => {
+        clone.remove()
+        objectUrls.forEach((u) => URL.revokeObjectURL(u))
+      },
+    }
+  }
+
   async function handleDownload(exportFormat: 'png' | 'jpeg') {
     if (!posterRef.current || isExporting) return
     setIsExporting(exportFormat)
     try {
       const options = { quality: 0.98, cacheBust: true }
+
+      // Story exports at exactly 1080×1920: lay the sanitized clone out at
+      // half resolution (540×960, same 9:16) and rasterize with pixelRatio 2.
+      // Print formats use their ISO canvas size with pixelRatio 2 (~300 DPI).
+      const exportWidth = isStory ? Math.round(size.width / 2) : size.width
+      const exportHeight = isStory ? Math.round(size.height / 2) : size.height
+      const { clone, cleanup } = await prepareExportClone(posterRef.current, exportWidth, exportHeight)
+
       let dataUrl: string
-      if (isStory) {
-        // Story: render an exact 1080×1920 (9:16) export. The on-screen
-        // preview is a 360px-wide, zoomed-down copy, so we clone the node
-        // off-DOM at half print resolution (540×960 — same 9:16 ratio) and
-        // rasterize that; pixelRatio 2 doubles it to exactly 1080×1920.
-        const clone = posterRef.current.cloneNode(true) as HTMLElement
-        clone.style.width = `${Math.round(size.width / 2)}px`
-        clone.style.height = `${Math.round(size.height / 2)}px`
-        clone.style.zoom = '1'
-        clone.style.transform = 'none'
-        clone.style.position = 'fixed'
-        clone.style.left = '-99999px'
-        clone.style.top = '0'
-        document.body.appendChild(clone)
-        try {
-          // pixelRatio: 2 on 540×960 logical px → exact 1080×1920 output.
-          const storyOptions = { ...options, pixelRatio: 2 }
-          dataUrl = exportFormat === 'png'
-            ? await toPng(clone, storyOptions)
-            : await toJpeg(clone, storyOptions)
-        } finally {
-          document.body.removeChild(clone)
-        }
-      } else {
-        // A4/A5: pixelRatio: 2 → ~150 DPI at print size ×2 = 300 DPI equivalent.
-        const printOptions = { ...options, pixelRatio: 2 }
+      try {
+        const exportOptions = { ...options, pixelRatio: 2 }
         dataUrl = exportFormat === 'png'
-          ? await toPng(posterRef.current, printOptions)
-          : await toJpeg(posterRef.current, printOptions)
+          ? await toPng(clone, exportOptions)
+          : await toJpeg(clone, exportOptions)
+      } finally {
+        cleanup()
       }
 
       const link = document.createElement('a')
