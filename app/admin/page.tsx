@@ -177,6 +177,14 @@ export default function AdminPage() {
           return
         }
 
+        // Deep link: notification links point at /admin?tab=listings (etc.).
+        // Read from location rather than useSearchParams so the page stays
+        // statically prerenderable without a Suspense wrapper.
+        const requested = new URLSearchParams(window.location.search).get('tab')
+        if (requested === 'sellers' || requested === 'listings' || requested === 'reviews' || requested === 'featured') {
+          setTab(requested)
+        }
+
         setIsAdmin(true)
         await loadData()
       } catch (err) {
