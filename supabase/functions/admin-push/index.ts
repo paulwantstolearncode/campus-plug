@@ -27,22 +27,22 @@ webpush.setVapidDetails(
   VAPID_PRIVATE_KEY,
 )
 
+const CORS_HEADERS = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-headers': 'authorization,x-push-worker-secret,content-type',
+  'access-control-allow-methods': 'GET,POST',
+}
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...CORS_HEADERS },
   })
 
 Deno.serve(async (req) => {
   // Browser clients fetch the VAPID key to subscribe (CORS preflight + GET).
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      headers: {
-        'access-control-allow-origin': '*',
-        'access-control-allow-headers': 'authorization,x-push-worker-secret,content-type',
-        'access-control-allow-methods': 'GET,POST',
-      },
-    })
+    return new Response(null, { headers: { ...CORS_HEADERS } })
   }
 
   const url = new URL(req.url)
