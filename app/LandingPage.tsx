@@ -1,252 +1,218 @@
-'use client'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createServerClient } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import ListingCard, { type ListingCardData } from '@/app/ListingCard'
 import { CATEGORIES } from '@/lib/categories'
-import FeedbackModal from '@/app/components/FeedbackModal'
 import NavBar from '@/app/components/NavBar'
 import MarqueeStrip from '@/app/components/MarqueeStrip'
 import BentoGrid from '@/app/components/BentoGrid'
-import { useRouter } from 'next/navigation'
+import RotatingSearchPlaceholder from '@/app/components/RotatingSearchPlaceholder'
+import FeedbackToggle from '@/app/components/FeedbackToggle'
 
 interface MarketplaceStats {
   sellerCount: number
   listingCount: number
 }
 
-const SEARCH_PLACEHOLDERS = [
-  'Search: past questions, hair braiding, PS5, gas refill, phone repair...',
-  'Search: DCIT 201 tutoring, braiding, catering, laundry...',
-  'Search: wireless earbuds, laptop stand, generator rental...',
-  'Search: manicure, photography, graphic design, typing...',
-]
-
-function RotatingSearchPlaceholder() {
-  const [index, setIndex] = useState(0)
-  const router = useRouter()
-  const [query, setQuery] = useState('')
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % SEARCH_PLACEHOLDERS.length)
-    }, 3500)
-    return () => clearInterval(timer)
-  }, [])
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (query.trim()) {
-      router.push('/services?q=' + encodeURIComponent(query.trim()))
-    } else {
-      router.push('/services')
+/** Server-side Supabase client (cookie-based). Safe for data fetching. */
+async function serverSupabase() {
+  const cookieStore = await cookies()
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll() {},
+      },
     }
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="relative">
-      <input
-        type="text"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder={SEARCH_PLACEHOLDERS[index]}
-        className="w-full px-5 py-4 pr-14 rounded-full bg-ink-soft/90 backdrop-blur border border-white/15 text-white text-sm font-medium placeholder:text-white/40 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/30 transition-all shadow-2xl"
-      />
-      <button
-        type="submit"
-        className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-gold-vivid text-ink flex items-center justify-center hover:bg-gold-light transition-colors shadow-md shadow-gold-glow"
-        aria-label="Search"
-      >
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-      </button>
-    </form>
   )
 }
 
-export default function LandingPage() {
-  const [liveListings, setLiveListings] = useState<ListingCardData[]>([])
-  const [stats, setStats] = useState<MarketplaceStats | null>(null)
-  const [categoryCounts, setCategoryCounts] = useState<Map<string, number>>(new Map())
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
-  const [banners, setBanners] = useState<{ id: string; title: string; subtitle: string | null; image_url: string | null; link_url: string; bg_color: string; text_color: string }[]>([])
+interface ListingRow {
+  id: string
+  title: string
+  description: string | null
+  price: number
+  max_price: number | null
+  image_url: string | null
+  listing_type: string
+  category: string | null
+  campus_location: string | null
+  deleted_at: string | null
+  approval_status: string
+  seller_id: string
+  seller: {
+    full_name: string | null
+    whatsapp_number: string | null
+  } | null
+  listing_items: { price: number }[] | null
+  listing_images: { id: string }[] | null
+}
 
-  useEffect(() => {
-    // TODO(seo): convert this page to a Server Component and fetch listings
-    // server-side so the live/category sections render in the initial HTML.
-    // Requires splitting the client-only scroll-handler logic into a child
-    // component. Client-side fetching is fine for now.
+const LISTING_SELECT =
+  'id, title, description, price, max_price, image_url, listing_type, category, campus_location, approval_status, seller_id, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)'
 
-    // "Featured on Campus" — admin-curated slots first (landing_featured_listings),
-    // then fill remaining slots with the newest approved listings that have an
-    // image and aren't already featured. If the migration hasn't been run yet
-    // (table missing), this falls back to the newest-6 behavior automatically.
-    // Showcase only; every tap funnels to /login. The whole section hides
-    // itself if there are zero approved listings with images.
-    async function loadLive() {
-      // Pre-migration safety (same pattern as the original table-missing
-      // fallback): until supabase/add_campus_location.sql has been run, a
-      // select that includes campus_location 400s (unknown column) and would
-      // hide the whole section. If the primary load comes back empty, retry
-      // without the column — locations just won't show until the migration.
-      const listingSelect =
-        'id, title, description, price, max_price, image_url, listing_type, category, campus_location, approval_status, seller_id, seller:profiles!seller_id (full_name, whatsapp_number), listing_items (price), listing_images (id)'
-      // Pre-migration safety: strip optional columns added by later
-      // migrations (campus_location, max_price) if the load comes back
-      // empty — sections degrade gracefully instead of 400ing.
-      const legacySelect = listingSelect
-        .replace(', max_price', '')
-        .replace(', campus_location', '')
+const LEGACY_SELECT = LISTING_SELECT
+  .replace(', max_price', '')
+  .replace(', campus_location', '')
 
-      async function loadWith(select: string): Promise<ListingCardData[]> {
-        // 1) Admin-curated slots, in order. A slot only counts if its listing
-        //    still exists, is approved, and has an image.
-        const { data: slotData, error: slotError } = await supabase
-          .from('landing_featured_listings')
-          .select('slot, listing:listings!listing_id (' + select + ')')
-          .order('slot', { ascending: true })
+/** Fetch live listings for the hero carousel / landing showcase (server-side). */
+async function loadLiveListings(): Promise<ListingCardData[]> {
+  const supabase = await serverSupabase()
 
-        let featured: ListingCardData[] = []
-        if (slotError) {
-          // Table or column missing (migration not run yet) — fall through
-          // to newest-6.
-          console.error('Failed to load featured slots:', slotError)
-        } else if (slotData) {
-          featured = (slotData as unknown as { slot: number; listing: ListingCardData | null }[])
-            .filter((s) =>
-              s.listing &&
-              s.listing.approval_status === 'approved' &&
-              !s.listing.deleted_at &&
-              !!s.listing.image_url &&
-              s.listing.image_url.trim() !== ''
-            )
-            .map((s) => s.listing as ListingCardData)
-        }
+  const { data: slotData } = await supabase
+    .from('landing_featured_listings')
+    .select('slot, listing:listings!listing_id (' + LISTING_SELECT + ')')
+    .order('slot', { ascending: true })
 
-        // 2) Fill the remaining slots with boosted listings first,
-        //    then the newest approved listings that aren't already featured.
-        let combined = featured
-        if (combined.length < 6) {
-          const picked = combined.map((l) => l.id)
-          const baseFill = () => {
-            const q = supabase
-              .from('listings')
-              .select(select)
-              .eq('approval_status', 'approved')
-              .is('deleted_at', null)
-              .not('image_url', 'is', null)
-              .neq('image_url', '')
-            if (picked.length > 0) q.not('id', 'in', picked)
-            return q
-          }
+  let featured: ListingCardData[] = []
+  if (slotData) {
+    featured = (slotData as unknown as { slot: number; listing: ListingRow | null }[])
+      .filter(
+        (s) =>
+          s.listing &&
+          s.listing.approval_status === 'approved' &&
+          !s.listing.deleted_at &&
+          !!s.listing.image_url &&
+          s.listing.image_url.trim() !== ''
+      )
+      .map((s) => s.listing as unknown as ListingCardData)
+  }
 
-          // Boosted first, then regular.
-          const { data: boostedFill } = await baseFill()
-            .gt('boosted_until', new Date().toISOString())
-            .order('boosted_until', { ascending: false })
-            .limit(6)
-
-          const boostedRows = (boostedFill || []) as unknown as { id: string }[]
-          const boostedIds = new Set(boostedRows.map((l) => l.id))
-          const { data: regularFill, error: fillError } = await baseFill()
-            .order('created_at', { ascending: false })
-            .limit(6)
-
-          if (fillError) {
-            // Last resort: newest-6 with no exclusion (pre-featured behavior).
-            const { data: fallback } = await supabase
-              .from('listings')
-              .select(select)
-              .eq('approval_status', 'approved')
-              .is('deleted_at', null)
-              .not('image_url', 'is', null)
-              .neq('image_url', '')
-              .order('created_at', { ascending: false })
-              .limit(6)
-            if (fallback) combined = fallback as unknown as ListingCardData[]
-          } else if (regularFill) {
-            const regularRows = (regularFill || []) as unknown as { id: string }[]
-            const merged = [...boostedRows, ...regularRows.filter((l) => !boostedIds.has(l.id))].slice(0, 6)
-            combined = [...featured, ...merged as unknown as ListingCardData[]].slice(0, 6)
-          }
-        }
-
-        return combined
-      }
-
-      try {
-        let combined = await loadWith(listingSelect)
-        if (combined.length === 0) combined = await loadWith(legacySelect)
-        if (combined.length > 0) setLiveListings(combined)
-      } catch (err) {
-        // Decorative — a failed fetch just leaves the section hidden.
-        console.error('Failed to load live listings:', err)
-      }
+  let combined = featured
+  if (combined.length < 6) {
+    const picked = combined.map((l) => l.id)
+    const baseFill = () => {
+      const q = supabase
+        .from('listings')
+        .select(LISTING_SELECT)
+        .eq('approval_status', 'approved')
+        .is('deleted_at', null)
+        .not('image_url', 'is', null)
+        .neq('image_url', '')
+      if (picked.length > 0) q.not('id', 'in', picked)
+      return q
     }
 
-    // Hero social-proof pill counts (security-definer RPC — see
-    // supabase/add_marketplace_stats.sql). Shows the loading placeholder
-    // until data arrives; if the RPC hasn't been created yet the pill
-    // simply stays on its placeholder.
-    async function loadStats() {
-      try {
-        const { data } = await supabase.rpc('marketplace_stats')
-        if (data && data[0]) {
-          setStats({
-            sellerCount: Number(data[0].seller_count),
-            listingCount: Number(data[0].listing_count),
-          })
-        }
-      } catch (err) {
-        console.error('Failed to load marketplace stats:', err)
-      }
-    }
+    const { data: boostedFill } = await baseFill()
+      .gt('boosted_until', new Date().toISOString())
+      .order('boosted_until', { ascending: false })
+      .limit(6)
 
-    // Category showcase counts — one lightweight query, tallied client-side.
-    async function loadCategoryCounts() {
-      try {
-        const { data } = await supabase
-          .from('listings')
-          .select('category')
-          .eq('approval_status', 'approved')
-          .is('deleted_at', null)
-        if (!data) return
-        const counts = new Map<string, number>()
-        for (const row of data as { category: string | null }[]) {
-          if (row.category) {
-            counts.set(row.category, (counts.get(row.category) || 0) + 1)
-          }
-        }
-        setCategoryCounts(counts)
-      } catch (err) {
-        console.error('Failed to load category counts:', err)
-      }
-    }
+    const boostedRows = (boostedFill || []) as unknown as { id: string }[]
+    const boostedIds = new Set(boostedRows.map((l) => l.id))
 
-    loadLive()
-    loadStats()
-    loadCategoryCounts()
+    const { data: regularFill, error: fillError } = await baseFill()
+      .order('created_at', { ascending: false })
+      .limit(6)
 
-    // Banner ads — active, non-expired, newest first.
-    async function loadBanners() {
-      try {
-        const { data } = await supabase
-          .from('banner_ads')
-          .select('id, title, subtitle, image_url, link_url, bg_color, text_color')
-          .eq('is_active', true)
-          .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
-          .order('slot', { ascending: true })
-          .limit(3)
-        if (data) setBanners(data)
-      } catch {
-        // Banner table may not exist yet — decorative, don't break.
-      }
+    if (fillError) {
+      const { data: fallback } = await supabase
+        .from('listings')
+        .select(LISTING_SELECT)
+        .eq('approval_status', 'approved')
+        .is('deleted_at', null)
+        .not('image_url', 'is', null)
+        .neq('image_url', '')
+        .order('created_at', { ascending: false })
+        .limit(6)
+      if (fallback) combined = fallback as unknown as ListingCardData[]
+    } else if (regularFill) {
+      const regularRows = (regularFill || []) as unknown as { id: string }[]
+      const merged = [
+        ...boostedRows,
+        ...regularRows.filter((l) => !boostedIds.has(l.id)),
+      ].slice(0, 6)
+      combined = [...featured, ...merged as unknown as ListingCardData[]].slice(0, 6)
     }
-    loadBanners()
-  }, [])
+  }
+
+  if (combined.length > 0) return combined
+
+  // Pre-migration fallback: drop columns added by later migrations.
+  const supabaseLegacy = await serverSupabase()
+  const { data: legacy } = await supabaseLegacy
+    .from('listings')
+    .select(LEGACY_SELECT)
+    .eq('approval_status', 'approved')
+    .is('deleted_at', null)
+    .not('image_url', 'is', null)
+    .neq('image_url', '')
+    .order('created_at', { ascending: false })
+    .limit(6)
+  return (legacy || []) as unknown as ListingCardData[]
+}
+
+/** Fetch headline marketplace stats via security-definer RPC. */
+async function loadStats(): Promise<MarketplaceStats | null> {
+  const supabase = await serverSupabase()
+  const { data } = await supabase.rpc('marketplace_stats')
+  if (data && data[0]) {
+    return {
+      sellerCount: Number(data[0].seller_count),
+      listingCount: Number(data[0].listing_count),
+    }
+  }
+  return null
+}
+
+/** Fetch category counts for the category showcase pills. */
+async function loadCategoryCounts(): Promise<Map<string, number>> {
+  const supabase = await serverSupabase()
+  const { data } = await supabase
+    .from('listings')
+    .select('category')
+    .eq('approval_status', 'approved')
+    .is('deleted_at', null)
+  const counts = new Map<string, number>()
+  for (const row of (data || []) as { category: string | null }[]) {
+    if (row.category) {
+      counts.set(row.category, (counts.get(row.category) || 0) + 1)
+    }
+  }
+  return counts
+}
+
+/** Fetch active, non-expired banner ads. */
+async function loadBanners(): Promise<{
+  id: string
+  title: string
+  subtitle: string | null
+  image_url: string | null
+  link_url: string
+  bg_color: string
+  text_color: string
+}[]> {
+  const supabase = await serverSupabase()
+  const { data } = await supabase
+    .from('banner_ads')
+    .select('id, title, subtitle, image_url, link_url, bg_color, text_color')
+    .eq('is_active', true)
+    .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
+    .order('slot', { ascending: true })
+    .limit(3)
+  return (data || []) as {
+    id: string
+    title: string
+    subtitle: string | null
+    image_url: string | null
+    link_url: string
+    bg_color: string
+    text_color: string
+  }[]
+}
+
+export default async function LandingPage() {
+  const [liveListings, stats, categoryCounts, banners] = await Promise.all([
+    loadLiveListings(),
+    loadStats(),
+    loadCategoryCounts(),
+    loadBanners(),
+  ])
 
   // Categories with at least one live approved listing, in canonical order.
   const visibleCategories = CATEGORIES.filter(
@@ -749,12 +715,7 @@ export default function LandingPage() {
               <Link href="/login" className="text-white/60 hover:text-gold transition-colors">
                 Sign up
               </Link>
-              <button
-                onClick={() => setFeedbackOpen(true)}
-                className="text-white/60 hover:text-gold transition-colors"
-              >
-                Send feedback
-              </button>
+
             </div>
           </div>
 
@@ -778,7 +739,7 @@ export default function LandingPage() {
         </Link>
       </div>
 
-      <FeedbackModal key={feedbackOpen ? 'open' : 'closed'} isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+      <FeedbackToggle />
     </main>
   )
 }
