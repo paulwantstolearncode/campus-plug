@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { formatName } from '@/lib/formatName'
 import NavBar from '@/app/components/NavBar'
-import { getConversations } from '@/lib/chat'
+import { getConversations, subscribeToInbox } from '@/lib/chat'
 
 interface ConversationRow {
   id: string
@@ -27,7 +27,7 @@ export default function MessagesInbox() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  const loadConversations = useCallback(async () => {
+  const loadConversations = useCallback(async (silent = false) => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
@@ -35,7 +35,7 @@ export default function MessagesInbox() {
         return
       }
       setUserId(user.id)
-      setLoading(true)
+      if (!silent) setLoading(true)
       const data = await getConversations(user.id)
       setConversations(data as ConversationRow[])
       setError(null)
@@ -43,7 +43,7 @@ export default function MessagesInbox() {
       console.error('Failed to load conversations:', err)
       setError('Could not load your messages. Please try again.')
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }, [router])
 
@@ -53,6 +53,23 @@ export default function MessagesInbox() {
     }
     init()
   }, [loadConversations])
+
+  // Live inbox: refresh quietly when a message arrives, and whenever the tab
+  // regains focus (the silent path keeps the skeleton from flashing).
+  useEffect(() => {
+    if (!userId) return
+
+    const refresh = () => {
+      void loadConversations(true)
+    }
+    const unsubscribe = subscribeToInbox(userId, refresh)
+    window.addEventListener('focus', refresh)
+
+    return () => {
+      unsubscribe()
+      window.removeEventListener('focus', refresh)
+    }
+  }, [userId, loadConversations])
 
   const otherParty = (c: ConversationRow) => {
     if (userId && c.buyer_id === userId) return c.seller

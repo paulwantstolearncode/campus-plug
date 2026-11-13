@@ -11,6 +11,7 @@ import {
   sendMessage,
   markMessagesRead,
   touchConversation,
+  subscribeToConversationMessages,
   type Conversation,
   type ChatMessage,
 } from '@/lib/chat'
@@ -54,6 +55,9 @@ export default function MessageThread() {
   const [input, setInput] = useState('')
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // Transient, in-thread feedback (failed send, reveal not yet unlocked). Kept
+  // separate from `error`, which swaps the whole page for the error state.
+  const [notice, setNotice] = useState<string | null>(null)
   const [revealed, setRevealed] = useState(false)
   const [celebrateReveal, setCelebrateReveal] = useState(false)
   const [otherNumber, setOtherNumber] = useState<string | null>(null)
@@ -95,6 +99,21 @@ export default function MessageThread() {
       setConversation(conv)
       setMessages(msgs)
 
+      // Restore the contact-reveal state: a thread that already unlocked the
+      // other party's number must not ask again on every visit.
+      if (conv.contact_revealed_at) {
+        const party = conv.buyer_id === user.id ? conv.seller : conv.buyer
+        setRevealed(true)
+        if (party) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('whatsapp_number')
+            .eq('id', party.id)
+            .maybeSingle()
+          setOtherNumber(profile?.whatsapp_number || null)
+        }
+      }
+
       // Mark messages as read when the thread is viewed.
       await markMessagesRead({ conversationId, userId: user.id })
     } catch (err) {
@@ -111,6 +130,33 @@ export default function MessageThread() {
     }
     init()
   }, [loadThread])
+
+  const refreshMessages = useCallback(async () => {
+    if (!conversationId || !userId) return
+    const msgs = await getMessages(conversationId)
+    setMessages(msgs)
+    await markMessagesRead({ conversationId, userId })
+  }, [conversationId, userId])
+
+  // Live thread: pick up the other party's replies and read receipts without a
+  // reload (needs supabase/enable_chat_realtime.sql; until that runs the focus
+  // refresh below still keeps the thread current).
+  useEffect(() => {
+    if (!conversation || !userId || !conversationId) return
+
+    const unsubscribe = subscribeToConversationMessages(conversationId, () => {
+      void refreshMessages()
+    })
+    const onFocus = () => {
+      void refreshMessages()
+    }
+    window.addEventListener('focus', onFocus)
+
+    return () => {
+      unsubscribe()
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [conversation, userId, conversationId, refreshMessages])
 
   const otherParty = () => {
     if (!conversation || !userId) return null
@@ -143,16 +189,24 @@ export default function MessageThread() {
     scrollToBottom()
 
     try {
-      const { error } = await sendMessage({
+      const { message, error } = await sendMessage({
         conversationId,
         senderId: userId,
         content: input.trim(),
       })
-      if (error) throw error
+      if (error) throw new Error(error)
       await touchConversation(conversationId)
+
+      // Swap the optimistic bubble for the saved row (real id, timestamp).
+      if (message) {
+        setMessages((prev) =>
+          prev.map((m) => (m.id === optimisticId ? message : m))
+        )
+      }
+      setNotice(null)
     } catch (err) {
       console.error('Send failed:', err)
-      setError('Failed to send message. Please try again.')
+      setNotice('Message not sent. Check your connection and try again.')
       setMessages((prev) => prev.filter((m) => m.id !== optimisticId))
     } finally {
       setSending(false)
@@ -185,7 +239,7 @@ export default function MessageThread() {
 
     const eligible = (review && review.length > 0) || (order && order.length > 0)
     if (!eligible) {
-      setError(
+      setNotice(
         'Contact details are revealed after a completed transaction or a verified review between you and this seller.'
       )
       return
@@ -206,7 +260,7 @@ export default function MessageThread() {
 
     setRevealed(true)
     setOtherNumber(profile?.whatsapp_number || null)
-    setError(null)
+    setNotice(null)
 
     // One-time celebration when contact is revealed.
     if (typeof window !== 'undefined') {
@@ -350,6 +404,22 @@ export default function MessageThread() {
               </div>
             )}
           </div>
+
+          {/* Transient feedback stays inline, so a failed send no longer
+              replaces the whole conversation with an error page. */}
+          {notice && (
+            <div className="mb-4 p-4 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium flex items-start justify-between gap-3">
+              <span>{notice}</span>
+              <button
+                type="button"
+                onClick={() => setNotice(null)}
+                aria-label="Dismiss"
+                className="text-red-700/60 hover:text-red-700 leading-none text-lg"
+              >
+                ×
+              </button>
+            </div>
+          )}
 
           {/* Messages */}
           <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-rule p-4 mb-6 h-[60vh] overflow-y-auto">

@@ -32,6 +32,37 @@ export interface ChatMessage {
   sender?: { full_name: string | null } | null
 }
 
+type ProfileLite = { id: string; full_name: string | null }
+
+/**
+ * Fetch display profiles for a set of user ids.
+ *
+ * conversations.buyer_id / seller_id (and chat_messages.sender_id) reference
+ * auth.users, not public.profiles, so PostgREST cannot embed profiles in those
+ * queries — it rejects them with PGRST200 "Could not find a relationship".
+ * Names are fetched in a second, id-filtered query instead.
+ */
+async function getProfiles(ids: string[]): Promise<Record<string, ProfileLite>> {
+  const unique = Array.from(new Set(ids.filter(Boolean)))
+  if (unique.length === 0) return {}
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, full_name')
+    .in('id', unique)
+
+  if (error) {
+    console.error('Failed to load conversation profiles:', error)
+    return {}
+  }
+
+  const map: Record<string, ProfileLite> = {}
+  for (const p of (data as ProfileLite[]) || []) {
+    map[p.id] = p
+  }
+  return map
+}
+
 export interface ConversationWithLastMessage extends Conversation {
   last_message_content: string | null
   last_message_sender_id: string | null
@@ -46,9 +77,7 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
   const [convResult, unreadResult] = await Promise.all([
     supabase
       .from('conversations')
-      .select(
-        '*, buyer:profiles!buyer_id (id, full_name), seller:profiles!seller_id (id, full_name), listing:listings!listing_id (id, title)'
-      )
+      .select('*, listing:listings!listing_id (id, title)')
       .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
       .order('last_message_at', { ascending: false }),
     supabase
@@ -66,8 +95,14 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
     unreadMap[m.conversation_id] = (unreadMap[m.conversation_id] || 0) + 1
   }
 
+  const profiles = await getProfiles(
+    conversations.flatMap((c) => [c.buyer_id, c.seller_id])
+  )
+
   return conversations.map((c) => ({
     ...c,
+    buyer: profiles[c.buyer_id] || null,
+    seller: profiles[c.seller_id] || null,
     unread_count: unreadMap[c.id] || 0,
   }))
 }
@@ -76,13 +111,16 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
 export async function getMessages(
   conversationId: string
 ): Promise<ChatMessage[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('chat_messages')
-    .select(
-      '*, sender:profiles!sender_id (full_name)'
-    )
+    .select('*')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: true })
+
+  if (error) {
+    console.error('Failed to load messages:', error)
+    return []
+  }
 
   return (data as ChatMessage[]) || []
 }
@@ -91,15 +129,42 @@ export async function getMessages(
 export async function getConversation(
   conversationId: string
 ): Promise<Conversation | null> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('conversations')
-    .select(
-      '*, buyer:profiles!buyer_id (id, full_name), seller:profiles!seller_id (id, full_name), listing:listings!listing_id (id, title)'
-    )
+    .select('*, listing:listings!listing_id (id, title)')
     .eq('id', conversationId)
     .maybeSingle()
 
-  return (data as Conversation) || null
+  if (error) {
+    console.error('Failed to load conversation:', error)
+    return null
+  }
+  if (!data) return null
+
+  const conv = data as Conversation
+  const profiles = await getProfiles([conv.buyer_id, conv.seller_id])
+  return {
+    ...conv,
+    buyer: profiles[conv.buyer_id] || null,
+    seller: profiles[conv.seller_id] || null,
+  }
+}
+
+/**
+ * Total unread messages across all of the user's conversations.
+ *
+ * RLS on chat_messages already restricts rows to conversations the user takes
+ * part in, so a single head-count is enough — no conversation-id list needed.
+ */
+export async function getTotalUnread(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from('chat_messages')
+    .select('id', { count: 'exact', head: true })
+    .is('read_at', null)
+    .neq('sender_id', userId)
+
+  if (error) return 0
+  return count || 0
 }
 
 /** Count of unread messages in a conversation for the given user. */
@@ -187,19 +252,25 @@ export async function getOrCreateConversation(input: {
 }
 
 /** Send a message. RLS enforces that sender_id = auth.uid() and the sender is
- *  a participant of the conversation. */
+ *  a participant of the conversation. Returns the saved row so the UI can swap
+ *  its optimistic bubble for the real one. */
 export async function sendMessage(input: {
   conversationId: string
   senderId: string
   content: string
-}): Promise<{ error?: string }> {
-  const { error } = await supabase.from('chat_messages').insert({
-    conversation_id: input.conversationId,
-    sender_id: input.senderId,
-    content: input.content.trim(),
-  })
+}): Promise<{ message?: ChatMessage; error?: string }> {
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .insert({
+      conversation_id: input.conversationId,
+      sender_id: input.senderId,
+      content: input.content.trim(),
+    })
+    .select('*')
+    .single()
+
   if (error) return { error: error.message }
-  return {}
+  return { message: data as ChatMessage }
 }
 
 /** Mark all unread messages in a conversation as read for the given user. */
@@ -215,6 +286,61 @@ export async function markMessagesRead(input: {
     .is('read_at', null)
   if (error) return { error: error.message }
   return {}
+}
+
+// ── Live updates ──────────────────────────────────────────────────────────
+
+type Unsubscribe = () => void
+
+/**
+ * Subscribe to inserts/updates on one conversation's messages.
+ * Requires chat_messages in the realtime publication
+ * (supabase/enable_chat_realtime.sql); RLS limits delivered rows to
+ * participants. Always returns a cleanup function.
+ */
+export function subscribeToConversationMessages(
+  conversationId: string,
+  onChange: () => void
+): Unsubscribe {
+  const channel = supabase
+    .channel(`chat_messages:${conversationId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'chat_messages',
+        filter: `conversation_id=eq.${conversationId}`,
+      },
+      () => onChange()
+    )
+    .subscribe()
+
+  return () => {
+    void supabase.removeChannel(channel)
+  }
+}
+
+/**
+ * Subscribe to new messages in any thread the user participates in (inbox and
+ * unread badge). RLS means only the user's own conversations are delivered.
+ */
+export function subscribeToInbox(
+  userId: string,
+  onChange: () => void
+): Unsubscribe {
+  const channel = supabase
+    .channel(`chat_inbox:${userId}`)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'chat_messages' },
+      () => onChange()
+    )
+    .subscribe()
+
+  return () => {
+    void supabase.removeChannel(channel)
+  }
 }
 
 /** Touch a conversation's last_message_at (called after a send succeeds). */

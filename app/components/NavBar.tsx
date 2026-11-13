@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import type { User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { getTotalUnread } from '@/lib/chat'
 import BrandMark from '@/lib/brandMark'
 import NotificationBell from './NotificationBell'
 import PushNotificationsToggle from './PushNotificationsToggle'
@@ -28,6 +29,7 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [dropdownOpen, setDropdownOpen] = useState(false)
+  const [unreadMessages, setUnreadMessages] = useState(0)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -53,6 +55,29 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Unread messages badge: one cheap head-count, refreshed on an interval and
+  // when the tab regains focus. The inbox itself updates live via Realtime.
+  useEffect(() => {
+    let cancelled = false
+    const refresh = async () => {
+      const count = user ? await getTotalUnread(user.id) : 0
+      if (!cancelled) setUnreadMessages(count)
+    }
+
+    void refresh()
+    const interval = window.setInterval(refresh, 60000)
+    const onFocus = () => {
+      void refresh()
+    }
+    window.addEventListener('focus', onFocus)
+
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+      window.removeEventListener('focus', onFocus)
+    }
+  }, [user])
 
   // Close dropdown on outside click
 
@@ -212,6 +237,11 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
                   }`}
                 >
                   Messages
+                  {unreadMessages > 0 && (
+                    <span className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-gold text-charcoal text-[10px] font-bold align-middle">
+                      {unreadMessages > 9 ? '9+' : unreadMessages}
+                    </span>
+                  )}
                 </Link>
               )}
             </div>
@@ -431,6 +461,11 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
                 className={`px-4 py-3 rounded-xl transition-colors flex items-center gap-3 ${textColor} ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 11.5a8.38 8.38 0 0 1-4 0.5c-2.1 0-3.8-2.1-3.8-4.3 0-1.1 0.2-2.1 0.5-3H5c-1.1 0-2 0.9-2 2v5c0 1.1 0.9 2 2 2h12c1.1 0 2-0.9 2-2v-5c0-1.1-0.9-2-2-2z" /><polyline points="16 17 18 17 15.5 15.5"/></svg> Messages
+                {unreadMessages > 0 && (
+                  <span className="ml-1.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-gold text-charcoal text-[10px] font-bold">
+                    {unreadMessages > 9 ? '9+' : unreadMessages}
+                  </span>
+                )}
               </Link>
             )}
 
