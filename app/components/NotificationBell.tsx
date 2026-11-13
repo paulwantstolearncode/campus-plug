@@ -91,7 +91,7 @@ function typeIcon(type: string | undefined): React.ReactNode {
     ),
   }
   return icons[type ?? ''] || (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ink-muted">
       <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 0 1-3.46 0" />
     </svg>
@@ -218,11 +218,11 @@ export default function NotificationBell() {
       {open && (
         <div
           ref={dropdownRef}
-          className="absolute right-0 top-12 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 z-50 overflow-hidden"
+          className="absolute right-0 top-12 w-80 sm:w-96 bg-surface rounded-2xl shadow-xl border border-rule z-50 overflow-hidden"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <h3 className="font-bold text-charcoal text-sm">Notifications</h3>
+          <div className="flex items-center justify-between px-5 py-4 border-b border-rule">
+            <h3 className="font-bold text-ink text-sm">Notifications</h3>
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllRead}
@@ -237,9 +237,9 @@ export default function NotificationBell() {
           <div className="max-h-96 overflow-y-auto">
             {notifications.length === 0 ? (
               <div className="px-5 py-10 text-center">
-                <div className="text-3xl mb-2 opacity-50">🔔</div>
-                <p className="text-sm text-gray-400">
-                  No notifications yet — you&apos;re all caught up!
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 mb-2 text-ink-muted opacity-50"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>
+                <p className="text-sm text-ink-muted">
+                  No wahala, chale — you&apos;re all caught up!
                 </p>
               </div>
             ) : (
@@ -247,7 +247,7 @@ export default function NotificationBell() {
                 <button
                   key={n.id}
                   onClick={() => handleNotificationClick(n)}
-                  className={`w-full text-left px-5 py-4 border-b border-gray-50 hover:bg-gray-50/80 transition-colors ${
+                  className={`w-full text-left px-5 py-4 border-b border-rule hover:bg-surface/60 transition-colors ${
                     !n.is_read ? 'bg-gold/5' : ''
                   }`}
                 >
@@ -265,11 +265,11 @@ export default function NotificationBell() {
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm leading-snug ${!n.is_read ? 'font-bold text-charcoal' : 'text-gray-600'}`}>
+                      <p className={`text-sm leading-snug ${!n.is_read ? 'font-bold text-ink' : 'text-ink-muted'}`}>
                         {n.title}
                       </p>
-                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</p>
-                      <p className="text-[10px] text-gray-400 mt-1.5">{timeAgo(n.created_at)}</p>
+                      <p className="text-xs text-ink-muted mt-0.5 line-clamp-2">{n.message}</p>
+                      <p className="text-[10px] text-ink-muted mt-1.5">{timeAgo(n.created_at)}</p>
                     </div>
                   </div>
                 </button>

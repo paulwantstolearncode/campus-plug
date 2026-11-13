@@ -20,6 +20,8 @@ import {
   type ReviewWithResponse,
 } from '@/lib/reviews'
 import { getOrders, advanceOrderStatus, orderStatusLabel, type Order } from '@/lib/orders'
+import { OrderStatusChip } from '@/app/components/OrderStatusChip'
+import { ConfirmButton } from '@/app/components/ConfirmButton'
 
 interface MyListing {
   id: string
@@ -473,21 +475,6 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
       return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg> Refunded</span>
     }
     return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Cancelled</span>
-  }
-
-  const orderStatusChip = (status: string) => {
-    const variants: Record<string, string> = {
-      confirmed: 'bg-blue-100 text-blue-700',
-      paid: 'bg-amber-100 text-amber-700',
-      preparing: 'bg-amber-100 text-amber-700',
-      shipped: 'bg-indigo-100 text-indigo-700',
-      delivered: 'bg-indigo-100 text-indigo-700',
-      complete: 'bg-green-100 text-green-700',
-      cancelled: 'bg-red-100 text-red-700',
-    }
-    return <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${variants[status] || 'bg-gray-100 text-gray-600'}`}>
-      {orderStatusLabel(status)}
-    </span>
   }
 
   const formatDate = (dateStr: string | null) => {
@@ -1039,7 +1026,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
                         </p>
                       </div>
                       <span className="font-bold text-gold-dark text-sm ml-auto">{formatPrice(o.amount)}</span>
-                      {orderStatusChip(o.status)}
+                      {<OrderStatusChip status={o.status} />}
                     </div>
                     <p className="text-xs text-ink-muted mt-1">
                       <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{new Date(o.created_at).toLocaleDateString()}</span>
@@ -1054,22 +1041,19 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M1 12s4-8 11-8 11 8-4 8-11 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View
                       </Link>
                       {nextStatus && (
-                        <button
-                          onClick={() => {
-                            const confirmMsg = nextStatus === 'complete'
-                              ? 'Mark this order as complete?'
-                              : 'Advance this order to ' + nextStatus + '?'
-                            if (!confirm(confirmMsg)) return
-                            advanceOrderStatus(o.id, nextStatus as Order['status'])
+                        <ConfirmButton
+                          label={orderStatusLabel(nextStatus)}
+                          confirmLabel="Tap again to confirm"
+                          onConfirm={async () => {
+                            await advanceOrderStatus(o.id, nextStatus as Order['status'])
                           }}
-                          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold text-xs transition-colors ${
-                            nextStatus === 'complete'
+                          className={`
+                            ${nextStatus === 'complete'
                               ? 'bg-green-500 text-white hover:bg-green-600'
-                              : 'bg-ink text-white hover:bg-black'
-                          }`}
-                        >
-                          {orderStatusLabel(nextStatus)}
-                        </button>
+                              : 'bg-ink text-white hover:bg-black'}
+                          `}
+                          confirmClassName="bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200"
+                        />
                       )}
                     </div>
                   </div>

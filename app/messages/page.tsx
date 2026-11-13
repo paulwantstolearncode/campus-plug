@@ -14,6 +14,7 @@ interface ConversationRow {
   seller_id: string
   last_message_at: string
   contact_revealed_at: string | null
+  unread_count: number
   buyer?: { id: string; full_name: string | null } | null
   seller?: { id: string; full_name: string | null } | null
   listing?: { id: string; title: string | null } | null
@@ -68,6 +69,13 @@ export default function MessagesInbox() {
     return (
       <main className="min-h-screen bg-ink">
         <NavBar variant="dark" />
+        <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+          <div className="relative max-w-3xl mx-auto px-4 sm:px-6">
+            <div className="h-4 w-1/3 bg-white/10 rounded-full mb-4 animate-pulse" />
+            <div className="h-12 bg-white/10 rounded-xl w-3/4 mb-3 animate-pulse" />
+            <div className="h-5 bg-white/10 rounded-lg w-1/2 animate-pulse" />
+          </div>
+        </section>
         <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
           <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
             <div className="space-y-4">
@@ -87,6 +95,14 @@ export default function MessagesInbox() {
     return (
       <main className="min-h-screen bg-ink">
         <NavBar variant="dark" />
+        <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+          <div className="relative max-w-3xl mx-auto px-4 sm:px-6">
+            <div className="space-y-4">
+              <div className="h-4 w-1/3 bg-white/10 rounded-full mb-4 animate-pulse" />
+              <div className="h-12 bg-white/10 rounded-xl w-3/4 mb-3 animate-pulse" />
+            </div>
+          </div>
+        </section>
         <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
           <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
             {error && (
@@ -105,24 +121,28 @@ export default function MessagesInbox() {
     <main className="min-h-screen bg-ink">
       <NavBar variant="dark" />
 
-      <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
-        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
+      <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-1">Messages</p>
               <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight tracking-tight">
-                Your conversations
+                Your <span className="font-serif-accent italic text-gold">conversations</span>
               </h1>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
 
           {conversations.length === 0 ? (
             <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
-              <div className="text-4xl mb-4 opacity-50">💬</div>
-              <p className="text-xl font-bold text-ink">No conversations yet</p>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 mb-4 text-ink-muted opacity-50"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <p className="text-xl font-bold text-ink">No wahala, chale — nothing here yet</p>
               <p className="text-ink-muted mt-2 mb-6">
-                Start a conversation from a listing page — tap &quot;Message&quot; on any
-                listing to open a thread with the seller.
+                Open a listing and tap &quot;Message&quot; to start a conversation with the seller.
               </p>
               <Link
                 href="/services"
@@ -147,7 +167,14 @@ export default function MessagesInbox() {
                         {name.charAt(0).toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-charcoal truncate">{name}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className={`font-semibold text-charcoal truncate ${c.unread_count > 0 ? 'font-bold' : ''}`}>
+                            {name}
+                          </p>
+                          {c.unread_count > 0 && (
+                            <span className="w-2 h-2 rounded-full bg-gold shadow-sm" />
+                          )}
+                        </div>
                         <p className="text-xs text-ink-muted truncate">{listingTitle}</p>
                       </div>
                     </div>

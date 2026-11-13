@@ -210,7 +210,15 @@ export default function MessageThread() {
   if (loading) {
     return (
       <main className="min-h-screen bg-ink">
-        <NavBar variant="dark" />
+        <NavBar variant="dark" back={{ href: '/messages', label: 'Back to messages' }} />
+        <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+          <div className="relative max-w-3xl mx-auto px-4 sm:px-6">
+            <div className="space-y-4">
+              <div className="h-4 w-1/3 bg-white/10 rounded-full mb-4 animate-pulse" />
+              <div className="h-8 bg-white/10 rounded-2xl w-3/4 mb-3 animate-pulse" />
+            </div>
+          </div>
+        </section>
         <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
           <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
             <div className="h-4 w-1/3 skeleton-shimmer-light" />
@@ -227,7 +235,15 @@ export default function MessageThread() {
   if (error || !conversation || !userId) {
     return (
       <main className="min-h-screen bg-ink">
-        <NavBar variant="dark" />
+        <NavBar variant="dark" back={{ href: '/messages', label: 'Back to messages' }} />
+        <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+          <div className="relative max-w-3xl mx-auto px-4 sm:px-6">
+            <div className="space-y-4">
+              <div className="h-4 w-1/3 bg-white/10 rounded-full mb-4 animate-pulse" />
+              <div className="h-8 bg-white/10 rounded-2xl w-3/4 mb-3 animate-pulse" />
+            </div>
+          </div>
+        </section>
         <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
           <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
             {error && (
@@ -255,19 +271,27 @@ export default function MessageThread() {
     <main className="min-h-screen bg-ink">
       <NavBar variant="dark" back={{ href: '/messages', label: 'Back to messages' }} />
 
+      <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center text-xl font-bold text-gold-dark shrink-0">
+              {name.charAt(0).toUpperCase()}
+            </div>
+            <div>
+              <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-1">Conversation</p>
+              <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight tracking-tight">
+                {name}
+              </h1>
+              <p className="text-xs text-white/70 mt-1">{listingTitle}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
           {/* Thread header */}
           <div className="mb-6">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center text-xl font-bold text-gold-dark shrink-0">
-                {name.charAt(0).toUpperCase()}
-              </div>
-              <div>
-                <p className="font-bold text-charcoal">{name}</p>
-                <p className="text-xs text-ink-muted">{listingTitle}</p>
-              </div>
-            </div>
             {party && !revealed && (
               <button
                 onClick={handleRevealContact}
@@ -281,8 +305,36 @@ export default function MessageThread() {
               </button>
             )}
             {revealed && otherNumber && (
-              <div className="mt-4 p-3 rounded-xl border border-green-200 bg-green-50 text-green-800 text-sm">
-                {name}&apos;s WhatsApp: <span className="font-mono font-bold">{otherNumber}</span>
+              <div className="mt-4 bg-white/90 backdrop-blur-sm rounded-3xl border border-rule p-6 md:p-8 shadow-sm">
+                <div className="flex items-start gap-3 mb-4">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gold shrink-0">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2H16l-5-5-7 7h3a2 2 0 0 1 2-1.7V13.9a2 2 0 0 1 .3-.87l3-1.5a2 2 0 0 1 1.4-.8h.1l4 2.5c.5.8 1.4 1.2 2.3 1.2h5.1c1.1 0 2.1-.4 2.8-1.2l3-3c.6-.6.9-1.4.9-2.2v-2.8c0-1.1-.4-2.1-1.1-2.8z" />
+                  </svg>
+                  <div>
+                    <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-1">Contact revealed</p>
+                    <p className="text-sm text-ink">{name}&apos;s WhatsApp</p>
+                  </div>
+                </div>
+                <p className="text-sm text-ink-muted mb-4">
+                  You&apos;ve completed a deal together — here&apos;s their number.
+                </p>
+                <p className="text-sm font-mono font-bold text-ink mb-4">
+                  {otherNumber}
+                </p>
+                <a
+                  href={`https://wa.me/${otherNumber.replace(/[^+\d]/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center justify-center gap-2 w-full bg-gold text-charcoal py-3.5 rounded-full font-semibold hover:bg-gold-dark transition-colors text-sm"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-charcoal shrink-0">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2H16l-5-5-7 7h3a2 2 0 0 1 2-1.7V13.9a2 2 0 0 1 .3-.87l3-1.5a2 2 0 0 1 1.4-.8h.1l4 2.5c.5.8 1.4 1.2 2.3 1.2h5.1c1.1 0 2.1-.4 2.8-1.2l3-3c.6-.6.9-1.4.9-2.2v-2.8c0-1.1-.4-2.1-1.1-2.8z" />
+                  </svg>
+                  Message them on WhatsApp
+                </a>
+                <p className="text-[10px] text-ink-muted mt-3">
+                  Your number stays private — they&apos;ll see it only when you message them.
+                </p>
               </div>
             )}
           </div>
@@ -315,7 +367,7 @@ export default function MessageThread() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 disabled={sending}
-                className="flex-1 px-5 py-3 rounded-xl border-2 border-rule text-ink focus:outline-none focus:border-gold transition-colors"
+                className="flex-1 px-5 py-3 rounded-full border-2 border-rule text-ink focus:outline-none focus:border-gold transition-colors"
               />
               <button
                 type="submit"

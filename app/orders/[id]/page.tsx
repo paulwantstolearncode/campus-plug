@@ -13,6 +13,7 @@ import {
   type Order,
   type OrderEvent,
 } from '@/lib/orders'
+import { OrderStatusChip } from '@/app/components/OrderStatusChip'
 
 interface EventRow extends OrderEvent {
   actor?: { full_name: string | null } | null
@@ -111,7 +112,16 @@ export default function OrderDetailPage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-ink">
-        <NavBar variant="dark" />
+        <NavBar variant="dark" back={{ href: '/orders', label: 'Back to orders' }} />
+        <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+          <div className="relative max-w-3xl mx-auto px-4 sm:px-6">
+            <div className="space-y-4">
+              <div className="h-4 w-1/3 bg-white/10 rounded-full mb-4 animate-pulse" />
+              <div className="h-12 bg-white/10 rounded-xl w-3/4 mb-3 animate-pulse" />
+              <div className="h-5 bg-white/10 rounded-lg w-1/2 animate-pulse" />
+            </div>
+          </div>
+        </section>
         <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
           <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
             <div className="space-y-4">
@@ -127,7 +137,15 @@ export default function OrderDetailPage() {
   if (error || !order) {
     return (
       <main className="min-h-screen bg-ink">
-        <NavBar variant="dark" />
+        <NavBar variant="dark" back={{ href: '/orders', label: 'Back to orders' }} />
+        <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+          <div className="relative max-w-3xl mx-auto px-4 sm:px-6">
+            <div className="space-y-4">
+              <div className="h-4 w-1/3 bg-white/10 rounded-full mb-4 animate-pulse" />
+              <div className="h-12 bg-white/10 rounded-xl w-3/4 mb-3 animate-pulse" />
+            </div>
+          </div>
+        </section>
         <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
           <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
             {error && (
@@ -154,39 +172,35 @@ export default function OrderDetailPage() {
     <main className="min-h-screen bg-ink">
       <NavBar variant="dark" back={{ href: '/orders', label: 'Back to orders' }} />
 
+      <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-1">Order</p>
+              <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight tracking-tight">
+                {listingTitle}
+              </h1>
+              <p className="text-xs text-white/70 mt-1">
+                With {name} · {formatPrice(order.amount)} · {order.kind === 'product' ? 'Product' : 'Service'}
+              </p>
+            </div>
+            <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold border border-white/20 text-white">
+              Order #{order.id.slice(-4).toUpperCase()}
+            </span>
+          </div>
+        </div>
+      </section>
+
       <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
-          {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-1">Order</p>
-                <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight tracking-tight">
-                  {listingTitle}
-                </h1>
-                <p className="text-xs text-ink-muted mt-1">
-                  With {name} · {formatPrice(order.amount)} · {order.kind === 'product' ? 'Product' : 'Service'}
-                </p>
-              </div>
-              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-bold border border-rule text-charcoal">
-                Order #{order.id.slice(0, 8)}
-              </span>
-            </div>
 
             {/* Status chip */}
             <div className="mt-4 flex items-center gap-3">
-              <span className={`inline-flex items-center gap-1 px-3 py-2 rounded-full text-sm font-bold ${
-                order.status === 'complete' ? 'bg-green-100 text-green-700 border border-green-200' :
-                order.status === 'cancelled' ? 'bg-red-100 text-red-700 border border-red-200' :
-                'bg-blue-100 text-blue-700 border border-blue-200'
-              }`}>
-                {orderStatusLabel(order.status)}
-              </span>
+              <OrderStatusChip status={order.status} />
               {order.completed_at && (
                 <span className="text-xs text-ink-muted">Completed {new Date(order.completed_at).toLocaleDateString()}</span>
               )}
             </div>
-          </div>
 
           {/* Status timeline */}
           <div className="mb-8">

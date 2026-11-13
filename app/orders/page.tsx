@@ -6,7 +6,8 @@ import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
 import NavBar from '@/app/components/NavBar'
-import { getOrders, orderStatusLabel } from '@/lib/orders'
+import { getOrders } from '@/lib/orders'
+import { OrderStatusChip } from '@/app/components/OrderStatusChip'
 
 interface OrderRow {
   id: string
@@ -71,6 +72,13 @@ export default function OrdersPage() {
     return (
       <main className="min-h-screen bg-ink">
         <NavBar variant="dark" />
+        <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+          <div className="relative max-w-3xl mx-auto px-4 sm:px-6">
+            <div className="h-4 w-1/3 bg-white/10 rounded-full mb-4 animate-pulse" />
+            <div className="h-12 bg-white/10 rounded-xl w-3/4 mb-3 animate-pulse" />
+            <div className="h-5 bg-white/10 rounded-lg w-1/2 animate-pulse" />
+          </div>
+        </section>
         <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
           <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
             <div className="space-y-4">
@@ -90,6 +98,14 @@ export default function OrdersPage() {
     return (
       <main className="min-h-screen bg-ink">
         <NavBar variant="dark" />
+        <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+          <div className="relative max-w-3xl mx-auto px-4 sm:px-6">
+            <div className="space-y-4">
+              <div className="h-4 w-1/3 bg-white/10 rounded-full mb-4 animate-pulse" />
+              <div className="h-12 bg-white/10 rounded-xl w-3/4 mb-3 animate-pulse" />
+            </div>
+          </div>
+        </section>
         <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
           <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
             {error && (
@@ -104,43 +120,32 @@ export default function OrdersPage() {
     )
   }
 
-  const statusChip = (status: string) => {
-    const variants: Record<string, string> = {
-      confirmed: 'bg-blue-100 text-blue-700',
-      paid: 'bg-amber-100 text-amber-700',
-      preparing: 'bg-amber-100 text-amber-700',
-      shipped: 'bg-indigo-100 text-indigo-700',
-      delivered: 'bg-indigo-100 text-indigo-700',
-      complete: 'bg-green-100 text-green-700',
-      cancelled: 'bg-red-100 text-red-700',
-    }
-    return <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${variants[status] || 'bg-gray-100 text-gray-600'}`}>
-      {orderStatusLabel(status)}
-    </span>
-  }
-
   return (
     <main className="min-h-screen bg-ink">
       <NavBar variant="dark" />
 
-      <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
-        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
+      <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between mb-6">
             <div>
               <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-1">Orders</p>
               <h1 className="text-3xl md:text-4xl font-bold text-white leading-tight tracking-tight">
-                Your orders
+                Your <span className="font-serif-accent italic text-gold">orders</span>
               </h1>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
 
           {orders.length === 0 ? (
             <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
-              <div className="text-4xl mb-4 opacity-50">📦</div>
-              <p className="text-xl font-bold text-ink">No orders yet</p>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 mb-4 text-ink-muted opacity-50"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <p className="text-xl font-bold text-ink">No wahala, chale — nothing here yet</p>
               <p className="text-ink-muted mt-2 mb-6">
-                Orders you buy or sell appear here. Start from a listing page —
-                agree with the seller, then tap &quot;Start order&quot;.
+                Your buys and sells will show up here once you start a deal. Open a listing and tap &quot;Message&quot; to begin.
               </p>
               <Link
                 href="/services"
@@ -173,7 +178,7 @@ export default function OrdersPage() {
                       </div>
                     </div>
                     <div className="text-right hidden sm:block">
-                      {statusChip(o.status)}
+                      {<OrderStatusChip status={o.status} />}
                     </div>
                   </Link>
                 )

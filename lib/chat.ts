@@ -16,6 +16,7 @@ export interface Conversation {
   last_message_at: string
   updated_at: string
   contact_revealed_at: string | null
+  unread_count: number
   buyer?: { id: string; full_name: string | null } | null
   seller?: { id: string; full_name: string | null } | null
   listing?: { id: string; title: string | null } | null
@@ -42,15 +43,33 @@ export interface ConversationWithLastMessage extends Conversation {
 
 /** All conversations the user participates in, newest last_message first. */
 export async function getConversations(userId: string): Promise<Conversation[]> {
-  const { data } = await supabase
-    .from('conversations')
-    .select(
-      '*, buyer:profiles!buyer_id (id, full_name), seller:profiles!seller_id (id, full_name), listing:listings!listing_id (id, title)'
-    )
-    .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
-    .order('last_message_at', { ascending: false })
+  const [convResult, unreadResult] = await Promise.all([
+    supabase
+      .from('conversations')
+      .select(
+        '*, buyer:profiles!buyer_id (id, full_name), seller:profiles!seller_id (id, full_name), listing:listings!listing_id (id, title)'
+      )
+      .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+      .order('last_message_at', { ascending: false }),
+    supabase
+      .from('chat_messages')
+      .select('conversation_id')
+      .is('read_at', null)
+      .neq('sender_id', userId),
+  ])
 
-  return (data as Conversation[]) || []
+  const conversations = (convResult.data as Conversation[]) || []
+
+  // Count unread messages per conversation.
+  const unreadMap: Record<string, number> = {}
+  for (const m of (unreadResult.data as { conversation_id: string }[]) || []) {
+    unreadMap[m.conversation_id] = (unreadMap[m.conversation_id] || 0) + 1
+  }
+
+  return conversations.map((c) => ({
+    ...c,
+    unread_count: unreadMap[c.id] || 0,
+  }))
 }
 
 /** All messages in a conversation, oldest first. Returns empty array on error. */
