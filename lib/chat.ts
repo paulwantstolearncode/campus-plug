@@ -89,8 +89,7 @@ export async function getMessages(
 
 /** A single conversation with its participants (for the thread header). */
 export async function getConversation(
-  conversationId: string,
-  userId: string
+  conversationId: string
 ): Promise<Conversation | null> {
   const { data } = await supabase
     .from('conversations')
@@ -98,7 +97,6 @@ export async function getConversation(
       '*, buyer:profiles!buyer_id (id, full_name), seller:profiles!seller_id (id, full_name), listing:listings!listing_id (id, title)'
     )
     .eq('id', conversationId)
-    .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
     .maybeSingle()
 
   return (data as Conversation) || null

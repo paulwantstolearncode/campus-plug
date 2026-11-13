@@ -83,7 +83,7 @@ export default function MessageThread() {
       setLoading(true)
 
       const [conv, msgs] = await Promise.all([
-        getConversation(conversationId, user.id),
+        getConversation(conversationId),
         getMessages(conversationId),
       ])
 
