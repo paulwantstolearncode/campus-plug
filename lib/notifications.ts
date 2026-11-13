@@ -8,6 +8,9 @@ export interface Notification {
   link: string | null
   is_read: boolean
   created_at: string
+  type?: string
+  reference_id?: string
+  sender_id?: string
 }
 
 /**
@@ -87,12 +90,18 @@ export async function createNotification(input: {
   title: string
   message: string
   link?: string
+  type?: string
+  reference_id?: string
+  sender_id?: string
 }): Promise<{ success: boolean; error?: string }> {
   const { error } = await supabase.from('notifications').insert({
     user_id: input.userId,
     title: input.title.trim(),
     message: input.message.trim(),
     link: input.link || null,
+    type: input.type || null,
+    reference_id: input.reference_id || null,
+    sender_id: input.sender_id || null,
   })
 
   if (error) {
