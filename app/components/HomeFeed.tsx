@@ -7,6 +7,7 @@ import NavBar from '@/app/components/NavBar'
 import { getCategoriesByType } from '@/lib/categories'
 import ListingCard, { type ListingCardData } from '@/app/ListingCard'
 import { ListingCardSkeleton } from '@/app/components/Skeleton'
+import StatsStrip from '@/app/components/StatsStrip'
 import { getSellerRatings, type SellerRating } from '@/lib/reviews'
 
 interface HomeFeedProps {
@@ -319,6 +320,8 @@ export default function HomeFeed({ user }: HomeFeedProps) {
                   </button>
                 )}
               </div>
+
+              <StatsStrip />
 
               {filteredListings.length === 0 ? (
                 filter === 'mine' ? (

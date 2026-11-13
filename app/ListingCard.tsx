@@ -25,6 +25,8 @@ export interface ListingCardData {
   deleted_at: string | null
   sold_at: string | null
   last_activity_at: string | null
+  created_at?: string
+  boosted_until?: string | null
   seller_id: string
   seller: {
     full_name: string | null
@@ -95,7 +97,30 @@ export default function ListingCard({
   const [localFavorited, setLocalFavorited] = useState(false)
   const [user, setUser] = useState<{ id: string } | null>(null)
   const [toast, setToast] = useState<{ message: string; action?: { label: string; onClick: () => void } } | null>(null)
+  const [isBoosted, setIsBoosted] = useState(false)
+  const [isFresh, setIsFresh] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setIsBoosted(Boolean(listing.boosted_until && new Date(listing.boosted_until) > new Date()))
+    }, 0)
+    return () => clearTimeout(t)
+  }, [listing.boosted_until])
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setIsFresh(Boolean(listing.created_at && new Date(listing.created_at) > new Date(Date.now() - 24 * 60 * 60 * 1000)))
+    }, 0)
+    return () => clearTimeout(t)
+  }, [listing.created_at])
+
+  // Verified seller — top rated or avg >= 4.0 with at least one review.
+  const isVerified = Boolean(
+    rating?.is_top_rated ||
+      (rating?.review_count && rating?.review_count > 0 &&
+        Number(rating.average_rating) >= 4.0)
+  )
 
   const isFavorited = isFavoritedProp !== undefined ? isFavoritedProp : localFavorited
 
@@ -210,7 +235,7 @@ export default function ListingCard({
 
   return (
     <div className="group relative fade-up" style={delay ? { animationDelay: delay } : undefined}>
-      <div className="card-lift relative bg-surface rounded-2xl overflow-hidden hairline">
+      <div className={`card-lift-strong relative bg-surface rounded-2xl overflow-hidden hairline ${isBoosted ? 'hairline-glow' : ''}`}>
         <Link href={href} className="relative block aspect-[4/3] overflow-hidden bg-paper-deep">
           {listing.image_url ? (
             <Image
@@ -237,8 +262,12 @@ export default function ListingCard({
             {listing.listing_type === 'service' ? 'Service' : 'Product'}
           </div>
 
+          {isFresh && (
+            <div className="absolute top-3 left-12 w-2 h-2 rounded-full bg-gold fresh-pulse-dot shadow-sm" />
+          )}
+
           {/* Price pill — top-right, gold signal */}
-          <div className="absolute top-3 right-3 bg-gold-signal text-ink font-mono font-bold px-3 py-1 rounded-lg text-sm shadow-md shadow-gold-glow">
+          <div className="absolute top-3 right-3 bg-gold-signal text-ink font-mono font-bold px-3 py-1 rounded-lg text-sm shadow-md shadow-gold-glow hover:bg-gold-vivid hover:shadow-glow transition-colors transition-shadow duration-300">
             {priceLabel}
           </div>
 
@@ -249,9 +278,12 @@ export default function ListingCard({
             </div>
           )}
 
-          {rating?.is_top_rated && (
-            <div className="absolute bottom-3 left-3 bg-gold-signal text-ink px-2.5 py-1 rounded-lg text-[11px] font-bold shadow-md flex items-center gap-1">
-              ⭐ Top Rated
+          {isVerified && (
+            <div className="absolute bottom-3 left-3 bg-gold-signal text-ink px-2.5 py-1 rounded-lg text-[10px] font-bold shadow-md flex items-center gap-1">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              Verified
             </div>
           )}
 

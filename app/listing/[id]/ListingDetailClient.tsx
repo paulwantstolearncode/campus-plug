@@ -652,9 +652,15 @@ export default function ListingDetailClient() {
                           {Number(ratingInfo.average_rating).toFixed(1)} ({ratingInfo.review_count} reviews)
                         </span>
                       </div>
-                      {ratingInfo.is_top_rated && (
+                      {ratingInfo.is_top_rated ||
+                        (ratingInfo.review_count &&
+                          ratingInfo.review_count > 0 &&
+                          Number(ratingInfo.average_rating) >= 4.0) && (
                         <div className="inline-flex items-center gap-1.5 bg-gold/10 border border-gold/30 text-gold-dark px-3 py-1.5 rounded-full text-xs font-bold">
-                          ⭐ Top Rated Seller
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                            <polyline points="20 6 9 17 4 12" />
+                          </svg>
+                          Verified Seller
                         </div>
                       )}
                     </div>
@@ -945,9 +951,15 @@ export default function ListingDetailClient() {
                     </span>
                   )}
                 </div>
-                {ratingInfo?.is_top_rated && (
+                {ratingInfo?.is_top_rated ||
+                  (ratingInfo?.review_count &&
+                    ratingInfo?.review_count > 0 &&
+                    Number(ratingInfo?.average_rating) >= 4.0) && (
                   <span className="inline-flex items-center gap-1.5 mt-2 bg-gold text-charcoal px-3 py-1.5 rounded-full text-xs font-bold shadow-md">
-                    ⭐ Top Rated
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                    Verified
                   </span>
                 )}
 

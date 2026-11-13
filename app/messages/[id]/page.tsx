@@ -4,6 +4,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { formatName } from '@/lib/formatName'
 import NavBar from '@/app/components/NavBar'
+import { Celebrate } from '@/app/components/Celebrate'
 import {
   getConversation,
   getMessages,
@@ -54,6 +55,7 @@ export default function MessageThread() {
   const [sending, setSending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [revealed, setRevealed] = useState(false)
+  const [celebrateReveal, setCelebrateReveal] = useState(false)
   const [otherNumber, setOtherNumber] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -205,6 +207,15 @@ export default function MessageThread() {
     setRevealed(true)
     setOtherNumber(profile?.whatsapp_number || null)
     setError(null)
+
+    // One-time celebration when contact is revealed.
+    if (typeof window !== 'undefined') {
+      const key = `cp_revealed_celebrated_${conversationId}`
+      if (!localStorage.getItem(key)) {
+        localStorage.setItem(key, '1')
+        setCelebrateReveal(true)
+      }
+    }
   }
 
   if (loading) {
@@ -269,6 +280,7 @@ export default function MessageThread() {
 
   return (
     <main className="min-h-screen bg-ink">
+      <Celebrate trigger={celebrateReveal} />
       <NavBar variant="dark" back={{ href: '/messages', label: 'Back to messages' }} />
 
       <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">

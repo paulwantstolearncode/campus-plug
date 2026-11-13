@@ -14,6 +14,7 @@ import {
   type OrderEvent,
 } from '@/lib/orders'
 import { OrderStatusChip } from '@/app/components/OrderStatusChip'
+import { Celebrate } from '@/app/components/Celebrate'
 
 interface EventRow extends OrderEvent {
   actor?: { full_name: string | null } | null
@@ -26,6 +27,7 @@ export default function OrderDetailPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const [error, setError] = useState<string>('')
   const [saving, setSaving] = useState(false)
+  const [celebrateComplete, setCelebrateComplete] = useState(false)
   const router = useRouter()
   const params = useParams()
   const rawId = params.id
@@ -94,6 +96,15 @@ export default function OrderDetailPage() {
       // Refresh to reflect the new status + new event row
       await loadOrder()
       setError('')
+
+      // One-time celebration when the order reaches complete.
+      if (toStatus === 'complete') {
+        const key = `cp_celebrated_${orderId}`
+        if (typeof window !== 'undefined' && !localStorage.getItem(key)) {
+          localStorage.setItem(key, '1')
+          setCelebrateComplete(true)
+        }
+      }
     } catch (err) {
       console.error('Advance failed:', err)
       setError('Failed to update order status. Please try again.')
@@ -170,6 +181,7 @@ export default function OrderDetailPage() {
 
   return (
     <main className="min-h-screen bg-ink">
+      <Celebrate trigger={celebrateComplete} />
       <NavBar variant="dark" back={{ href: '/orders', label: 'Back to orders' }} />
 
       <section className="relative pt-32 pb-12 md:pt-40 md:pb-16 overflow-hidden animated-gradient">

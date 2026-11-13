@@ -244,9 +244,44 @@ button:not(:disabled):active, .btn-tactile:active {
   color: var(--charcoal);
 }
 
+/* Celebration burst — hand-rolled, zero deps. Radiates dots from centre. */
+@keyframes celebrate-burst {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--tx, 0)), calc(-50% + var(--ty, 0))) scale(0);
+  }
+}
+
+/* Stronger card lift for listing cards. */
+.card-lift-strong {
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease;
+}
+.card-lift-strong:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-card);
+  border-color: var(--color-rule);
+}
+
+/* Fresh listing pulse dot — respects reduced motion + touch guards. */
+@keyframes fresh-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
 /* Pause continuous decorative animations on touch devices. */
 @media (hover: none) and (pointer: coarse) {
-  .animated-gradient, .blob, .shine-button { animation: none; }
+  .animated-gradient, .blob, .shine-button,
+  .celebrate-burst, .fresh-pulse-dot { animation: none; }
 }
 
 /* Hide ambient blur blobs entirely on mobile — heavy GPU compositing for
@@ -358,7 +393,8 @@ body,
    visible when their animation is disabled. */
 @media (prefers-reduced-motion: reduce) {
   .marquee-track, .scroll-dot, .animated-gradient, .blob,
-  .shine-button, .animate-fade-in, .skeleton-shimmer, .skeleton-shimmer-light {
+  .shine-button, .animate-fade-in, .skeleton-shimmer, .skeleton-shimmer-light,
+  .celebrate-burst, .fresh-pulse-dot {
     animation: none;
   }
   .fade-up, .fade-up-delay-1, .fade-up-delay-2, .fade-up-delay-3,
