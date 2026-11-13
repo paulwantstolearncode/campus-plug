@@ -202,6 +202,18 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
                   Favorites
                 </Link>
               )}
+              {user && (
+                <Link
+                  href="/messages"
+                  className={`text-sm font-medium transition-colors pb-1 ${
+                    pathname.startsWith('/messages')
+                      ? `${textColor} border-b-2 ${activeBorder} pb-1`
+                      : `${mutedText} ${hoverText}`
+                  }`}
+                >
+                  Messages
+                </Link>
+              )}
             </div>
           )}
         </div>
@@ -409,6 +421,16 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
                 className={`px-4 py-3 rounded-xl transition-colors flex items-center gap-3 ${textColor} ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21.2l7.8-7.8 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg> Favorites
+              </Link>
+            )}
+
+            {user && (
+              <Link
+                href="/messages"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`px-4 py-3 rounded-xl transition-colors flex items-center gap-3 ${textColor} ${isDark ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 11.5a8.38 8.38 0 0 1-4 0.5c-2.1 0-3.8-2.1-3.8-4.3 0-1.1 0.2-2.1 0.5-3H5c-1.1 0-2 0.9-2 2v5c0 1.1 0.9 2 2 2h12c1.1 0 2-0.9 2-2v-5c0-1.1-0.9-2-2-2z" /><polyline points="16 17 18 17 15.5 15.5"/></svg> Messages
               </Link>
             )}
 

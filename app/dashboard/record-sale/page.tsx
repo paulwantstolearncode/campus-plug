@@ -158,6 +158,14 @@ export default function RecordSalePage() {
       return
     }
 
+    // Buyer WhatsApp is required so the buyer can be notified when the sale
+    // is marked complete and can confirm + leave a review.
+    const whatsappDigits = buyerWhatsapp.replace(/[^+\d]/g, '')
+    if (whatsappDigits.length < 9 || whatsappDigits.length > 15 || !/^\+?\d{9,15}$/.test(whatsappDigits)) {
+      alert('Please enter a valid buyer WhatsApp number (9–15 digits, optional leading +).')
+      return
+    }
+
     setSaving(true)
 
     try {
@@ -379,7 +387,7 @@ export default function RecordSalePage() {
 
               <div>
                 <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">
-                  Buyer name <span className="text-ink-muted font-normal normal-case">(optional)</span>
+                  Buyer name <span className="text-ink-muted font-normal normal-case">(optional — cosmetic only, e.g. &quot;Sale to Ama&quot;)</span>
                 </label>
                 <input
                   type="text"
@@ -392,14 +400,18 @@ export default function RecordSalePage() {
 
               <div>
                 <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">
-                  Buyer WhatsApp <span className="text-ink-muted font-normal normal-case">(optional)</span>
+                  Buyer WhatsApp <span className="text-ink-muted font-normal normal-case">(required)</span>
                 </label>
+                <p className="text-xs text-ink-muted mb-2">
+                  Enter the number the buyer used so they can confirm the purchase and leave a review.
+                </p>
                 <input
                   type="text"
                   placeholder="e.g. 233201234567"
                   className="w-full px-5 py-4 rounded-2xl border-2 border-rule text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors"
                   value={buyerWhatsapp}
                   onChange={(e) => setBuyerWhatsapp(e.target.value)}
+                  required
                 />
               </div>
 

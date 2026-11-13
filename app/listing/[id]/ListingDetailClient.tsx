@@ -18,6 +18,7 @@ import {
   type SellerRating,
   type ReviewWithResponse,
 } from '@/lib/reviews'
+import { getOrCreateConversation } from '@/lib/chat'
 
 interface ListingItem {
   id: string
@@ -430,6 +431,29 @@ export default function ListingDetailClient() {
     syncFavorite()
   }
 
+  const handleMessageClick = async () => {
+    if (!user) {
+      setToast({ message: 'Sign in to message sellers' })
+      return
+    }
+    if (listing.seller_id === user.id) {
+      setToast({ message: 'You cannot message yourself' })
+      return
+    }
+    const { id, error } = await getOrCreateConversation({
+      buyerId: user.id,
+      sellerId: listing.seller_id,
+      listingId: listingId || null,
+    })
+    if (error) {
+      setToast({ message: error })
+      return
+    }
+    if (id) {
+      router.push('/messages/' + id)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-ink">
 <NavBar back={{ href: backHref, label: 'Back to ' + (isService ? 'services' : 'marketplace') }} />
@@ -675,6 +699,18 @@ export default function ListingDetailClient() {
                         </svg>
                         Chat on WhatsApp
                       </a>
+
+                      {/* Message on Campus Plug button */}
+                      <button
+                        onClick={handleMessageClick}
+                        className="mt-3 flex items-center justify-center gap-2 w-full bg-white border-2 border-rule text-charcoal py-3.5 rounded-full font-semibold text-sm hover:border-gold hover:bg-gold/5 transition-colors min-h-[44px]"
+                      >
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 11.5a8.38 8.38 0 0 1-4 0.5c-2.1 0-3.8-2.1-3.8-4.3 0-1.1 0.2-2.1 0.5-3H5c-1.1 0-2 0.9-2 2v5c0 1.1 0.9 2 2 2h12c1.1 0 2-0.9 2-2v-5c0-1.1-0.9-2-2-2z" />
+                          <polyline points="16 17 18 17 15.5 15.5" />
+                        </svg>
+                        Message on Campus Plug
+                      </button>
 
                       {/* Reassurance microcopy */}
                       <p className="mt-2 text-center text-[11px] text-ink-muted">

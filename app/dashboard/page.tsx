@@ -19,6 +19,7 @@ import {
   type SellerRating,
   type ReviewWithResponse,
 } from '@/lib/reviews'
+import { getOrders, advanceOrderStatus, orderStatusLabel, type Order } from '@/lib/orders'
 
 interface MyListing {
   id: string
@@ -75,6 +76,8 @@ export default function DashboardPage() {
   const [listings, setListings] = useState<MyListing[]>([])
   const [bookings, setBookings] = useState<MyBooking[]>([])
   const [sales, setSales] = useState<MySale[]>([])
+const [orders, setOrders] = useState<Order[]>([])
+const [ordersError, setOrdersError] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [bookingsError, setBookingsError] = useState<string | null>(null)
@@ -350,6 +353,18 @@ export default function DashboardPage() {
           setSales(saleData as unknown as MySale[])
         }
 
+        // Orders — unified order model (additive, failure-tolerant).
+        // Sellers see orders where they are the seller; buyers see orders
+        // where they are the buyer. The getOrders helper uses OR on both.
+        // getOrders handles errors internally and returns [] on failure.
+        try {
+          const orderData = await getOrders(user.id)
+          setOrders(orderData as Order[])
+        } catch (err) {
+          console.error('Dashboard orders fetch failed:', err)
+          setOrdersError('Could not load your orders. Please try again.')
+        }
+
         // Reviews about me + my review records (additive, failure-tolerant).
         await loadReviewData(user.id)
 
@@ -458,6 +473,21 @@ export default function DashboardPage() {
       return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg> Refunded</span>
     }
     return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Cancelled</span>
+  }
+
+  const orderStatusChip = (status: string) => {
+    const variants: Record<string, string> = {
+      confirmed: 'bg-blue-100 text-blue-700',
+      paid: 'bg-amber-100 text-amber-700',
+      preparing: 'bg-amber-100 text-amber-700',
+      shipped: 'bg-indigo-100 text-indigo-700',
+      delivered: 'bg-indigo-100 text-indigo-700',
+      complete: 'bg-green-100 text-green-700',
+      cancelled: 'bg-red-100 text-red-700',
+    }
+    return <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${variants[status] || 'bg-gray-100 text-gray-600'}`}>
+      {orderStatusLabel(status)}
+    </span>
   }
 
   const formatDate = (dateStr: string | null) => {
@@ -958,6 +988,96 @@ export default function DashboardPage() {
               ))}
             </div>
           )}
+          {/* ORDERS — unified order model */}
+          <div className="flex items-center justify-between mb-4 mt-14">
+            <div>
+              <h2 className="text-2xl font-bold text-charcoal">Orders</h2>
+              <p className="text-xs text-ink-muted mt-1">
+                Unified orders for product sales and service bookings.
+                Advance the status as the transaction progresses.
+              </p>
+            </div>
+          </div>
+
+          {ordersError && (
+            <div className="mb-4 p-3 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-xs font-medium">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> {ordersError} — run add_orders.sql in Supabase and refresh.
+            </div>
+          )}
+
+          {orders.length === 0 ? (
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule mb-12">
+              <div className="text-5xl mb-4">📦</div>
+              <p className="text-xl font-bold text-charcoal">No orders yet</p>
+              <p className="text-ink-muted mt-2">Orders you buy or sell appear here. Start a conversation from a listing page and agree on a deal to create an order.</p>
+            </div>
+          ) : (
+            <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-rule divide-y divide-rule mb-12">
+              {orders.map((o) => {
+                const party = userId === o.seller_id ? o.buyer : o.seller
+                const partyName = party?.full_name ? formatName(party.full_name) : (o.buyer_name || 'Unknown')
+                let nextStatus: string | null = null
+                if (userId === o.seller_id) {
+                  switch (o.status) {
+                    case 'confirmed': nextStatus = 'paid'; break
+                    case 'paid': nextStatus = 'preparing'; break
+                    case 'preparing': nextStatus = 'shipped'; break
+                    case 'shipped': nextStatus = 'delivered'; break
+                    default: nextStatus = null
+                  }
+                } else if (userId === o.buyer_id && o.status === 'delivered') {
+                  nextStatus = 'complete'
+                }
+
+                return (
+                  <div key={o.id} className="p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                      <div>
+                        <p className="font-semibold text-charcoal">{o.listing?.title || 'Unknown listing'}</p>
+                        <p className="text-xs text-ink-muted">
+                          {o.kind === 'product' ? 'Product' : 'Service'} · {formatPrice(o.amount)}
+                        </p>
+                      </div>
+                      <span className="font-bold text-gold-dark text-sm ml-auto">{formatPrice(o.amount)}</span>
+                      {orderStatusChip(o.status)}
+                    </div>
+                    <p className="text-xs text-ink-muted mt-1">
+                      <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{new Date(o.created_at).toLocaleDateString()}</span>
+                      {userId === o.seller_id ? <>{' · '}<span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>{partyName}</span></> : <>{' · '}<span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>{partyName}</span></>}
+                    </p>
+
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      <Link
+                        href={"/orders/" + o.id}
+                        className="inline-flex items-center gap-1.5 bg-ink text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M1 12s4-8 11-8 11 8-4 8-11 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> View
+                      </Link>
+                      {nextStatus && (
+                        <button
+                          onClick={() => {
+                            const confirmMsg = nextStatus === 'complete'
+                              ? 'Mark this order as complete?'
+                              : 'Advance this order to ' + nextStatus + '?'
+                            if (!confirm(confirmMsg)) return
+                            advanceOrderStatus(o.id, nextStatus as Order['status'])
+                          }}
+                          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-semibold text-xs transition-colors ${
+                            nextStatus === 'complete'
+                              ? 'bg-green-500 text-white hover:bg-green-600'
+                              : 'bg-ink text-white hover:bg-black'
+                          }`}
+                        >
+                          {orderStatusLabel(nextStatus)}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )
+          }
           </>
           )}
 

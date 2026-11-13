@@ -9,6 +9,7 @@ import { getCategoryDisplay } from '@/lib/categories'
 import type { SellerRating } from '@/lib/reviews'
 import { supabase } from '@/lib/supabase'
 import { logAnalyticsEvent } from '@/lib/analytics'
+import { getOrCreateConversation } from '@/lib/chat'
 
 export interface ListingCardData {
   id: string
@@ -178,6 +179,29 @@ export default function ListingCard({
     toggleFavorite()
   }
 
+  const handleMessageClick = async () => {
+    if (!user) {
+      setToast({ message: 'Sign in to message sellers' })
+      return
+    }
+    if (listing.seller_id === user.id) {
+      setToast({ message: 'You cannot message yourself' })
+      return
+    }
+    const { id, error } = await getOrCreateConversation({
+      buyerId: user.id,
+      sellerId: listing.seller_id,
+      listingId: listing.id,
+    })
+    if (error) {
+      setToast({ message: error })
+      return
+    }
+    if (id) {
+      router.push('/messages/' + id)
+    }
+  }
+
   const whatsappUrl = listing.seller?.whatsapp_number
     ? 'https://wa.me/' + listing.seller.whatsapp_number + '?text=' + encodeURIComponent(
         'Hi ' + (listing.seller?.full_name ? formatName(listing.seller.full_name) : 'there') + '! I saw your listing for "' + listing.title + '" (' + priceLabel + ') on Campus Plug: https://campuspluggh.com/listing/' + listing.id + '. Is this still available?'
@@ -320,6 +344,18 @@ export default function ListingCard({
                     <WhatsAppIcon className="shrink-0" />
                     Message on WhatsApp
                   </a>
+                )}
+                {!listing.sold_at && user && (
+                  <button
+                    onClick={handleMessageClick}
+                    className="flex-1 flex items-center justify-center gap-2 bg-white border-2 border-rule text-charcoal py-2.5 rounded-xl font-semibold text-sm hover:border-gold hover:bg-gold/5 transition-colors min-h-[44px]"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 11.5a8.38 8.38 0 0 1-4 0.5c-2.1 0-3.8-2.1-3.8-4.3 0-1.1 0.2-2.1 0.5-3H5c-1.1 0-2 0.9-2 2v5c0 1.1 0.9 2 2 2h12c1.1 0 2-0.9 2-2v-5c0-1.1-0.9-2-2-2z" />
+                      <polyline points="16 17 18 17 15.5 15.5" />
+                    </svg>
+                    Message
+                  </button>
                 )}
               </>
             )}

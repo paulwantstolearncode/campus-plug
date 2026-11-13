@@ -152,6 +152,13 @@ export default function SaleDetailPage() {
 
     setSaving(true)
     try {
+      const whatsappDigits = buyerWhatsapp.replace(/[^+\d]/g, '')
+      if (whatsappDigits.length < 9 || whatsappDigits.length > 15 || !/^\+?\d{9,15}$/.test(whatsappDigits)) {
+        alert('Please enter a valid buyer WhatsApp number (9–15 digits, optional leading +).')
+        setSaving(false)
+        return
+      }
+
       const { error: saleError } = await supabase
         .from('sales')
         .update({
@@ -354,12 +361,16 @@ export default function SaleDetailPage() {
               </div>
               <div>
                 <label className="block text-sm font-bold text-ink mb-2 uppercase tracking-widest">Buyer WhatsApp</label>
+                <p className="text-xs text-ink-muted mb-1">
+                  Enter the number the buyer used so they can confirm the purchase and leave a review.
+                </p>
                 {editable ? (
                   <input
                     type="text"
                     className="w-full px-4 py-3 rounded-xl border-2 border-rule text-ink focus:outline-none focus:border-gold transition-colors"
                     value={buyerWhatsapp}
                     onChange={(e) => setBuyerWhatsapp(e.target.value)}
+                    required
                   />
                 ) : (
                   <p className="text-sm text-ink font-mono">{buyerWhatsapp || '—'}</p>

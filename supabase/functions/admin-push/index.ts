@@ -9,9 +9,12 @@
 //     job sends it as x-push-worker-secret so only the cron can invoke this.
 //
 // Runs every 2 minutes (cron job 'admin-push-drain' in add_web_push.sql).
-// Sends each queued message to ALL push_subscriptions belonging to admins,
-// then marks the messages processed. Expired/invalid subscriptions (404/410)
-// are pruned automatically.
+// Routing rule:
+//   * push_messages.user_id IS NULL  → broadcast to ALL admin subscriptions
+//     (legacy behavior for messages inserted before per-user targeting).
+//   * push_messages.user_id IS SET   → deliver to that user's subscriptions only.
+//
+// Expired/invalid subscriptions (404/410) are pruned automatically.
 // ============================================================================
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -66,7 +69,7 @@ Deno.serve(async (req) => {
   // 1. Unprocessed queue (bounded per run so a backlog drains gradually).
   const { data: messages, error: msgErr } = await supabase
     .from('push_messages')
-    .select('id, title, body, link')
+    .select('id, title, body, link, user_id')
     .is('processed_at', null)
     .order('id', { ascending: true })
     .limit(50)
@@ -74,26 +77,10 @@ Deno.serve(async (req) => {
   if (msgErr) return json({ error: msgErr.message }, 500)
   if (!messages || messages.length === 0) return json({ sent: 0, drained: 0 })
 
-  // 2. Subscriptions for admin users only.
-  const { data: adminProfiles, error: adminErr } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('is_admin', true)
-
-  if (adminErr) return json({ error: adminErr.message }, 500)
-  const adminIds = (adminProfiles || []).map((a) => a.id)
-  if (adminIds.length === 0) return json({ sent: 0, skipped: 'no admins' })
-
-  const { data: subs, error: subErr } = await supabase
-    .from('push_subscriptions')
-    .select('id, endpoint, p256dh, auth_key')
-    .in('user_id', adminIds)
-
-  if (subErr) return json({ error: subErr.message }, 500)
-  if (!subs || subs.length === 0) return json({ sent: 0, skipped: 'no subscriptions' })
-
   let sent = 0
   let failed = 0
+  let adminSent = 0
+  let userSent = 0
   const pruneIds: string[] = []
 
   for (const message of messages) {
@@ -102,6 +89,50 @@ Deno.serve(async (req) => {
       body: message.body,
       url: message.link || '/',
     })
+
+    const targetUserIds = message.user_id ? [message.user_id] : null
+
+    // 2. Resolve subscription owners: target user, or all admins (legacy NULL path).
+    let ownerIds: string[]
+    if (targetUserIds) {
+      ownerIds = targetUserIds
+      if (ownerIds.length === 0) {
+        await supabase
+          .from('push_messages')
+          .update({ processed_at: new Date().toISOString() })
+          .eq('id', message.id)
+        continue
+      }
+    } else {
+      const { data: adminProfiles, error: adminErr } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('is_admin', true)
+
+      if (adminErr) return json({ error: adminErr.message }, 500)
+      ownerIds = (adminProfiles || []).map((a) => a.id)
+      if (ownerIds.length === 0) {
+        await supabase
+          .from('push_messages')
+          .update({ processed_at: new Date().toISOString() })
+          .eq('id', message.id)
+        continue
+      }
+    }
+
+    const { data: subs, error: subErr } = await supabase
+      .from('push_subscriptions')
+      .select('id, endpoint, p256dh, auth_key')
+      .in('user_id', ownerIds)
+
+    if (subErr) return json({ error: subErr.message }, 500)
+    if (!subs || subs.length === 0) {
+      await supabase
+        .from('push_messages')
+        .update({ processed_at: new Date().toISOString() })
+        .eq('id', message.id)
+      continue
+    }
 
     await Promise.allSettled(
       subs.map(async (s) => {
@@ -114,6 +145,11 @@ Deno.serve(async (req) => {
             payload,
           )
           sent++
+          if (targetUserIds) {
+            userSent++
+          } else {
+            adminSent++
+          }
         } catch (err: unknown) {
           const statusCode = (err as { statusCode?: number }).statusCode
           if (statusCode === 404 || statusCode === 410) {
@@ -140,6 +176,8 @@ Deno.serve(async (req) => {
     drained: messages.length,
     sent,
     failed,
+    adminSent,
+    userSent,
     pruned: pruneIds.length,
   })
 })
