@@ -167,7 +167,7 @@ export default async function CategoriesPage() {
               <Link
                 key={cat.slug}
                 href={`/services?category=${cat.slug}`}
-                className="group relative sm:col-span-2 rounded-2xl p-6 sm:p-7 overflow-hidden border border-rule bg-surface transition-all duration-300 hover:-translate-y-1.5 hover:border-gold/50 hover:shadow-[0_12px_40px_-12px_rgba(201,162,39,0.2)]"
+                className="group relative sm:col-span-2 rounded-card p-6 sm:p-7 overflow-hidden border border-rule bg-surface transition-all duration-300 hover:-translate-y-1.5 hover:border-gold/50 hover:shadow-[0_12px_40px_-12px_rgba(201,162,39,0.2)]"
                 style={{ backgroundImage: `linear-gradient(135deg, ${cat.color}14 0%, transparent 60%)` }}
               >
                 {/* Demand badge */}
@@ -212,7 +212,7 @@ export default async function CategoriesPage() {
               <Link
                 key={cat.slug}
                 href={`/services?category=${cat.slug}`}
-                className="group relative bg-white/90 backdrop-blur-sm border border-rule rounded-2xl p-5 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:border-gold/50 hover:shadow-[0_12px_40px_-12px_rgba(201,162,39,0.2)]"
+                className="group relative bg-white/90 backdrop-blur-sm border border-rule rounded-card p-5 overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:border-gold/50 hover:shadow-[0_12px_40px_-12px_rgba(201,162,39,0.2)]"
               >
                 <span
                   className="absolute -bottom-5 -right-4 text-[5rem] leading-none opacity-[0.06] select-none pointer-events-none transition-transform duration-500 group-hover:scale-110"
@@ -249,8 +249,8 @@ export default async function CategoriesPage() {
       <section className="relative pb-24 md:pb-32 bg-adinkra-paper">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           {/* Gradient p-px wrapper = metallic gold border */}
-          <div className="rounded-3xl p-px bg-gradient-to-br from-[#e8b93b] via-[#c9a227]/40 to-[#a8841a]">
-            <div className="relative overflow-hidden bg-ink rounded-[calc(1.5rem-1px)] px-8 py-14 md:px-16 md:py-20 text-center">
+          <div className="rounded-card p-px bg-gradient-to-br from-[#e8b93b] via-[#c9a227]/40 to-[#a8841a]">
+            <div className="relative overflow-hidden bg-ink rounded-[calc(var(--radius-card)-1px)] px-8 py-14 md:px-16 md:py-20 text-center">
               <div className="absolute inset-0 grain-overlay opacity-[0.05] pointer-events-none" aria-hidden="true" />
               <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
                 <div className="absolute -top-24 left-1/4 w-80 h-80 bg-gold/10 rounded-full blur-3xl" />

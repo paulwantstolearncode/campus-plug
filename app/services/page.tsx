@@ -1,36 +1,13 @@
 'use client'
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
 import Link from 'next/link'
-import { formatPriceRange, formatListingPrice } from '@/lib/format'
-import { formatName } from '@/lib/formatName'
-import { CATEGORIES, getCategoriesByType, getCategoryDisplay } from '@/lib/categories'
+import { CATEGORIES, getCategoriesByType } from '@/lib/categories'
 import { CAMPUS_LOCATIONS } from '@/lib/campusLocations'
-import StarRating from '@/app/StarRating'
 import { getSellerRatings, type SellerRating } from '@/lib/reviews'
 import NavBar from '@/app/components/NavBar'
+import ListingCard, { type ListingCardData } from '@/app/ListingCard'
 import { ListingCardSkeleton } from '@/app/components/Skeleton'
-
-interface Service {
-  id: string
-  title: string
-  description: string | null
-  price: number
-  max_price: number | null
-  image_url: string | null
-  service_duration: string | null
-  service_location: string | null
-  category: string | null
-  listing_type: string
-  seller_id: string
-  seller: {
-    full_name: string | null
-    whatsapp_number: string | null
-  } | null
-  listing_items: { price: number }[] | null
-  listing_images: { id: string }[] | null
-}
 
 /** Curated location chips for the filter bar. */
 const LOCATION_CHIPS = [
@@ -51,7 +28,7 @@ const SEARCH_PLACEHOLDERS = [
 ]
 
 export default function ServicesPage() {
-  const [services, setServices] = useState<Service[]>([])
+  const [services, setServices] = useState<ListingCardData[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [placeholderIdx, setPlaceholderIdx] = useState(0)
@@ -113,7 +90,7 @@ export default function ServicesPage() {
           console.error('Failed to load services:', error)
         } else if (regular) {
           // Merge: boosted first, then the rest (skip duplicates).
-          const merged = [...(boosted || []), ...(regular || []).filter((l: { id: string }) => !boostedIds.has(l.id))] as unknown as Service[]
+          const merged = [...(boosted || []), ...(regular || []).filter((l: { id: string }) => !boostedIds.has(l.id))] as unknown as ListingCardData[]
           setServices(merged)
           const ratings = await getSellerRatings(merged.map((s) => s.seller_id))
           setSellerRatings(ratings)
@@ -212,7 +189,7 @@ export default function ServicesPage() {
       <section className="relative pb-24 md:pb-32 bg-adinkra-paper">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8">
           {services.length === 0 ? (
-            <div className="relative overflow-hidden bg-gradient-to-br from-charcoal to-gray-900 rounded-3xl p-12 md:p-20 text-center border border-white/10">
+            <div className="relative overflow-hidden bg-gradient-to-br from-charcoal to-gray-900 rounded-card p-12 md:p-20 text-center border border-white/10">
               <div className="relative">
                 <div className="text-6xl mb-4">💼</div>
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">No services yet</h2>
@@ -340,7 +317,7 @@ export default function ServicesPage() {
               </div>
 
               {filteredServices.length === 0 ? (
-                <div className="relative overflow-hidden bg-gradient-to-br from-off-white to-white rounded-3xl p-12 md:p-16 text-center border border-rule shadow-sm">
+                <div className="relative overflow-hidden bg-gradient-to-br from-off-white to-white rounded-card p-12 md:p-16 text-center border border-rule shadow-sm">
                   <div className="relative">
                     <div className="text-6xl mb-4 opacity-60">🔍</div>
                     {searchQuery.trim() ? (
@@ -379,85 +356,16 @@ export default function ServicesPage() {
                 </div>
               ) : (
               <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" data-tour="services-grid">
-                {filteredServices.map((service, idx) => {
-                  const cat = getCategoryDisplay(service.category)
-                  return (
-                  <div
+                {filteredServices.map((service, idx) => (
+                  <ListingCard
                     key={service.id}
-                    data-tour={idx === 0 ? 'listing-card' : undefined}
-                    className="group relative fade-up"
-                    style={{ animationDelay: ((idx % 10) * 45) + 'ms' }}
-                  >
-                    <div className="relative bg-white rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border border-gray-100">
-                      <Link href={"/listing/" + service.id} className="relative block aspect-[4/5] overflow-hidden bg-gray-100">
-                        {service.image_url ? (
-                          <Image src={service.image_url} alt={service.title} fill sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw" className="object-cover group-hover:scale-110 transition-transform duration-700" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-charcoal via-gray-800 to-charcoal">
-                            <span className="text-7xl opacity-40">{service.listing_type === 'service' ? '💼' : '📦'}</span>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/60 to-transparent"></div>
-                        <div className="absolute top-4 left-4 glass px-3 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
-                          <span className="w-2 h-2 bg-gold rounded-full"></span>
-                          {service.listing_type === 'service' ? 'Service' : 'Product'}
-                        </div>
-                        <div className="absolute top-4 right-4 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
-                          {formatPriceRange(service.listing_items) || formatListingPrice(service.price, service.max_price)}
-                        </div>
-                        {sellerRatings[service.seller_id]?.is_top_rated && (
-                          <div className="absolute top-16 left-4 bg-gold text-charcoal px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Top Rated
-                          </div>
-                        )}
-                        {service.listing_images && service.listing_images.length > 1 && (
-                          <div className="absolute top-16 right-4 glass px-2.5 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> {service.listing_images.length}
-                          </div>
-                        )}
-                        <div className="absolute inset-0 p-5 md:p-6 flex flex-col justify-end text-white">
-                          <h3 className="text-xl md:text-2xl font-bold mb-2 line-clamp-2 group-hover:translate-x-1 hover:text-gold transition-all">{service.title}</h3>
-                          {service.category && (
-                            <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full mb-2 w-fit bg-gold/20 text-gold">
-                              {cat.emoji} {cat.label}
-                            </span>
-                          )}
-                          {service.seller?.full_name && (
-                            <p className="text-sm text-white/90 mb-2 flex items-center gap-1.5">
-                              <span className="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center text-xs">{formatName(service.seller.full_name).charAt(0)}</span>
-                              {formatName(service.seller.full_name)}
-                              {sellerRatings[service.seller_id]?.review_count ? (
-                                <span className="inline-flex items-center gap-1 text-xs font-semibold" title={'Average ' + Number(sellerRatings[service.seller_id].average_rating).toFixed(1) + ' across ' + sellerRatings[service.seller_id].review_count + ' reviews'}>
-                                  <StarRating rating={Number(sellerRatings[service.seller_id].average_rating) || 0} size="sm" />
-                                  {Number(sellerRatings[service.seller_id].average_rating).toFixed(1)} ({sellerRatings[service.seller_id].review_count})
-                                </span>
-                              ) : null}
-                            </p>
-                          )}
-                          <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/80">
-                            {service.service_duration && (<span className="flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {service.service_duration}</span>)}
-                            {service.service_location && (<span className="flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> {service.service_location}</span>)}
-                          </div>
-                        </div>
-                      </Link>
-                      <div className="p-4 flex gap-2">
-                        {service.listing_type === 'service' ? (
-                          <Link href={"/services/" + service.id + "/book"} className="flex-1 flex items-center justify-center gap-2 bg-charcoal text-white py-3 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm group/btn">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Book Now <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
-                          </Link>
-                        ) : (
-                          <Link href={"/listing/" + service.id} className="flex-1 flex items-center justify-center gap-2 bg-charcoal text-white py-3 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm group/btn">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> View details <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
-                          </Link>
-                        )}
-                        {service.seller?.whatsapp_number && (
-                          <a href={"https://wa.me/" + service.seller.whatsapp_number + "?text=" + encodeURIComponent('Hi ' + (service.seller?.full_name ? formatName(service.seller.full_name) : 'there') + '! I saw your listing for "' + service.title + '" (' + formatListingPrice(service.price, service.max_price) + ') on Campus Plug: https://campuspluggh.com/listing/' + service.id + '. Is this still available?')} target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center bg-green-500 text-white rounded-full hover:bg-green-600 transition-all hover:scale-110" title="Message on WhatsApp"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  )
-                })}
+                    listing={service}
+                    variant="board"
+                    index={idx}
+                    sellerRatings={sellerRatings}
+                    tour={idx === 0 ? 'listing-card' : undefined}
+                  />
+                ))}
               </div>
               )}
             </>

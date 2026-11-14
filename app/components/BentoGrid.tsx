@@ -34,7 +34,7 @@ export default function BentoGrid() {
                 key={cat.slug}
                 href={`/services?category=${cat.slug}`}
                 className={
-                  'group relative overflow-hidden bg-surface hairline rounded-2xl p-6 card-lift hover:border-gold hover:shadow-glow transition-colors flex flex-col justify-end ' +
+                  'group relative overflow-hidden bg-surface hairline rounded-card p-6 card-lift hover:border-gold hover:shadow-glow transition-colors flex flex-col justify-end ' +
                   (tall ? 'md:row-span-2 min-h-[280px]' : 'min-h-[160px]')
                 }
               >

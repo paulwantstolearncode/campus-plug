@@ -233,7 +233,7 @@ export default function HomeFeed({ user }: HomeFeedProps) {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8">
           {listings.length === 0 ? (
-            <div className="relative overflow-hidden bg-gradient-to-br from-charcoal to-gray-900 rounded-3xl p-12 md:p-20 text-center border border-white/10">
+            <div className="relative overflow-hidden bg-gradient-to-br from-charcoal to-gray-900 rounded-card p-12 md:p-20 text-center border border-white/10">
               <div className="relative">
                 <div className="text-6xl mb-4">🛒</div>
                 <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">Nothing here yet</h2>

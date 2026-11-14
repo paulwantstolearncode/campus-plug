@@ -370,7 +370,7 @@ export default async function LandingPage() {
               <div className="relative">
                 <div className="grid grid-cols-2 gap-4">
                   {/* Featured listing card */}
-                  <div className="col-span-2 fade-up fade-up-delay-1 glass-dark rounded-3xl p-3 card-lift">
+                  <div className="col-span-2 fade-up fade-up-delay-1 glass-dark rounded-card p-3 card-lift">
                     {liveListings[0] ? (
                       <Link href="/services" className="block">
                         <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-white/5">
@@ -396,7 +396,7 @@ export default async function LandingPage() {
                   </div>
 
                   {/* Wanted board teaser */}
-                  <Link href="/requests" className="fade-up fade-up-delay-2 glass-dark rounded-3xl p-5 card-lift flex flex-col justify-between">
+                  <Link href="/requests" className="fade-up fade-up-delay-2 glass-dark rounded-card p-5 card-lift flex flex-col justify-between">
                     <div className="text-2xl mb-3">📋</div>
                     <p className="text-sm font-semibold text-white mb-1">Need something specific?</p>
                     <p className="text-[11px] text-white/50 mb-4">Post it — sellers pitch you on WhatsApp.</p>
@@ -404,7 +404,7 @@ export default async function LandingPage() {
                   </Link>
 
                   {/* Stats card */}
-                  <div className="fade-up fade-up-delay-3 glass-dark rounded-3xl p-5 card-lift flex flex-col justify-between">
+                  <div className="fade-up fade-up-delay-3 glass-dark rounded-card p-5 card-lift flex flex-col justify-between">
                     <div className="text-2xl mb-3">⚡</div>
                     <p className="text-3xl font-bold text-white font-mono leading-none mb-1">
                       {stats ? stats.listingCount : '—'}
@@ -453,7 +453,7 @@ export default async function LandingPage() {
                       href={banner.link_url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block rounded-2xl overflow-hidden transition-all hover:scale-[1.01] shadow-lg"
+                      className="block rounded-card overflow-hidden transition-all hover:scale-[1.01] shadow-lg"
                       style={{ backgroundColor: banner.bg_color, color: banner.text_color }}
                     >
                       <div className="flex items-center gap-4 p-5 md:p-6">
@@ -479,7 +479,7 @@ export default async function LandingPage() {
       {/* What is Campus Plug? — plain-English explainer for crawlers and new visitors */}
       <section className="relative py-16 md:py-24 bg-paper">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          <div className="hairline rounded-3xl bg-surface px-6 py-12 md:px-12 md:py-16 text-center shadow-lift">
+          <div className="hairline rounded-card bg-surface px-6 py-12 md:px-12 md:py-16 text-center shadow-lift">
             <p className="eyebrow text-gold-dark mb-4">The marketplace</p>
             <h2 className="text-4xl md:text-5xl font-bold text-ink leading-tight mb-6">
               What is <em className="font-serif-accent text-gold">Campus Plug</em>?
@@ -553,7 +553,7 @@ export default async function LandingPage() {
             {howItWorks.map((step, idx) => (
               <div
                 key={step.number}
-                className="fade-up card-lift group relative bg-surface hairline p-8 md:p-10 rounded-3xl"
+                className="fade-up card-lift group relative bg-surface hairline p-8 md:p-10 rounded-card"
                 style={{ animationDelay: (idx * 0.1) + 's' }}
               >
                 <span className="absolute top-6 right-8 text-4xl md:text-5xl font-bold text-gold/30 group-hover:text-gold transition-colors font-mono">
@@ -628,7 +628,7 @@ export default async function LandingPage() {
             {whyCards.map((card, idx) => (
               <div
                 key={card.title}
-                className="fade-up card-lift group bg-surface hairline p-8 md:p-10 rounded-3xl"
+                className="fade-up card-lift group bg-surface hairline p-8 md:p-10 rounded-card"
                 style={{ animationDelay: (idx * 0.07) + 's' }}
               >
                 <div className="text-5xl mb-4">{card.icon}</div>

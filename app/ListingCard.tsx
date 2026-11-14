@@ -4,7 +4,10 @@ import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { formatPriceRange, formatListingPrice } from '@/lib/format'
+import { formatName } from '@/lib/formatName'
 import { getCategoryDisplay } from '@/lib/categories'
+import { SITE_URL } from '@/lib/site'
+import StarRating from '@/app/StarRating'
 import type { SellerRating } from '@/lib/reviews'
 import { supabase } from '@/lib/supabase'
 import { getOrCreateConversation } from '@/lib/chat'
@@ -19,6 +22,8 @@ export interface ListingCardData {
   listing_type: string
   category: string | null
   campus_location: string | null
+  service_duration?: string | null
+  service_location?: string | null
   approval_status: string
   deleted_at: string | null
   sold_at: string | null
@@ -37,6 +42,12 @@ export interface ListingCardData {
 interface ListingCardProps {
   listing: ListingCardData
   index?: number
+  /** 'feed' (default) = light card with message/favourite actions, used by the
+      home feed, landing preview, shop and favourites pages. 'board' = dark
+      overlay card with seller proof + Book/WhatsApp actions, used by /services. */
+  variant?: 'feed' | 'board'
+  /** Forwarded to data-tour on the wrapper (onboarding tour anchor). */
+  tour?: string
   /** Deprecated — stagger is now fixed at 45ms × (index % 10). Kept for
       backward compatibility with existing callers. */
   staggerSeconds?: number
@@ -68,6 +79,8 @@ function HeartIcon({ filled }: { filled: boolean }) {
 export default function ListingCard({
   listing,
   index,
+  variant = 'feed',
+  tour,
   sellerRatings,
   isOwner,
   onDelete,
@@ -217,9 +230,103 @@ export default function ListingCard({
     }
   }
 
+  // ── Board variant: dark overlay card for the /services board. Carries the
+  //    seller proof (name, rating, duration, location) and Book/WhatsApp
+  //    actions that the feed card doesn't need.
+  if (variant === 'board') {
+    const boardRating = sellerRatings?.[listing.seller_id]
+    const waHref = listing.seller?.whatsapp_number
+      ? 'https://wa.me/' + listing.seller.whatsapp_number + '?text=' + encodeURIComponent(
+          'Hi ' + (listing.seller?.full_name ? formatName(listing.seller.full_name) : 'there') +
+          '! I saw your listing for "' + listing.title + '" (' + formatListingPrice(listing.price, listing.max_price) +
+          ') on Campus Plug: ' + SITE_URL + '/listing/' + listing.id + '. Is this still available?'
+        )
+      : null
+
+    return (
+      <div className="group relative fade-up" style={delay ? { animationDelay: delay } : undefined} data-tour={tour}>
+        <div className="relative bg-white rounded-card overflow-hidden shadow-xl hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 hairline">
+          <Link href={'/listing/' + listing.id} className="relative block aspect-[4/5] overflow-hidden bg-gray-100">
+            {listing.image_url ? (
+              <Image
+                src={listing.image_url}
+                alt={listing.title}
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
+                className="object-cover group-hover:scale-110 transition-transform duration-700"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-charcoal via-gray-800 to-charcoal">
+                <span className="text-7xl opacity-40">{listing.listing_type === 'service' ? '💼' : '📦'}</span>
+              </div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-charcoal via-charcoal/60 to-transparent"></div>
+            <div className="absolute top-4 left-4 glass px-3 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
+              <span className="w-2 h-2 bg-gold rounded-full"></span>
+              {listing.listing_type === 'service' ? 'Service' : 'Product'}
+            </div>
+            <div className="absolute top-4 right-4 bg-gold text-charcoal px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+              {priceLabel}
+            </div>
+            {boardRating?.is_top_rated && (
+              <div className="absolute top-16 left-4 bg-gold text-charcoal px-2.5 py-1 rounded-full text-[10px] font-bold shadow-lg flex items-center gap-1">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Top Rated
+              </div>
+            )}
+            {listing.listing_images && listing.listing_images.length > 1 && (
+              <div className="absolute top-16 right-4 glass px-2.5 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1.5">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> {listing.listing_images.length}
+              </div>
+            )}
+            <div className="absolute inset-0 p-5 md:p-6 flex flex-col justify-end text-white">
+              <h3 className="text-xl md:text-2xl font-bold mb-2 line-clamp-2 group-hover:translate-x-1 hover:text-gold transition-all">{listing.title}</h3>
+              {listing.category && (
+                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full mb-2 w-fit bg-gold/20 text-gold">
+                  {cat.emoji} {cat.label}
+                </span>
+              )}
+              {listing.seller?.full_name && (
+                <p className="text-sm text-white/90 mb-2 flex items-center gap-1.5">
+                  <span className="w-6 h-6 rounded-full bg-gold/20 flex items-center justify-center text-xs">{formatName(listing.seller.full_name).charAt(0)}</span>
+                  {formatName(listing.seller.full_name)}
+                  {boardRating?.review_count ? (
+                    <span className="inline-flex items-center gap-1 text-xs font-semibold" title={'Average ' + Number(boardRating.average_rating).toFixed(1) + ' across ' + boardRating.review_count + ' reviews'}>
+                      <StarRating rating={Number(boardRating.average_rating) || 0} size="sm" />
+                      {Number(boardRating.average_rating).toFixed(1)} ({boardRating.review_count})
+                    </span>
+                  ) : null}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-white/80">
+                {listing.service_duration && (<span className="flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {listing.service_duration}</span>)}
+                {listing.service_location && (<span className="flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> {listing.service_location}</span>)}
+              </div>
+            </div>
+          </Link>
+          <div className="p-4 flex gap-2">
+            {listing.listing_type === 'service' ? (
+              <Link href={'/services/' + listing.id + '/book'} className="flex-1 flex items-center justify-center gap-2 bg-charcoal text-white py-3 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm group/btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> Book Now <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
+              </Link>
+            ) : (
+              <Link href={'/listing/' + listing.id} className="flex-1 flex items-center justify-center gap-2 bg-charcoal text-white py-3 rounded-full font-semibold hover:bg-black transition-all hover:scale-[1.02] text-sm group/btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> View details <span className="group-hover/btn:translate-x-1 transition-transform">→</span>
+              </Link>
+            )}
+            {waHref && (
+              <a href={waHref} target="_blank" rel="noopener noreferrer" className="w-12 h-12 flex items-center justify-center bg-green-500 text-white rounded-full hover:bg-green-600 transition-all hover:scale-110" title="Message on WhatsApp">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              </a>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="group relative fade-up" style={delay ? { animationDelay: delay } : undefined}>
-      <div className={`card-lift-strong relative bg-surface rounded-2xl overflow-hidden hairline ${isBoosted ? 'hairline-glow' : ''}`}>
+    <div className="group relative fade-up" style={delay ? { animationDelay: delay } : undefined} data-tour={tour}>
+      <div className={`card-lift-strong relative bg-surface rounded-card overflow-hidden hairline ${isBoosted ? 'hairline-glow' : ''}`}>
         <Link href={href} className="relative block aspect-[4/3] overflow-hidden bg-paper-deep">
           {listing.image_url ? (
             <Image
