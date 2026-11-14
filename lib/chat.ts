@@ -110,23 +110,47 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
   }))
 }
 
+/** Position of the oldest loaded message, used to page backwards. */
+export interface MessageCursor {
+  /**
+   * The row's own created_at, verbatim — it carries microseconds, and passing
+   * it through `new Date(...)` would truncate to milliseconds and could skip
+   * messages at a page boundary.
+   */
+  createdAt: string
+  /** Tiebreaker for messages sharing that timestamp. */
+  id: string
+}
+
 /**
- * One page of a conversation's messages, oldest first.
+ * A page of a conversation's messages, oldest first.
  *
- * Reads the newest `limit` messages (newest-first in SQL, reversed for
- * display) plus one probe row, which reports whether older messages remain.
- * Omit `limit` to load the whole thread. Never throws: callers get `error` so
- * a failed page can be reported instead of rendered as an empty thread.
+ * Without a cursor this is the newest `limit` messages; with one it is the
+ * `limit` messages immediately older than it — so paging back never re-reads
+ * what the client already has. One extra probe row reports whether the page
+ * was cut short by `limit`. Omit `limit` to load the whole thread. Never
+ * throws: callers get `error` so a failed page is reported, not shown empty.
  */
 export async function getMessages(
   conversationId: string,
-  limit?: number
+  options: { limit?: number; before?: MessageCursor } = {}
 ): Promise<{ messages: ChatMessage[]; hasOlder: boolean; error?: string }> {
+  const { limit, before } = options
+
   let query = supabase
     .from('chat_messages')
     .select('*')
     .eq('conversation_id', conversationId)
     .order('created_at', { ascending: false })
+    .order('id', { ascending: false })
+
+  if (before) {
+    // Composite cursor: created_at alone can tie, so id breaks the tie and no
+    // message can be skipped or repeated at a page boundary.
+    query = query.or(
+      `created_at.lt.${before.createdAt},and(created_at.eq.${before.createdAt},id.lt.${before.id})`
+    )
+  }
 
   if (limit !== undefined) query = query.limit(limit + 1)
 
@@ -144,10 +168,16 @@ export async function getMessages(
   return { messages: rows.reverse(), hasOlder }
 }
 
-/** A single conversation with its participants (for the thread header). */
+/**
+ * A single conversation with its participants (for the thread header).
+ *
+ * `conversation: null` with no `error` means the row isn't visible — i.e. the
+ * viewer isn't a participant. A query failure returns `error` instead, so the
+ * thread can distinguish "not yours" from "couldn't load".
+ */
 export async function getConversation(
   conversationId: string
-): Promise<Conversation | null> {
+): Promise<{ conversation: Conversation | null; error?: string }> {
   const { data, error } = await supabase
     .from('conversations')
     .select('*, listing:listings!listing_id (id, title)')
@@ -156,16 +186,18 @@ export async function getConversation(
 
   if (error) {
     console.error('Failed to load conversation:', error)
-    return null
+    return { conversation: null, error: error.message }
   }
-  if (!data) return null
+  if (!data) return { conversation: null }
 
   const conv = data as Conversation
   const profiles = await getProfiles([conv.buyer_id, conv.seller_id])
   return {
-    ...conv,
-    buyer: profiles[conv.buyer_id] || null,
-    seller: profiles[conv.seller_id] || null,
+    conversation: {
+      ...conv,
+      buyer: profiles[conv.buyer_id] || null,
+      seller: profiles[conv.seller_id] || null,
+    },
   }
 }
 

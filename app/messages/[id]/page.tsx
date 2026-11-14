@@ -28,6 +28,17 @@ function isNearBottom(el: HTMLDivElement | null): boolean {
   return el.scrollHeight - el.scrollTop - el.clientHeight < 80
 }
 
+/** Merge server rows into the thread by id, keeping untouched optimistic bubbles. */
+function mergeMessages(
+  prev: ThreadMessage[],
+  incoming: ChatMessage[]
+): ThreadMessage[] {
+  const byId = new Map<string, ThreadMessage>()
+  for (const m of prev) byId.set(m.id, m)
+  for (const m of incoming) byId.set(m.id, m)
+  return [...byId.values()].sort((a, b) => a.created_at.localeCompare(b.created_at))
+}
+
 interface MessageBubbleProps {
   message: ThreadMessage
   isSender: boolean
@@ -95,7 +106,6 @@ export default function MessageThread() {
   const [revealed, setRevealed] = useState(false)
   const [celebrateReveal, setCelebrateReveal] = useState(false)
   const [otherNumber, setOtherNumber] = useState<string | null>(null)
-  const [loadedCount, setLoadedCount] = useState(0)
   const [hasOlder, setHasOlder] = useState(false)
   const [loadingOlder, setLoadingOlder] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -116,24 +126,26 @@ export default function MessageThread() {
       setUserId(user.id)
       setLoading(true)
 
-      const [conv, page] = await Promise.all([
+      const [convResult, page] = await Promise.all([
         getConversation(conversationId),
-        getMessages(conversationId, PAGE_SIZE),
+        getMessages(conversationId, { limit: PAGE_SIZE }),
       ])
 
-      if (!conv) {
-        setError('Conversation not found or you are not a participant.')
+      // A failed query is not "not found": say so instead of blaming the id.
+      if (convResult.error || page.error) {
+        setError('Could not load this conversation. Please try again.')
         return
       }
-      if (page.error) {
-        setError('Could not load this conversation. Please try again.')
+
+      const conv = convResult.conversation
+      if (!conv) {
+        setError('Conversation not found or you are not a participant.')
         return
       }
 
       setConversation(conv)
       setMessages(page.messages)
       setHasOlder(page.hasOlder)
-      setLoadedCount(PAGE_SIZE)
 
       // Open on the newest message, like every chat app.
       requestAnimationFrame(() => {
@@ -170,19 +182,13 @@ export default function MessageThread() {
   const refreshMessages = useCallback(async () => {
     if (!conversationId || !userId) return
 
-    // Re-read only the pages the reader already has, so a live update never
-    // discards older history they loaded on purpose.
+    // Only the newest page is re-read; older pages already loaded stay merged.
     const atBottom = isNearBottom(messagesContainerRef.current)
-    const page = await getMessages(conversationId, loadedCount)
+    const page = await getMessages(conversationId, { limit: PAGE_SIZE })
     if (page.error) return
 
-    // Keep optimistic bubbles: a refresh must never swallow a message the user
-    // is still sending or has yet to retry.
-    setMessages((prev) => {
-      const pending = prev.filter((m) => m.delivery)
-      return pending.length ? [...page.messages, ...pending] : page.messages
-    })
-    setHasOlder(page.hasOlder)
+    // Merging by id keeps optimistic bubbles and loaded history alike.
+    setMessages((prev) => mergeMessages(prev, page.messages))
 
     // Only follow the conversation if the reader was already at the bottom.
     if (atBottom) {
@@ -196,11 +202,15 @@ export default function MessageThread() {
     if (page.messages.some((m) => m.sender_id !== userId && !m.read_at)) {
       await markMessagesRead({ conversationId, userId })
     }
-  }, [conversationId, userId, loadedCount])
+  }, [conversationId, userId])
 
-  // Fetch one more page of history, keeping the message being read in place.
+  // Fetch the page immediately older than what's loaded, keeping the message
+  // being read in place.
   const loadOlder = async () => {
     if (!conversationId || loadingOlder) return
+
+    const oldest = messages.find((m) => !m.delivery)
+    if (!oldest) return
 
     const el = messagesContainerRef.current
     const prevHeight = el?.scrollHeight ?? 0
@@ -208,19 +218,17 @@ export default function MessageThread() {
 
     setLoadingOlder(true)
     try {
-      const next = loadedCount + PAGE_SIZE
-      const page = await getMessages(conversationId, next)
+      const page = await getMessages(conversationId, {
+        limit: PAGE_SIZE,
+        before: { createdAt: oldest.created_at, id: oldest.id },
+      })
       if (page.error) {
         setNotice('Could not load older messages. Please try again.')
         return
       }
 
-      setLoadedCount(next)
       setHasOlder(page.hasOlder)
-      setMessages((prev) => {
-        const pending = prev.filter((m) => m.delivery)
-        return pending.length ? [...page.messages, ...pending] : page.messages
-      })
+      setMessages((prev) => mergeMessages(prev, page.messages))
 
       requestAnimationFrame(() => {
         if (el) el.scrollTop = el.scrollHeight - prevHeight + prevTop
