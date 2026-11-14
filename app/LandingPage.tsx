@@ -308,7 +308,7 @@ export default async function LandingPage() {
               {/* Main headline */}
               <h1 className="fade-up fade-up-delay-1 text-5xl sm:text-6xl md:text-7xl xl:text-8xl font-bold text-white leading-[0.95] tracking-tight mb-5">
                 Campus help,<br className="hidden sm:block" />
-                without the <em className="font-serif-accent text-gold not-italic">guesswork</em>.
+                without the <em className="font-serif-accent text-gold italic">guesswork</em>.
               </h1>
 
               <p className="fade-up fade-up-delay-1 text-base sm:text-lg text-gold-vivid font-semibold tracking-wide mb-4">
