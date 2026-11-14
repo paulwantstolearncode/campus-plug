@@ -29,7 +29,6 @@ export interface ChatMessage {
   content: string
   created_at: string
   read_at: string | null
-  sender?: { full_name: string | null } | null
 }
 
 type ProfileLite = { id: string; full_name: string | null }
@@ -61,13 +60,6 @@ async function getProfiles(ids: string[]): Promise<Record<string, ProfileLite>> 
     map[p.id] = p
   }
   return map
-}
-
-export interface ConversationWithLastMessage extends Conversation {
-  last_message_content: string | null
-  last_message_sender_id: string | null
-  last_message_created_at: string | null
-  unread_count: number
 }
 
 // ── Reads ─────────────────────────────────────────────────────────────────
@@ -162,22 +154,6 @@ export async function getTotalUnread(userId: string): Promise<number> {
     .select('id', { count: 'exact', head: true })
     .is('read_at', null)
     .neq('sender_id', userId)
-
-  if (error) return 0
-  return count || 0
-}
-
-/** Count of unread messages in a conversation for the given user. */
-export async function getUnreadCount(
-  conversationId: string,
-  userId: string
-): Promise<number> {
-  const { count, error } = await supabase
-    .from('chat_messages')
-    .select('id', { count: 'exact', head: true })
-    .eq('conversation_id', conversationId)
-    .neq('sender_id', userId)
-    .is('read_at', null)
 
   if (error) return 0
   return count || 0

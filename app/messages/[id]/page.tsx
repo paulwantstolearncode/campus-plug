@@ -16,17 +16,31 @@ import {
   type ChatMessage,
 } from '@/lib/chat'
 
+/** A thread message; `delivery` marks a local, not-yet-saved send. */
+type ThreadMessage = ChatMessage & { delivery?: 'sending' | 'failed' }
+
 interface MessageBubbleProps {
-  message: ChatMessage
+  message: ThreadMessage
   isSender: boolean
+  onRetry: () => void
 }
 
-function MessageBubble({ message, isSender }: MessageBubbleProps) {
+/** Fetch a participant's WhatsApp number (profiles is publicly readable). */
+async function fetchWhatsappNumber(id: string): Promise<string | null> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('whatsapp_number')
+    .eq('id', id)
+    .maybeSingle()
+  return data?.whatsapp_number || null
+}
+
+function MessageBubble({ message, isSender, onRetry }: MessageBubbleProps) {
   const time = new Date(message.created_at).toLocaleTimeString([], {
     hour: '2-digit',
     minute: '2-digit',
   })
-  const read = message.read_at ? '✓' : ''
+  const read = message.read_at ? ' ✓' : ''
   return (
     <div
       className={`flex ${isSender ? 'justify-end' : 'justify-start'} mb-3`}
@@ -40,8 +54,19 @@ function MessageBubble({ message, isSender }: MessageBubbleProps) {
       >
         <p className="mb-1">{message.content}</p>
         <p className={`text-[10px] ${isSender ? 'text-white/60' : 'text-ink-muted'} text-right`}>
-          {time} {isSender && read}
+          {message.delivery === 'sending' && 'Sending… '}
+          {time}
+          {isSender && !message.delivery && read}
         </p>
+        {message.delivery === 'failed' && (
+          <button
+            type="button"
+            onClick={onRetry}
+            className="mt-1 text-[11px] font-semibold text-gold hover:text-gold-dark underline underline-offset-2"
+          >
+            Not sent — tap to retry
+          </button>
+        )}
       </div>
     </div>
   )
@@ -49,7 +74,7 @@ function MessageBubble({ message, isSender }: MessageBubbleProps) {
 
 export default function MessageThread() {
   const [conversation, setConversation] = useState<Conversation | null>(null)
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [messages, setMessages] = useState<ThreadMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [input, setInput] = useState('')
@@ -105,12 +130,7 @@ export default function MessageThread() {
         const party = conv.buyer_id === user.id ? conv.seller : conv.buyer
         setRevealed(true)
         if (party) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('whatsapp_number')
-            .eq('id', party.id)
-            .maybeSingle()
-          setOtherNumber(profile?.whatsapp_number || null)
+          setOtherNumber(await fetchWhatsappNumber(party.id))
         }
       }
 
@@ -134,8 +154,19 @@ export default function MessageThread() {
   const refreshMessages = useCallback(async () => {
     if (!conversationId || !userId) return
     const msgs = await getMessages(conversationId)
-    setMessages(msgs)
-    await markMessagesRead({ conversationId, userId })
+
+    // Keep optimistic bubbles: a refresh must never swallow a message the user
+    // is still sending or has yet to retry.
+    setMessages((prev) => {
+      const pending = prev.filter((m) => m.delivery)
+      return pending.length ? [...msgs, ...pending] : msgs
+    })
+
+    // Only write when something is actually unread — marking read emits UPDATE
+    // events that would otherwise bounce straight back into this refresh.
+    if (msgs.some((m) => m.sender_id !== userId && !m.read_at)) {
+      await markMessagesRead({ conversationId, userId })
+    }
   }, [conversationId, userId])
 
   // Live thread: pick up the other party's replies and read receipts without a
@@ -168,49 +199,75 @@ export default function MessageThread() {
     return party?.full_name ? formatName(party.full_name) : 'Unknown'
   }
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim() || !conversationId || !userId) return
+  // Save a message and reconcile its bubble: success swaps in the stored row,
+  // failure keeps the text on screen with a retry control.
+  const deliverMessage = useCallback(
+    async (optimisticId: string, content: string) => {
+      if (!conversationId || !userId) return
+      try {
+        const { message, error } = await sendMessage({
+          conversationId,
+          senderId: userId,
+          content,
+        })
+        if (error) throw new Error(error)
+        await touchConversation(conversationId)
 
-    setSending(true)
-    const optimisticId = 'opt-' + Date.now()
-    const optimisticMessage: ChatMessage = {
-      id: optimisticId,
-      conversation_id: conversationId,
-      sender_id: userId,
-      content: input.trim(),
-      created_at: new Date().toISOString(),
-      read_at: null,
-      sender: { full_name: 'You' },
-    }
-
-    setMessages((prev) => [...prev, optimisticMessage])
-    setInput('')
-    scrollToBottom()
-
-    try {
-      const { message, error } = await sendMessage({
-        conversationId,
-        senderId: userId,
-        content: input.trim(),
-      })
-      if (error) throw new Error(error)
-      await touchConversation(conversationId)
-
-      // Swap the optimistic bubble for the saved row (real id, timestamp).
-      if (message) {
         setMessages((prev) =>
-          prev.map((m) => (m.id === optimisticId ? message : m))
+          message
+            ? prev.map((m) => (m.id === optimisticId ? message : m))
+            : prev.filter((m) => m.id !== optimisticId)
+        )
+      } catch (err) {
+        console.error('Send failed:', err)
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === optimisticId
+              ? { ...m, delivery: 'failed' as const }
+              : m
+          )
         )
       }
-      setNotice(null)
-    } catch (err) {
-      console.error('Send failed:', err)
-      setNotice('Message not sent. Check your connection and try again.')
-      setMessages((prev) => prev.filter((m) => m.id !== optimisticId))
+    },
+    [conversationId, userId]
+  )
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const content = input.trim()
+    if (!content || !conversationId || !userId) return
+
+    const optimisticId = `opt-${Date.now()}`
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: optimisticId,
+        conversation_id: conversationId,
+        sender_id: userId,
+        content,
+        created_at: new Date().toISOString(),
+        read_at: null,
+        delivery: 'sending',
+      },
+    ])
+    setInput('')
+    scrollToBottom()
+    setSending(true)
+
+    try {
+      await deliverMessage(optimisticId, content)
     } finally {
       setSending(false)
     }
+  }
+
+  const retryMessage = (message: ThreadMessage) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === message.id ? { ...m, delivery: 'sending' as const } : m
+      )
+    )
+    void deliverMessage(message.id, message.content)
   }
 
   const handleRevealContact = async () => {
@@ -245,12 +302,7 @@ export default function MessageThread() {
       return
     }
 
-    // Fetch the other party's WhatsApp number (profiles is publicly readable).
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('whatsapp_number')
-      .eq('id', party.id)
-      .single()
+    const number = await fetchWhatsappNumber(party.id)
 
     // Mark the conversation as revealed.
     await supabase
@@ -259,7 +311,7 @@ export default function MessageThread() {
       .eq('id', conversationId)
 
     setRevealed(true)
-    setOtherNumber(profile?.whatsapp_number || null)
+    setOtherNumber(number)
     setNotice(null)
 
     // One-time celebration when contact is revealed.
@@ -370,7 +422,7 @@ export default function MessageThread() {
                 Reveal contact
               </button>
             )}
-            {revealed && otherNumber && (
+            {revealed && (
               <div className="mt-4 bg-white/90 backdrop-blur-sm rounded-3xl border border-rule p-6 md:p-8 shadow-sm">
                 <div className="flex items-start gap-3 mb-4">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gold shrink-0">
@@ -384,9 +436,16 @@ export default function MessageThread() {
                 <p className="text-sm text-ink-muted mb-4">
                   You&apos;ve completed a deal together — here&apos;s their number.
                 </p>
-                <p className="text-sm font-mono font-bold text-ink mb-4">
-                  {otherNumber}
-                </p>
+                {otherNumber ? (
+                  <p className="text-sm font-mono font-bold text-ink mb-4">
+                    {otherNumber}
+                  </p>
+                ) : (
+                  <p className="text-sm text-ink-muted mb-4">
+                    They haven&apos;t added a WhatsApp number yet.
+                  </p>
+                )}
+                {otherNumber && (
                 <a
                   href={`https://wa.me/${otherNumber.replace(/[^+\d]/g, '')}`}
                   target="_blank"
@@ -398,6 +457,7 @@ export default function MessageThread() {
                   </svg>
                   Message them on WhatsApp
                 </a>
+                )}
                 <p className="text-[10px] text-ink-muted mt-3">
                   Your number stays private — they&apos;ll see it only when you message them.
                 </p>
@@ -432,7 +492,12 @@ export default function MessageThread() {
                 {messages.map((m) => {
                   const isSender = m.sender_id === userId
                   return (
-                    <MessageBubble key={m.id} message={m} isSender={isSender} />
+                    <MessageBubble
+                      key={m.id}
+                      message={m}
+                      isSender={isSender}
+                      onRetry={() => retryMessage(m)}
+                    />
                   )
                 })}
                 <div ref={messagesEndRef} />
