@@ -93,7 +93,9 @@ export default function ListingCard({
     formatPriceRange(listing.listing_items) ||
     formatListingPrice(listing.price, listing.max_price)
   const rating = sellerRatings?.[listing.seller_id]
-  const href = preview ? '/login' : '/listing/' + listing.id
+  // Listing detail pages are public for approved listings, so preview cards on
+  // the logged-out landing link straight through instead of bouncing to /login.
+  const href = '/listing/' + listing.id
   // Stagger capped every 10 cards so deep feeds don't fade in late.
   const delay = index !== undefined ? ((index % 10) * 45) + 'ms' : undefined
 
