@@ -525,7 +525,7 @@ export default async function LandingPage() {
 
             <div className="text-center mt-12 md:mt-14">
               <Link
-                href="/login"
+                href="/services"
                 className="group inline-flex items-center gap-2 bg-charcoal text-white px-8 py-4 rounded-full font-semibold hover:bg-black transition-all hover:scale-105 shadow-xl shadow-charcoal/25"
               >
                 Browse the board
@@ -595,7 +595,7 @@ export default async function LandingPage() {
                 return (
                   <Link
                     key={c.slug}
-                    href="/login"
+                    href={`/services?category=${c.slug}`}
                     className="fade-up card-lift group inline-flex items-center gap-2 bg-surface hairline text-ink px-5 py-2.5 rounded-full font-semibold text-sm hover:border-gold hover:text-gold-dark transition-colors"
                     style={{ animationDelay: (idx * 0.07) + 's' }}
                   >
