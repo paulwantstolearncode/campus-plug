@@ -153,7 +153,7 @@ export default function AdminLocationsPage() {
   if (error && !isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen animated-gradient p-6">
-        <div className="bg-white rounded-3xl p-8 max-w-md text-center shadow-xl">
+        <div className="bg-white rounded-card p-8 max-w-md text-center shadow-xl">
           <div className="text-4xl mb-3">⚠️</div>
           <p className="text-red-600 font-semibold">{error}</p>
           <Link href="/" className="inline-block mt-5 text-sm text-white bg-charcoal rounded-full px-5 py-2.5 hover:bg-black transition-colors">← Back to app</Link>
@@ -225,7 +225,7 @@ export default function AdminLocationsPage() {
           </div>
 
           {listings.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
+            <div className="bg-white rounded-card p-12 text-center border border-gray-100">
               <div className="text-5xl mb-4">✨</div>
               <p className="text-xl font-bold text-charcoal">All caught up!</p>
               <p className="text-gray-500 mt-2">Every listing has a campus location assigned.</p>
@@ -240,7 +240,7 @@ export default function AdminLocationsPage() {
                 const hasAssignment = !!currentAssignment
 
                 return (
-                  <div key={listing.id} className="bg-white rounded-3xl p-5 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                  <div key={listing.id} className="bg-white rounded-card p-5 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
                     <div className="flex flex-col md:flex-row gap-4">
                       {/* Thumbnail */}
                       <div className="w-full md:w-24 h-24 rounded-2xl overflow-hidden bg-gray-100 shrink-0">

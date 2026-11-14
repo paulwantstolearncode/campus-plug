@@ -54,7 +54,7 @@ export default function FresherChecklist() {
   const allDone = doneCount === total
 
   return (
-    <div className="relative bg-ink text-white rounded-3xl border border-white/10 p-6 sm:p-8 overflow-hidden shadow-2xl">
+    <div className="relative bg-ink text-white rounded-card border border-white/10 p-6 sm:p-8 overflow-hidden shadow-2xl">
       {/* Ambient gold glow + grain */}
       <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
         <div className="absolute -top-20 right-0 w-72 h-72 bg-gold/10 rounded-full blur-3xl" />

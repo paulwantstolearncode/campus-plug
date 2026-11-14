@@ -167,7 +167,7 @@ export default function FavoritesPage() {
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-8">
           {listings.length === 0 ? (
             /* Empty state */
-            <div className="relative overflow-hidden bg-white rounded-3xl p-12 md:p-20 text-center border border-gray-100 shadow-xl max-w-2xl mx-auto">
+            <div className="relative overflow-hidden bg-white rounded-card p-12 md:p-20 text-center border border-gray-100 shadow-xl max-w-2xl mx-auto">
               <div className="relative">
                 <svg
                   width="80"

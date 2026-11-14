@@ -397,7 +397,7 @@ export default function AdminPage() {
   if (error && !isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen animated-gradient p-6">
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 max-w-md text-center shadow-xl border border-rule">
+        <div className="bg-white/90 backdrop-blur-sm rounded-card p-8 max-w-md text-center shadow-xl border border-rule">
           <div className="text-4xl mb-3">⚠️</div>
           <p className="text-red-600 font-semibold">{error}</p>
           <Link href="/" className="inline-block mt-5 text-sm text-white bg-ink rounded-full px-5 py-2.5 hover:bg-black transition-colors">← Back to app</Link>
@@ -489,7 +489,7 @@ export default function AdminPage() {
 
           {tab === 'sellers' ? (
             sellers.length === 0 ? (
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
+              <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule">
                 <div className="text-5xl mb-4">✨</div>
                 <p className="text-xl font-bold text-charcoal">All caught up!</p>
                 <p className="text-ink-muted mt-2">No pending sellers to review.</p>
@@ -505,7 +505,7 @@ export default function AdminPage() {
                   const waMessage = `Hi ${emailPrefix}! 👋\n\nThis is Paul from Campus Plug 🔌\n\nI'm verifying your seller application:\n📧 Account: ${account}\n📅 Applied: ${appliedDate}\n\nQuick check: reply YES to confirm this is really you, and I'll approve your seller account right away.\n\nWhat are you planning to offer on Campus Plug? Would love to know 👀`
 
                   return (
-                    <div key={seller.id} className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-rule">
+                    <div key={seller.id} className="bg-white/90 backdrop-blur-sm rounded-card p-6 shadow-lg border border-rule">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center text-lg font-bold text-gold-dark mb-3">
                         {seller.full_name?.charAt(0).toUpperCase() || '?'}
                       </div>
@@ -552,7 +552,7 @@ export default function AdminPage() {
             )
           ) : tab === 'listings' ? (
             listings.length === 0 ? (
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
+              <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule">
                 <div className="text-5xl mb-4">✨</div>
                 <p className="text-xl font-bold text-charcoal">All caught up!</p>
                 <p className="text-ink-muted mt-2">No pending listings to review.</p>
@@ -574,7 +574,7 @@ export default function AdminPage() {
                   const waMessage = `Hi ${namePrefix}! 👋\n\nThis is Paul from Campus Plug 🔌\n\nReviewing your new listing:\n📦 Title: ${listing.title}\n💰 Price: ${price}\n📅 Posted: ${postedDate}\n\nQuick question before I approve: ${reason}\n\nYour listing was read by the Campus Plug team before going live 🛡️\n\nOnce we chat, I'll approve it right away. Thanks for being one of our first sellers! 🙏`
 
                   return (
-                    <div key={listing.id} className="bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg border border-rule">
+                    <div key={listing.id} className="bg-white/90 backdrop-blur-sm rounded-card overflow-hidden shadow-lg border border-rule">
                       {listing.image_url ? (
                         <Image src={listing.image_url} alt={listing.title} width={400} height={192} className="w-full h-48 object-cover" />
                       ) : (
@@ -652,13 +652,13 @@ export default function AdminPage() {
             )
           ) : tab === 'reviews' ? (
             reviewsError ? (
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
+              <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule">
                 <div className="text-5xl mb-4">🚩</div>
                 <p className="text-xl font-bold text-charcoal">Reviews not available yet</p>
                 <p className="text-ink-muted mt-2">Run supabase/add_reviews_system.sql, then refresh. ({reviewsError})</p>
               </div>
             ) : flaggedReviews.length === 0 ? (
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
+              <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule">
                 <div className="text-5xl mb-4">✨</div>
                 <p className="text-xl font-bold text-charcoal">No flagged reviews</p>
                 <p className="text-ink-muted mt-2">Reviews sellers have flagged for moderation will appear here.</p>
@@ -669,7 +669,7 @@ export default function AdminPage() {
                   const reviewerName = review.reviewer?.full_name ? formatName(review.reviewer.full_name) : 'Verified Buyer'
                   const sellerName = review.seller?.full_name ? formatName(review.seller.full_name) : 'Unknown seller'
                   return (
-                    <div key={review.id} className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-amber-200">
+                    <div key={review.id} className="bg-white/90 backdrop-blur-sm rounded-card p-6 shadow-lg border border-amber-200">
                       <div className="flex items-center justify-between gap-2 mb-2">
                         <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
                           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg> Flagged
@@ -718,7 +718,7 @@ export default function AdminPage() {
             )
           ) : (
             featuredError ? (
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
+              <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule">
                 <div className="text-5xl mb-4">⭐</div>
                 <p className="text-xl font-bold text-charcoal">Featured listings not available yet</p>
                 <p className="text-ink-muted mt-2">Run supabase/add_landing_featured_listings.sql, then refresh. ({featuredError})</p>
@@ -748,7 +748,7 @@ export default function AdminPage() {
                       .map((id, j) => (j !== i ? id : null))
                       .filter(Boolean) as string[]
                     return (
-                      <div key={i} className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
+                      <div key={i} className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-xs font-bold text-ink-muted uppercase tracking-widest">Slot {i + 1}</span>
                           {sel && (

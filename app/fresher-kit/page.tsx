@@ -117,7 +117,7 @@ export default function FresherKitPage() {
             {PILLARS.map((pillar) => (
               <div
                 key={pillar.title}
-                className={`card-lift group relative bg-surface rounded-2xl border border-rule overflow-hidden flex flex-col hover:border-gold/60 hover:shadow-[0_16px_48px_-16px_rgba(201,162,39,0.25)] ${
+                className={`card-lift group relative bg-surface rounded-card border border-rule overflow-hidden flex flex-col hover:border-gold/60 hover:shadow-[0_16px_48px_-16px_rgba(201,162,39,0.25)] ${
                   pillar.tall ? 'sm:row-span-2 min-h-[280px] p-7 sm:p-8' : 'min-h-[180px] p-6 sm:p-7'
                 }`}
               >
@@ -180,7 +180,7 @@ export default function FresherKitPage() {
 
       {/* ── Wanted Board Callout ── */}
       <section className="px-4 sm:px-6 pb-16">
-        <div className="max-w-4xl mx-auto bg-ink rounded-3xl p-8 sm:p-12 text-center relative overflow-hidden">
+        <div className="max-w-4xl mx-auto bg-ink rounded-card p-8 sm:p-12 text-center relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
             <div
               className="absolute inset-0"

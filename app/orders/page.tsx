@@ -141,7 +141,7 @@ export default function OrdersPage() {
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
 
           {orders.length === 0 ? (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 mb-4 text-ink-muted opacity-50"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               <p className="text-xl font-bold text-ink">No wahala, chale — nothing here yet</p>
               <p className="text-ink-muted mt-2 mb-6">

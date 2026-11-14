@@ -233,7 +233,7 @@ function NewReviewInner() {
       <section className="relative pb-24 bg-off-white -mt-6">
         <div className="relative max-w-2xl mx-auto px-4 sm:px-6 pt-8">
           {error ? (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-10 text-center shadow-xl border border-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-10 text-center shadow-xl border border-rule">
               <div className="text-5xl mb-4">🤔</div>
               <p className="text-xl font-bold text-charcoal mb-2">Can&apos;t open this review</p>
               <p className="text-ink-muted mb-6">{error}</p>
@@ -242,7 +242,7 @@ function NewReviewInner() {
               </Link>
             </div>
           ) : (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-xl border border-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 md:p-8 shadow-xl border border-rule">
               {editWindowExpired && (
                 <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-700 text-sm font-medium">
                   ⏰ Your 7-day edit window has expired — this review is locked. You can still delete it.

@@ -138,7 +138,7 @@ export default function AdminFeedbackPage() {
   if (error && !isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen animated-gradient p-6">
-        <div className="bg-white rounded-3xl p-8 max-w-md text-center shadow-xl">
+        <div className="bg-white rounded-card p-8 max-w-md text-center shadow-xl">
           <div className="text-4xl mb-3">⚠️</div>
           <p className="text-red-600 font-semibold">{error}</p>
           <Link href="/" className="inline-block mt-5 text-sm text-white bg-charcoal rounded-full px-5 py-2.5 hover:bg-black transition-colors">← Back to app</Link>
@@ -226,7 +226,7 @@ export default function AdminFeedbackPage() {
 
           {/* List */}
           {feedback.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
+            <div className="bg-white rounded-card p-12 text-center border border-gray-100">
               <div className="text-5xl mb-4">💬</div>
               <p className="text-xl font-bold text-charcoal">No feedback yet</p>
               <p className="text-gray-500 mt-2">Submissions from users will appear here.</p>
@@ -240,7 +240,7 @@ export default function AdminFeedbackPage() {
                 return (
                   <div
                     key={item.id}
-                    className={'bg-white rounded-3xl p-6 shadow-lg border transition-colors ' + (item.is_read ? 'border-gray-100' : 'border-gold/40')}
+                    className={'bg-white rounded-card p-6 shadow-lg border transition-colors ' + (item.is_read ? 'border-gray-100' : 'border-gold/40')}
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
                       <div className="flex flex-wrap items-center gap-2">

@@ -122,7 +122,7 @@ export default function SaleDetailPage() {
   if (error || !sale) {
     return (
       <div className="flex items-center justify-center min-h-screen animated-gradient p-6">
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 max-w-md text-center shadow-xl border border-rule">
+        <div className="bg-white/90 backdrop-blur-sm rounded-card p-8 max-w-md text-center shadow-xl border border-rule">
           <div className="text-4xl mb-3">⚠️</div>
           <p className="text-red-600 font-semibold">{error || 'Sale not found'}</p>
           <Link href="/dashboard" className="inline-block mt-5 text-sm text-white bg-ink rounded-full px-5 py-2.5 hover:bg-black transition-colors">← Back to dashboard</Link>
@@ -280,7 +280,7 @@ export default function SaleDetailPage() {
             </div>
           )}
 
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-xl border border-rule space-y-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 md:p-8 shadow-xl border border-rule space-y-6">
             {/* Line items */}
             <div>
               <p className="text-xs font-bold text-ink uppercase tracking-widest mb-3">Items Sold</p>

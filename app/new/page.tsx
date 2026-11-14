@@ -472,7 +472,7 @@ function NewListingContent() {
       <section className="relative pb-24 md:pb-32 bg-off-white -mt-8">
         <div className="relative max-w-2xl mx-auto px-4 sm:px-6">
 
-          <form onSubmit={handleSubmit} className="relative bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-10 border border-rule space-y-8">
+          <form onSubmit={handleSubmit} className="relative bg-white/90 backdrop-blur-sm rounded-card shadow-2xl p-6 md:p-10 border border-rule space-y-8">
 
             <div>
               <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">Listing Type</label>
@@ -678,7 +678,7 @@ function NewListingContent() {
                 </p>
               </div>
             ) : (
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
+              <div className="p-5 rounded-card bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
                 <label className="block text-sm font-bold text-ink mb-1 uppercase tracking-widest">Starting Price</label>
                 <p className="text-2xl font-bold text-gold-dark">{formatPrice(derivedPrice)}</p>
                 <p className="text-xs text-ink-muted mt-1">
@@ -699,7 +699,7 @@ function NewListingContent() {
             </div>
 
             {listingType === 'service' && (
-              <div className="space-y-8 p-6 bg-gradient-to-br from-gold/5 to-transparent rounded-2xl border border-gold/20">
+              <div className="space-y-8 p-6 bg-gradient-to-br from-gold/5 to-transparent rounded-card border border-gold/20">
                 <div className="flex items-center gap-2 text-gold-dark">
                   <span className="text-xl">💼</span>
                   <span className="text-sm font-bold uppercase tracking-widest">Service Details</span>
@@ -730,7 +730,7 @@ function NewListingContent() {
             )}
 
             {/* BUNDLE ITEMS */}
-            <div className="p-6 bg-gradient-to-br from-gold/5 to-transparent rounded-2xl border border-gold/20">
+            <div className="p-6 rounded-card bg-gradient-to-br from-gold/5 to-transparent border border-gold/20">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2 text-gold-dark">
                   <span className="text-xl">📦</span>
@@ -840,7 +840,7 @@ function NewListingContent() {
             </p>
           </form>
 
-          <div className="mt-6 p-6 rounded-2xl bg-gradient-to-br from-ink to-ink-soft text-white text-center">
+          <div className="mt-6 p-6 rounded-card bg-gradient-to-br from-ink to-ink-soft text-white text-center">
             <p className="text-sm text-white/70">
               💡 <strong className="text-gold">Pro tip:</strong> Bundled listings with a price menu get more bookings — add multiple services and great photos.
             </p>
@@ -867,7 +867,7 @@ function NewListingSkeleton() {
       {/* Form skeleton */}
       <section className="relative pb-24 md:pb-32 bg-off-white -mt-8">
         <div className="relative max-w-2xl mx-auto px-4 sm:px-6">
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-10 border border-rule space-y-8">
+          <div className="bg-white/90 backdrop-blur-sm rounded-card shadow-2xl p-6 md:p-10 border border-rule space-y-8">
             <div className="h-12 skeleton-shimmer-light rounded-full" />
             <div className="h-12 skeleton-shimmer-light rounded-full" />
             <div className="h-32 skeleton-shimmer-light rounded-2xl" />

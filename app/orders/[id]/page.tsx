@@ -265,7 +265,7 @@ export default function OrderDetailPage() {
           </div>
 
           {/* Order details */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-xl border border-rule mb-8">
+          <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 md:p-8 shadow-xl border border-rule mb-8">
             <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-4">Order details</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -300,7 +300,7 @@ export default function OrderDetailPage() {
 
           {/* Advance status actions */}
           {availableTransitions.length > 0 && (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 md:p-8 shadow-xl border border-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 md:p-8 shadow-xl border border-rule">
               <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-4">
                 Update status
               </p>

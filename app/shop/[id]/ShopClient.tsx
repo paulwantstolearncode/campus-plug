@@ -170,7 +170,7 @@ export default function ShopClient({ seller }: ShopClientProps) {
 
           {/* Listing grid */}
           {filteredListings.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
+            <div className="bg-white rounded-card p-12 text-center border border-gray-100">
               <div className="text-5xl mb-4 opacity-50">📋</div>
               <p className="text-xl font-bold text-charcoal mb-2">No listings yet</p>
               <p className="text-gray-500">

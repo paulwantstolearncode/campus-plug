@@ -514,7 +514,7 @@ export default function PosterGeneratorPage() {
   if (error && !isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen animated-gradient p-6">
-        <div className="bg-white rounded-3xl p-8 max-w-md text-center shadow-xl">
+        <div className="bg-white rounded-card p-8 max-w-md text-center shadow-xl">
           <div className="text-4xl mb-3">⚠️</div>
           <p className="text-red-600 font-semibold">{error}</p>
           <Link href="/" className="inline-block mt-5 text-sm text-white bg-charcoal rounded-full px-5 py-2.5 hover:bg-black transition-colors">← Back to app</Link>
@@ -772,7 +772,7 @@ export default function PosterGeneratorPage() {
       {/* ── Poster Canvas ── */}
       <section className="bg-off-white no-print pb-24">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8">
-          <div className="bg-white/50 rounded-2xl p-6 border border-white/10 flex justify-center">
+          <div className="bg-white/50 rounded-card p-6 border border-white/10 flex justify-center">
             {/* Story: strict 9:16 preview shell — the canvas inside is laid
                 out at print resolution (1080×1920) and zoomed down by
                 storyZoom, so proportions always match the export exactly.

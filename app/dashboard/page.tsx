@@ -613,7 +613,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
 
           {/* PROMOTE YOUR SHOP — 1-click WhatsApp Status share */}
           {userId && (
-            <div className="bg-gradient-to-r from-gold/15 via-gold/10 to-gold/5 rounded-3xl p-6 md:p-7 border border-gold/40 mb-8 shadow-lg shadow-gold/10">
+            <div className="bg-gradient-to-r from-gold/15 via-gold/10 to-gold/5 rounded-card p-6 md:p-7 border border-gold/40 mb-8 shadow-lg shadow-gold/10">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="flex-1">
                   <h2 className="text-xl font-bold text-charcoal mb-1 flex items-center gap-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Promote Your Campus Shop</h2>
@@ -663,7 +663,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
               { label: 'Pending review', value: pending, icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
               { label: 'Sold', value: sold, icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg> },
             ].map((stat) => (
-              <div key={stat.label} className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
+              <div key={stat.label} className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule">
                 <div className="mb-2">{stat.icon}</div>
                 <div className="text-3xl font-bold text-charcoal">{stat.value}</div>
                 <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">{stat.label}</div>
@@ -672,7 +672,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
           </div>
 
           {/* SALES STATS */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-gold/40 mb-12">
+          <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 shadow-lg border border-gold/40 mb-12">
             <div className="flex items-center gap-2 mb-4">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
               <h2 className="font-bold text-charcoal">Your Sales Stats</h2>
@@ -724,7 +724,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
               </div>
 
               {/* Per-listing breakdown */}
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-rule divide-y divide-rule">
+              <div className="bg-white/90 backdrop-blur-sm rounded-card shadow-lg border border-rule divide-y divide-rule">
                 {analytics.slice(0, 10).map((item) => (
                   <div key={item.id} className="flex items-center gap-4 px-5 py-3">
                     <div className="flex-1 min-w-0">
@@ -757,7 +757,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
           </div>
 
           {listings.length === 0 ? (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule mb-12">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule mb-12">
               <div className="text-5xl mb-4">🏠</div>
               <p className="text-xl font-bold text-charcoal">No listings yet</p>
               <p className="text-ink-muted mt-2 mb-6">Create your first listing and start selling on campus.</p>
@@ -766,7 +766,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-12">
               {listings.map((listing) => (
-                <div key={listing.id} className="bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden shadow-lg border border-rule">
+                <div key={listing.id} className="bg-white/90 backdrop-blur-sm rounded-card overflow-hidden shadow-lg border border-rule">
                   {listing.image_url ? (
                     <Image src={listing.image_url} alt={listing.title} width={400} height={160} className="w-full h-40 object-cover" />
                   ) : (
@@ -860,13 +860,13 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
           )}
 
           {bookings.length === 0 ? (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule">
               <div className="text-5xl mb-4">📅</div>
               <p className="text-xl font-bold text-charcoal">No bookings yet</p>
               <p className="text-ink-muted mt-2">When buyers book your services, they&apos;ll show up here.</p>
             </div>
           ) : (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-rule divide-y divide-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card shadow-lg border border-rule divide-y divide-rule">
               {bookings.map((booking) => (
                 <div key={booking.id} className="p-5">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -921,13 +921,13 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
           )}
 
           {sales.length === 0 ? (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule">
               <div className="text-5xl mb-4">🛍️</div>
               <p className="text-xl font-bold text-charcoal">No product sales recorded yet</p>
               <p className="text-ink-muted mt-2">Sold something? Record it here to build your stats.</p>
             </div>
           ) : (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-rule divide-y divide-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card shadow-lg border border-rule divide-y divide-rule">
               {sales.map((sale) => (
                 <div key={sale.id} className="p-5">
                   <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -993,13 +993,13 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
           )}
 
           {orders.length === 0 ? (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule mb-12">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule mb-12">
               <div className="text-5xl mb-4">📦</div>
               <p className="text-xl font-bold text-charcoal">No orders yet</p>
               <p className="text-ink-muted mt-2">Orders you buy or sell appear here. Start a conversation from a listing page and agree on a deal to create an order.</p>
             </div>
           ) : (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-rule divide-y divide-rule mb-12">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card shadow-lg border border-rule divide-y divide-rule mb-12">
               {orders.map((o) => {
                 const party = userId === o.seller_id ? o.buyer : o.seller
                 const partyName = party?.full_name ? formatName(party.full_name) : (o.buyer_name || 'Unknown')
@@ -1069,7 +1069,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
           {!isSeller && (
           <>
             {/* START SELLING INVITE — top of the buyer account view */}
-            <div className="bg-gradient-to-r from-gold/15 via-gold/10 to-gold/5 rounded-3xl p-6 md:p-8 border border-gold/40 mb-8 shadow-lg shadow-gold/10">
+            <div className="bg-gradient-to-r from-gold/15 via-gold/10 to-gold/5 rounded-card p-6 md:p-8 border border-gold/40 mb-8 shadow-lg shadow-gold/10">
               <h2 className="text-2xl font-bold text-charcoal mb-2 flex items-center gap-2">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/><path d="M19 15l.9 2.4L22 18l-2.1.6L19 21l-.9-2.4L16 18l2.1-.6L19 15z"/></svg>
                 Got something to sell?
@@ -1089,7 +1089,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
 
             {/* QUICK LINKS */}
             <div className="grid gap-4 sm:grid-cols-2 mb-10">
-              <Link href="/favorites" className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule hover:border-gold transition-colors group">
+              <Link href="/favorites" className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule hover:border-gold transition-colors group">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-bold text-charcoal">Saved Favorites</p>
@@ -1100,7 +1100,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
                   <span className="text-2xl shrink-0 group-hover:scale-110 transition-transform">❤️</span>
                 </div>
               </Link>
-              <Link href="/requests" className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule hover:border-gold transition-colors group">
+              <Link href="/requests" className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule hover:border-gold transition-colors group">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="font-bold text-charcoal">Wanted Board</p>
@@ -1116,13 +1116,13 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
             <p className="text-xs text-ink-muted mb-4">Services you have booked from sellers on campus.</p>
 
             {myBuyerBookings.length === 0 ? (
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule mb-6">
+              <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule mb-6">
                 <div className="text-5xl mb-4">📅</div>
                 <p className="text-xl font-bold text-charcoal">No bookings yet</p>
                 <p className="text-ink-muted mt-2">When you book a service, it will show up here.</p>
               </div>
             ) : (
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-rule divide-y divide-rule mb-6">
+              <div className="bg-white/90 backdrop-blur-sm rounded-card shadow-lg border border-rule divide-y divide-rule mb-6">
                 {myBuyerBookings.map((booking) => (
                   <div key={booking.id} className="p-5">
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -1161,7 +1161,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
 
                 <div className="grid gap-4 md:grid-cols-2">
                   {reviewable.map((b) => (
-                    <div key={b.id} className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
+                    <div key={b.id} className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule">
                       <p className="font-semibold text-charcoal truncate">{b.listing?.title || 'Unknown listing'}</p>
                       <p className="text-xs text-ink-muted mt-1 mb-4">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 -mt-px text-green-600"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> You completed a booking for this — share your experience with the seller.
@@ -1176,7 +1176,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
                   ))}
 
                   {writtenReviews.map((w) => (
-                    <div key={w.id} className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
+                    <div key={w.id} className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule">
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <p className="text-xs font-bold text-charcoal truncate">
                           {w.seller?.full_name ? formatName(w.seller.full_name) : 'Seller'}
@@ -1236,13 +1236,13 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
             )}
 
             {reviews.length === 0 ? (
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
+              <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule">
                 <div className="text-5xl mb-4">⭐</div>
                 <p className="text-xl font-bold text-charcoal">No reviews yet</p>
                 <p className="text-ink-muted mt-2">When buyers complete transactions, their verified reviews show up here.</p>
               </div>
             ) : (
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-rule divide-y divide-rule">
+              <div className="bg-white/90 backdrop-blur-sm rounded-card shadow-lg border border-rule divide-y divide-rule">
                 {reviews.map((r) => {
                   const reviewerName = r.reviewer?.full_name
                     ? formatName(r.reviewer.full_name)
@@ -1392,7 +1392,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
       {/* DANGER ZONE — permanent account deletion */}
       <section className="pb-24 md:pb-32 bg-off-white">
         <div className="max-w-2xl mx-auto px-4 sm:px-6">
-          <div className="rounded-3xl border-2 border-red-200 bg-white p-6 md:p-8">
+          <div className="rounded-card border-2 border-red-200 bg-white p-6 md:p-8">
             <h2 className="text-lg font-bold text-charcoal mb-1">Danger Zone</h2>
             <p className="text-sm text-ink-muted mb-5">
               Permanently delete your Campus Plug account. This removes your profile, all
@@ -1417,7 +1417,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
       {/* MARK COMPLETED MODAL */}
       {completing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label="Complete booking">
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full">
+          <div className="bg-white/90 backdrop-blur-sm rounded-card shadow-2xl p-6 md:p-8 max-w-md w-full">
             <h3 className="text-xl font-bold text-charcoal mb-1">Complete this booking?</h3>
             <p className="text-sm text-ink-muted mb-5">{completing.listing?.title || 'Unknown listing'}</p>
 
@@ -1466,7 +1466,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
       {/* DELETE ACCOUNT MODAL */}
       {deleteModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true" aria-label="Delete account">
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-8 max-w-md w-full">
+          <div className="bg-white/90 backdrop-blur-sm rounded-card shadow-2xl p-6 md:p-8 max-w-md w-full">
             <h3 className="text-xl font-bold text-charcoal mb-2">Delete your account?</h3>
             <p className="text-sm text-ink-muted mb-4">
               {isSeller ? (

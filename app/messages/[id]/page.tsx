@@ -492,7 +492,7 @@ export default function MessageThread() {
               </button>
             )}
             {revealed && (
-              <div className="mt-4 bg-white/90 backdrop-blur-sm rounded-3xl border border-rule p-6 md:p-8 shadow-sm">
+              <div className="mt-4 bg-white/90 backdrop-blur-sm rounded-card border border-rule p-6 md:p-8 shadow-sm">
                 <div className="flex items-start gap-3 mb-4">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gold shrink-0">
                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2H16l-5-5-7 7h3a2 2 0 0 1 2-1.7V13.9a2 2 0 0 1 .3-.87l3-1.5a2 2 0 0 1 1.4-.8h.1l4 2.5c.5.8 1.4 1.2 2.3 1.2h5.1c1.1 0 2.1-.4 2.8-1.2l3-3c.6-.6.9-1.4.9-2.2v-2.8c0-1.1-.4-2.1-1.1-2.8z" />
@@ -553,7 +553,7 @@ export default function MessageThread() {
           {/* Messages */}
           <div
             ref={messagesContainerRef}
-            className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-rule p-4 mb-6 h-[60vh] overflow-y-auto"
+            className="bg-white/90 backdrop-blur-sm rounded-card shadow-xl border border-rule p-4 mb-6 h-[60vh] overflow-y-auto"
           >
             {hasOlder && (
               <div className="flex justify-center pb-3">

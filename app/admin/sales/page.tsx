@@ -296,7 +296,7 @@ export default function AdminSalesPage() {
   if (error && !isAdmin) {
     return (
       <div className="flex items-center justify-center min-h-screen animated-gradient p-6">
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 max-w-md text-center shadow-xl border border-rule">
+        <div className="bg-white/90 backdrop-blur-sm rounded-card p-8 max-w-md text-center shadow-xl border border-rule">
           <div className="text-4xl mb-3">⚠️</div>
           <p className="text-red-600 font-semibold">{error}</p>
           <Link href="/" className="inline-block mt-5 text-sm text-white bg-ink rounded-full px-5 py-2.5 hover:bg-black transition-colors">← Back to app</Link>
@@ -386,15 +386,15 @@ export default function AdminSalesPage() {
 
           {/* Transaction count breakdown */}
           <div className="grid grid-cols-3 gap-4 mb-6">
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule text-center">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule text-center">
               <div className="text-2xl font-bold text-green-600">{allTxns.filter((t) => t.status === 'completed').length}</div>
               <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Completed</div>
             </div>
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule text-center">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule text-center">
               <div className="text-2xl font-bold text-amber-600">{allTxns.filter((t) => t.status === 'pending').length}</div>
               <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Pending</div>
             </div>
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule text-center">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule text-center">
               <div className="text-2xl font-bold text-red-600">{allTxns.filter((t) => t.status === 'cancelled').length}</div>
               <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Cancelled</div>
             </div>
@@ -402,12 +402,12 @@ export default function AdminSalesPage() {
 
           {/* Overview */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule">
               <div className="text-2xl mb-2">💰</div>
               <div className="text-2xl font-bold text-charcoal">{formatPrice(totalFacilitated)}</div>
               <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Total Facilitated</div>
             </div>
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule">
               <div className="text-2xl mb-2">🧾</div>
               <div className="text-2xl font-bold text-charcoal">
                 {completedBookings.length + completedSales.length}
@@ -415,13 +415,13 @@ export default function AdminSalesPage() {
               </div>
               <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Completed Transactions</div>
             </div>
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule">
               <div className="text-2xl mb-2">💼</div>
               <div className="text-2xl font-bold text-charcoal">{completedBookings.length}</div>
               <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Service Bookings</div>
               <div className="text-sm font-bold text-gold-dark mt-1">{formatPrice(serviceAmount)}</div>
             </div>
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule">
               <div className="text-2xl mb-2">📦</div>
               <div className="text-2xl font-bold text-charcoal">{completedSales.length}</div>
               <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Product Sales</div>
@@ -430,7 +430,7 @@ export default function AdminSalesPage() {
           </div>
 
           {/* Refunded line */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-5 shadow-lg border border-rule mb-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule mb-6">
             <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
               <span className="text-2xl">↩️</span>
               <div>
@@ -441,7 +441,7 @@ export default function AdminSalesPage() {
           </div>
 
           {/* Commission preview */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-gold/40 mb-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 shadow-lg border border-gold/40 mb-6">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-xl">📈</span>
               <h2 className="font-bold text-charcoal">Hypothetical Commission</h2>
@@ -459,7 +459,7 @@ export default function AdminSalesPage() {
 
           {/* Top sellers + top categories */}
           <div className="grid lg:grid-cols-2 gap-6 mb-6">
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 shadow-lg border border-rule">
               <h2 className="font-bold text-charcoal mb-4">🏆 Top Sellers by Revenue</h2>
               {topSellers.length === 0 ? (
                 <p className="text-sm text-ink-muted">No completed sales in this period yet.</p>
@@ -479,7 +479,7 @@ export default function AdminSalesPage() {
               )}
             </div>
 
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-lg border border-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 shadow-lg border border-rule">
               <h2 className="font-bold text-charcoal mb-4">🗂️ Top Categories by Revenue</h2>
               {topCategories.length === 0 ? (
                 <p className="text-sm text-ink-muted">No completed sales in this period yet.</p>
@@ -508,7 +508,7 @@ export default function AdminSalesPage() {
             </button>
           </div>
 
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-lg border border-rule overflow-x-auto">
+          <div className="bg-white/90 backdrop-blur-sm rounded-card shadow-lg border border-rule overflow-x-auto">
             {filteredTxns.length === 0 ? (
               <div className="p-12 text-center">
                 <div className="text-5xl mb-4">🗃️</div>

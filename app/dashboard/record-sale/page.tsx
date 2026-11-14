@@ -277,7 +277,7 @@ export default function RecordSalePage() {
           )}
 
           {!error && listings.length === 0 && (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule">
               <div className="text-5xl mb-4">📦</div>
               <p className="text-xl font-bold text-ink">No product listings yet</p>
               <p className="text-ink-muted mt-2 mb-6">You need at least one product listing to record a sale.</p>
@@ -286,7 +286,7 @@ export default function RecordSalePage() {
           )}
 
           {listings.length > 0 && (
-            <form onSubmit={handleSubmit} className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-8 border border-rule space-y-6">
+            <form onSubmit={handleSubmit} className="bg-white/90 backdrop-blur-sm rounded-card shadow-2xl p-6 md:p-8 border border-rule space-y-6">
               {/* Listing picker */}
               <div>
                 <label className="block text-sm font-bold text-ink mb-3 uppercase tracking-widest">Which listing was the sale from? *</label>

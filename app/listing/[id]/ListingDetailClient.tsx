@@ -525,7 +525,7 @@ export default function ListingDetailClient() {
               <div className="lg:sticky lg:top-24 space-y-6">
 
                 {/* Carousel */}
-                <div className="bg-white/90 backdrop-blur-sm rounded-3xl overflow-hidden shadow-xl border border-rule">
+                <div className="bg-white/90 backdrop-blur-sm rounded-card overflow-hidden shadow-xl border border-rule">
                   <div
                     className="relative aspect-square overflow-hidden bg-paper-deep select-none"
                     onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX }}
@@ -606,7 +606,7 @@ export default function ListingDetailClient() {
                 </div>
 
                 {/* Seller card */}
-                <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-xl border border-rule">
+                <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 shadow-xl border border-rule">
                   <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-3">Seller</p>
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center text-lg font-bold text-gold-dark shrink-0">
@@ -835,7 +835,7 @@ export default function ListingDetailClient() {
             <div className="space-y-6">
 
               {/* Description */}
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 md:p-7 shadow-xl border border-rule">
+              <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 md:p-7 shadow-xl border border-rule">
                 <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-3">Description</p>
                 {listing.description ? (
                   <p className="text-ink leading-relaxed whitespace-pre-line">{listing.description}</p>
@@ -852,7 +852,7 @@ export default function ListingDetailClient() {
               </div>
 
               {/* Bundle items */}
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 md:p-7 shadow-xl border border-rule">
+              <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 md:p-7 shadow-xl border border-rule">
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-xs font-bold text-charcoal uppercase tracking-widest">
                     {isService ? 'Services & Pricing' : 'Items & Pricing'}
@@ -917,7 +917,7 @@ export default function ListingDetailClient() {
               </div>
 
               {/* Reviews */}
-              <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-6 md:p-7 shadow-xl border border-rule">
+              <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 md:p-7 shadow-xl border border-rule">
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                   <p className="text-xs font-bold text-charcoal uppercase tracking-widest">Reviews</p>
                   {ratingInfo && ratingInfo.review_count > 0 && (

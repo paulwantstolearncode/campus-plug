@@ -178,7 +178,7 @@ export default function BannerAdsPage() {
           )}
 
           {banners.length === 0 ? (
-            <div className="bg-white rounded-3xl p-12 text-center border border-gray-100">
+            <div className="bg-white rounded-card p-12 text-center border border-gray-100">
               <div className="text-5xl mb-4 opacity-50">📢</div>
               <p className="text-xl font-bold text-charcoal mb-2">No banners yet</p>
               <p className="text-gray-500 mb-6">Create a banner to advertise local businesses or promotions.</p>
@@ -189,7 +189,7 @@ export default function BannerAdsPage() {
           ) : (
             <div className="space-y-4">
               {banners.map((banner) => (
-                <div key={banner.id} className="bg-white rounded-3xl overflow-hidden shadow-lg border border-gray-100">
+                <div key={banner.id} className="bg-white rounded-card overflow-hidden shadow-lg border border-gray-100">
                   {/* Preview */}
                   <div className="p-4">
                     <a
@@ -258,7 +258,7 @@ export default function BannerAdsPage() {
       {showForm && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowForm(false)} />
-          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 md:p-8">
+          <div className="relative bg-white rounded-card shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 md:p-8">
             <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-gray-400 hover:text-charcoal text-xl">✕</button>
             <h2 className="text-2xl font-bold text-charcoal mb-6">{editingId ? 'Edit Banner' : 'New Banner'}</h2>
 

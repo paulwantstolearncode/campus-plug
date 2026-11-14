@@ -373,7 +373,7 @@ export default async function LandingPage() {
                   <div className="col-span-2 fade-up fade-up-delay-1 glass-dark rounded-card p-3 card-lift">
                     {liveListings[0] ? (
                       <Link href="/services" className="block">
-                        <div className="relative aspect-[16/9] rounded-2xl overflow-hidden bg-white/5">
+                        <div className="relative aspect-[16/9] rounded-card overflow-hidden bg-white/5">
                           {liveListings[0].image_url ? (
                             <Image src={liveListings[0].image_url} alt={liveListings[0].title} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" priority />
                           ) : (
@@ -518,7 +518,6 @@ export default async function LandingPage() {
                   listing={listing}
                   index={idx}
                   preview
-                  staggerSeconds={0.1}
                 />
               ))}
             </div>

@@ -189,7 +189,7 @@ export default function BecomeSellerPage() {
 
           {/* How it works — 3-step visual flow */}
           {status === 'form' && (
-            <div className="mb-6 bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-rule p-6 md:p-8">
+            <div className="mb-6 bg-white/90 backdrop-blur-sm rounded-card shadow-xl border border-rule p-6 md:p-8">
               <p className="eyebrow text-gold-dark mb-5">How it works</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {[
@@ -221,7 +221,7 @@ export default function BecomeSellerPage() {
             </div>
           )}
 
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-10 border border-rule">
+          <div className="bg-white/90 backdrop-blur-sm rounded-card shadow-2xl p-6 md:p-10 border border-rule">
 
             {status === 'pending' ? (
               <div className="text-center space-y-6">
@@ -234,7 +234,7 @@ export default function BecomeSellerPage() {
                   <p className="text-ink-muted">We&apos;ll WhatsApp you within 24 hours to verify and welcome you aboard.</p>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-gradient-to-br from-gold/10 to-transparent border border-gold/20 text-left">
+                <div className="p-5 rounded-card bg-gradient-to-br from-gold/10 to-transparent border border-gold/20 text-left">
                   <div className="flex gap-3">
                     <span className="text-xl">💬</span>
                     <div>
@@ -249,7 +249,7 @@ export default function BecomeSellerPage() {
                   </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-gradient-to-br from-green-50 to-transparent border border-green-200 text-left">
+                <div className="p-5 rounded-card bg-gradient-to-br from-green-50 to-transparent border border-green-200 text-left">
                   <div className="flex gap-3">
                     <span className="text-xl">✨</span>
                     <div>
@@ -300,7 +300,7 @@ export default function BecomeSellerPage() {
                   </p>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-gradient-to-br from-gold/10 via-gold/5 to-transparent border border-gold/20">
+                <div className="p-4 rounded-card bg-gradient-to-br from-gold/10 via-gold/5 to-transparent border border-gold/20">
                   <div className="flex gap-3">
                     <span className="text-xl">🤝</span>
                     <div>
@@ -314,7 +314,7 @@ export default function BecomeSellerPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {['Free to apply', 'Manual review', 'WhatsApp-first enquiries', 'You control your terms'].map((point) => (
-                    <div key={point} className="flex items-center gap-2.5 p-3.5 rounded-2xl bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
+                    <div key={point} className="flex items-center gap-2.5 p-3.5 rounded-card bg-gradient-to-br from-gold/10 to-gold/5 border border-gold/20">
                       <span className="w-6 h-6 shrink-0 rounded-full bg-gold text-charcoal flex items-center justify-center text-xs font-bold">✓</span>
                       <span className="text-sm font-semibold text-charcoal">{point}</span>
                     </div>

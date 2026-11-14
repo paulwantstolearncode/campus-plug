@@ -212,7 +212,7 @@ export default function BookServicePage() {
             {/* LEFT — Service Card (2 cols) */}
             <div className="lg:col-span-2">
               <div className="lg:sticky lg:top-24">
-                <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl overflow-hidden border border-rule">
+                <div className="bg-white/90 backdrop-blur-sm rounded-card shadow-xl overflow-hidden border border-rule">
 
                   {/* Service Image */}
                   <div className="relative aspect-square overflow-hidden bg-paper-deep">
@@ -289,7 +289,7 @@ export default function BookServicePage() {
             <div className="lg:col-span-3">
               <form
                 onSubmit={handleBooking}
-                className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-6 md:p-8 border border-rule space-y-6"
+                className="bg-white/90 backdrop-blur-sm rounded-card shadow-2xl p-6 md:p-8 border border-rule space-y-6"
               >
                 {/* Header */}
                 <div>

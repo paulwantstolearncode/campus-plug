@@ -157,7 +157,7 @@ export default function MessagesInbox() {
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
 
           {conversations.length === 0 ? (
-            <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-12 text-center border border-rule">
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 mb-4 text-ink-muted opacity-50"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
               <p className="text-xl font-bold text-ink">No wahala, chale — nothing here yet</p>
               <p className="text-ink-muted mt-2 mb-6">
@@ -179,7 +179,7 @@ export default function MessagesInbox() {
                   <Link
                     key={c.id}
                     href={'/messages/' + c.id}
-                    className="flex items-center justify-between p-4 rounded-2xl border border-rule bg-white/90 backdrop-blur-sm hover:border-gold transition-colors group"
+                    className="flex items-center justify-between p-4 rounded-card border border-rule bg-white/90 backdrop-blur-sm hover:border-gold transition-colors group"
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gold/20 to-gold/5 flex items-center justify-center text-lg font-bold text-gold-dark shrink-0">

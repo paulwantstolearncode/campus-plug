@@ -48,9 +48,6 @@ interface ListingCardProps {
   variant?: 'feed' | 'board'
   /** Forwarded to data-tour on the wrapper (onboarding tour anchor). */
   tour?: string
-  /** Deprecated — stagger is now fixed at 45ms × (index % 10). Kept for
-      backward compatibility with existing callers. */
-  staggerSeconds?: number
   sellerRatings?: Record<string, SellerRating>
   isOwner?: boolean
   onDelete?: (id: string, title: string) => void

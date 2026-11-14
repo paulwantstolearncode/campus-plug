@@ -22,7 +22,7 @@ export default function TermsPage() {
       />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 pt-32 pb-20">
-        <div className="bg-white rounded-3xl shadow-sm px-6 py-12 md:px-12 md:py-16">
+        <div className="bg-white rounded-card shadow-sm px-6 py-12 md:px-12 md:py-16">
           <h1 className="text-4xl md:text-5xl font-bold text-charcoal leading-tight mb-2">
             Terms of <em className="font-serif-accent italic text-gold">Service</em>
           </h1>
