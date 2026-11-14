@@ -64,7 +64,9 @@ async function getProfiles(ids: string[]): Promise<Record<string, ProfileLite>> 
 
 // ── Reads ─────────────────────────────────────────────────────────────────
 
-/** All conversations the user participates in, newest last_message first. */
+/** All conversations the user participates in, newest last_message first.
+ *  Throws on failure so the inbox can show a real error instead of the empty
+ *  state, which would read as "you have no conversations". */
 export async function getConversations(userId: string): Promise<Conversation[]> {
   const [convResult, unreadResult] = await Promise.all([
     supabase
@@ -78,6 +80,15 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
       .is('read_at', null)
       .neq('sender_id', userId),
   ])
+
+  if (convResult.error) {
+    throw new Error(convResult.error.message)
+  }
+
+  if (unreadResult.error) {
+    // Unread counts are decoration; a failure here must not blank the inbox.
+    console.error('Failed to load unread counts:', unreadResult.error)
+  }
 
   const conversations = (convResult.data as Conversation[]) || []
 
@@ -99,22 +110,38 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
   }))
 }
 
-/** All messages in a conversation, oldest first. Returns empty array on error. */
+/**
+ * One page of a conversation's messages, oldest first.
+ *
+ * Reads the newest `limit` messages (newest-first in SQL, reversed for
+ * display) plus one probe row, which reports whether older messages remain.
+ * Omit `limit` to load the whole thread. Never throws: callers get `error` so
+ * a failed page can be reported instead of rendered as an empty thread.
+ */
 export async function getMessages(
-  conversationId: string
-): Promise<ChatMessage[]> {
-  const { data, error } = await supabase
+  conversationId: string,
+  limit?: number
+): Promise<{ messages: ChatMessage[]; hasOlder: boolean; error?: string }> {
+  let query = supabase
     .from('chat_messages')
     .select('*')
     .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true })
+    .order('created_at', { ascending: false })
+
+  if (limit !== undefined) query = query.limit(limit + 1)
+
+  const { data, error } = await query
 
   if (error) {
     console.error('Failed to load messages:', error)
-    return []
+    return { messages: [], hasOlder: false, error: error.message }
   }
 
-  return (data as ChatMessage[]) || []
+  let rows = (data as ChatMessage[]) || []
+  const hasOlder = limit !== undefined && rows.length > limit
+  if (hasOlder) rows = rows.slice(0, limit)
+
+  return { messages: rows.reverse(), hasOlder }
 }
 
 /** A single conversation with its participants (for the thread header). */

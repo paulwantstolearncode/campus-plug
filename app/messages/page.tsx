@@ -41,7 +41,9 @@ export default function MessagesInbox() {
       setError(null)
     } catch (err) {
       console.error('Failed to load conversations:', err)
-      setError('Could not load your messages. Please try again.')
+      // Only a foreground load may replace the inbox with the error state; a
+      // failed background refresh leaves what's on screen alone.
+      if (!silent) setError('Could not load your messages. Please try again.')
     } finally {
       if (!silent) setLoading(false)
     }

@@ -19,6 +19,15 @@ import {
 /** A thread message; `delivery` marks a local, not-yet-saved send. */
 type ThreadMessage = ChatMessage & { delivery?: 'sending' | 'failed' }
 
+/** Messages fetched per page; "load older" adds another page each time. */
+const PAGE_SIZE = 30
+
+/** Whether the message pane is scrolled close to the newest message. */
+function isNearBottom(el: HTMLDivElement | null): boolean {
+  if (!el) return true
+  return el.scrollHeight - el.scrollTop - el.clientHeight < 80
+}
+
 interface MessageBubbleProps {
   message: ThreadMessage
   isSender: boolean
@@ -86,19 +95,15 @@ export default function MessageThread() {
   const [revealed, setRevealed] = useState(false)
   const [celebrateReveal, setCelebrateReveal] = useState(false)
   const [otherNumber, setOtherNumber] = useState<string | null>(null)
+  const [loadedCount, setLoadedCount] = useState(0)
+  const [hasOlder, setHasOlder] = useState(false)
+  const [loadingOlder, setLoadingOlder] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
   const params = useParams()
   const rawId = params.id
   const conversationId = Array.isArray(rawId) ? rawId[0] : rawId
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
 
   const loadThread = useCallback(async () => {
     if (!conversationId) return
@@ -111,18 +116,29 @@ export default function MessageThread() {
       setUserId(user.id)
       setLoading(true)
 
-      const [conv, msgs] = await Promise.all([
+      const [conv, page] = await Promise.all([
         getConversation(conversationId),
-        getMessages(conversationId),
+        getMessages(conversationId, PAGE_SIZE),
       ])
 
       if (!conv) {
         setError('Conversation not found or you are not a participant.')
         return
       }
+      if (page.error) {
+        setError('Could not load this conversation. Please try again.')
+        return
+      }
 
       setConversation(conv)
-      setMessages(msgs)
+      setMessages(page.messages)
+      setHasOlder(page.hasOlder)
+      setLoadedCount(PAGE_SIZE)
+
+      // Open on the newest message, like every chat app.
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ block: 'end' })
+      })
 
       // Restore the contact-reveal state: a thread that already unlocked the
       // other party's number must not ask again on every visit.
@@ -153,21 +169,66 @@ export default function MessageThread() {
 
   const refreshMessages = useCallback(async () => {
     if (!conversationId || !userId) return
-    const msgs = await getMessages(conversationId)
+
+    // Re-read only the pages the reader already has, so a live update never
+    // discards older history they loaded on purpose.
+    const atBottom = isNearBottom(messagesContainerRef.current)
+    const page = await getMessages(conversationId, loadedCount)
+    if (page.error) return
 
     // Keep optimistic bubbles: a refresh must never swallow a message the user
     // is still sending or has yet to retry.
     setMessages((prev) => {
       const pending = prev.filter((m) => m.delivery)
-      return pending.length ? [...msgs, ...pending] : msgs
+      return pending.length ? [...page.messages, ...pending] : page.messages
     })
+    setHasOlder(page.hasOlder)
+
+    // Only follow the conversation if the reader was already at the bottom.
+    if (atBottom) {
+      requestAnimationFrame(() => {
+        messagesEndRef.current?.scrollIntoView({ block: 'end' })
+      })
+    }
 
     // Only write when something is actually unread — marking read emits UPDATE
     // events that would otherwise bounce straight back into this refresh.
-    if (msgs.some((m) => m.sender_id !== userId && !m.read_at)) {
+    if (page.messages.some((m) => m.sender_id !== userId && !m.read_at)) {
       await markMessagesRead({ conversationId, userId })
     }
-  }, [conversationId, userId])
+  }, [conversationId, userId, loadedCount])
+
+  // Fetch one more page of history, keeping the message being read in place.
+  const loadOlder = async () => {
+    if (!conversationId || loadingOlder) return
+
+    const el = messagesContainerRef.current
+    const prevHeight = el?.scrollHeight ?? 0
+    const prevTop = el?.scrollTop ?? 0
+
+    setLoadingOlder(true)
+    try {
+      const next = loadedCount + PAGE_SIZE
+      const page = await getMessages(conversationId, next)
+      if (page.error) {
+        setNotice('Could not load older messages. Please try again.')
+        return
+      }
+
+      setLoadedCount(next)
+      setHasOlder(page.hasOlder)
+      setMessages((prev) => {
+        const pending = prev.filter((m) => m.delivery)
+        return pending.length ? [...page.messages, ...pending] : page.messages
+      })
+
+      requestAnimationFrame(() => {
+        if (el) el.scrollTop = el.scrollHeight - prevHeight + prevTop
+      })
+    } finally {
+      setLoadingOlder(false)
+    }
+  }
 
   // Live thread: pick up the other party's replies and read receipts without a
   // reload (needs supabase/enable_chat_realtime.sql; until that runs the focus
@@ -251,7 +312,7 @@ export default function MessageThread() {
       },
     ])
     setInput('')
-    scrollToBottom()
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     setSending(true)
 
     try {
@@ -482,7 +543,22 @@ export default function MessageThread() {
           )}
 
           {/* Messages */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-rule p-4 mb-6 h-[60vh] overflow-y-auto">
+          <div
+            ref={messagesContainerRef}
+            className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-rule p-4 mb-6 h-[60vh] overflow-y-auto"
+          >
+            {hasOlder && (
+              <div className="flex justify-center pb-3">
+                <button
+                  type="button"
+                  onClick={loadOlder}
+                  disabled={loadingOlder}
+                  className="text-xs font-semibold text-ink-muted hover:text-gold transition-colors px-4 py-2 rounded-full border border-rule bg-white disabled:opacity-50 min-h-[36px]"
+                >
+                  {loadingOlder ? 'Loading…' : 'Load older messages'}
+                </button>
+              </div>
+            )}
             {messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-ink-muted text-sm">
                 No messages yet. Start the conversation!
