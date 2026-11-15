@@ -350,6 +350,29 @@ export default function OrderDetailPage() {
             </div>
           )}
 
+          {/* Open dispute */}
+          {order.status !== 'cancelled' && order.status !== 'complete' && (
+            <div className="mt-8">
+              <button
+                onClick={() => {
+                  if (
+                    !confirm(
+                      'Open a dispute for this order? This will notify an admin and both parties can discuss the issue.'
+                    )
+                  )
+                    return
+                  router.push('/disputes')
+                }}
+                className="flex items-center justify-center gap-2 w-full bg-white border-2 border-red-200 text-red-700 py-3.5 rounded-full font-semibold hover:bg-red-50 hover:border-red-400 transition-colors min-h-[44px]"
+              >
+                ⚠️ Open a dispute
+              </button>
+              <p className="text-[11px] text-ink-muted text-center mt-2">
+                Admin will review and can release funds, refund, or dismiss.
+              </p>
+            </div>
+          )}
+
           <div className="mt-8">
             <button
               onClick={() => router.push('/orders')}
