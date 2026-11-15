@@ -19,6 +19,7 @@ import {
   type ReviewWithResponse,
 } from '@/lib/reviews'
 import { getOrCreateConversation } from '@/lib/chat'
+import { createOrder } from '@/lib/orders'
 
 interface ListingItem {
   id: string
@@ -76,6 +77,7 @@ export default function ListingDetailClient() {
   const [isFavorited, setIsFavorited] = useState(false)
   const [showMessagePreview, setShowMessagePreview] = useState(false)
   const [toast, setToast] = useState<{ message: string } | null>(null)
+  const [creatingOrder, setCreatingOrder] = useState(false)
   // Mobile thumb bar: slides away on scroll-down, returns on scroll-up.
   const [thumbBarHidden, setThumbBarHidden] = useState(false)
   const router = useRouter()
@@ -451,6 +453,48 @@ export default function ListingDetailClient() {
     }
   }
 
+  const handleBuyNow = async () => {
+    if (!user) {
+      setToast({ message: 'Sign in to buy this item' })
+      return
+    }
+    if (listing.seller_id === user.id) {
+      setToast({ message: 'You cannot buy your own listing' })
+      return
+    }
+    if (listing.sold_at) {
+      setToast({ message: 'This item is already sold' })
+      return
+    }
+
+    setCreatingOrder(true)
+    setToast(null)
+
+    try {
+      const { id, error } = await createOrder({
+        buyerId: user.id,
+        buyerWhatsapp: null,
+        buyerName: null,
+        sellerId: listing.seller_id,
+        listingId: listingId || null,
+        kind: listing.listing_type === 'service' ? 'service' : 'product',
+        amount: listing.price,
+        paymentMethod: 'prepaid',
+      })
+
+      if (error) throw error
+      if (!id) throw new Error('Order creation failed')
+
+      // Redirect to MoMo checkout
+      router.push('/checkout/' + id)
+    } catch (err) {
+      console.error('Buy now failed:', err)
+      setToast({ message: err instanceof Error ? err.message : 'Could not start order. Try again.' })
+    } finally {
+      setCreatingOrder(false)
+    }
+  }
+
   return (
     <main className="min-h-screen bg-ink">
 <NavBar back={{ href: backHref, label: 'Back to ' + (isService ? 'services' : 'marketplace') }} />
@@ -700,6 +744,26 @@ export default function ListingDetailClient() {
                         </svg>
                         Message on Campus Plug
                       </button>
+
+                      {/* Buy now — marketplace checkout */}
+                      {!listing.sold_at && (
+                        <button
+                          onClick={handleBuyNow}
+                          disabled={creatingOrder}
+                          className={`mt-3 flex items-center justify-center gap-2 w-full py-3.5 rounded-full font-semibold text-sm transition-all min-h-[44px] ${
+                            creatingOrder
+                              ? 'bg-white/50 text-ink-muted border border-white/20'
+                              : 'bg-gold text-charcoal hover:bg-gold-dark shadow-lg shadow-gold/30'
+                          }`}
+                        >
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`mr-1 ${creatingOrder ? 'animate-spin' : ''}`}>
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="8 12 12 16 16 12" />
+                            <line x1="12" y1="8" x2="12" y2="16" />
+                          </svg>
+                          {creatingOrder ? 'Creating order...' : 'Buy now — pay with MoMo'}
+                        </button>
+                      )}
 
                       {/* Reassurance microcopy */}
                       <p className="mt-2 text-center text-[11px] text-ink-muted">
