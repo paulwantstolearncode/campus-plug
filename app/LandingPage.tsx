@@ -9,6 +9,7 @@ import MarqueeStrip from '@/app/components/MarqueeStrip'
 import BentoGrid from '@/app/components/BentoGrid'
 import RotatingSearchPlaceholder from '@/app/components/RotatingSearchPlaceholder'
 import FeedbackToggle from '@/app/components/FeedbackToggle'
+import Footer from '@/app/components/Footer'
 
 interface MarketplaceStats {
   sellerCount: number
@@ -691,42 +692,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-charcoal text-white py-12 md:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <Link href="/" className="flex items-center gap-2 group">
-              <span className="text-2xl group-hover:rotate-12 transition-transform">🔌</span>
-              <span className="text-xl font-bold">Campus Plug</span>
-            </Link>
-
-            <p className="text-sm text-white/60 text-center">
-              Made with <span className="text-gold">💛</span> in Ghana for UG students
-            </p>
-
-            <div className="flex gap-6 text-sm">
-              <Link href="/requests" className="text-white/60 hover:text-gold transition-colors">
-                Wanted Board
-              </Link>
-              <Link href="/login" className="text-white/60 hover:text-gold transition-colors">
-                Login
-              </Link>
-              <Link href="/login" className="text-white/60 hover:text-gold transition-colors">
-                Sign up
-              </Link>
-
-            </div>
-          </div>
-
-          <div className="mt-8 pt-8 border-t border-white/10 text-center text-xs text-white/40">
-            © 2026 Campus Plug. All rights reserved.
-            <span className="mx-2">·</span>
-            <Link href="/privacy" className="hover:text-gold transition-colors">Privacy</Link>
-            <span className="mx-2">·</span>
-            <Link href="/terms" className="hover:text-gold transition-colors">Terms</Link>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
       {/* Sticky mobile "Post yours" CTA */}
       <div className="fixed bottom-4 right-4 md:hidden z-40">

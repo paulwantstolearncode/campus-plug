@@ -20,9 +20,9 @@
   --color-ink-soft: #17171c;       /* raised obsidian surface */
   --color-ink-muted: #6b6a66;      /* warm graphite */
   --color-rule: #e4e1d8;           /* hairline rule */
-  --color-gold-signal: #c9a227;    /* metallic gold */
-  --color-gold-vivid: #e8b93b;     /* bright gold for hover/CTAs */
-  --color-gold-soft: #f3ecd6;      /* soft gold wash */
+  --color-gold-signal: #c9a227;    /* metallic gold — the canonical brand accent, used on text, icons, badges */
+  --color-gold-vivid: #e8b93b;     /* bright gold — hover and CTA states only (interactive gold) */
+  --color-gold-soft: #f3ecd6;      /* soft gold wash — surface tints and subtle backgrounds */
   --color-gold-glow: rgba(201, 162, 39, 0.45);
   --color-whatsapp: #128c4a;       /* WhatsApp green (conversion signal) */
   --color-whatsapp-bright: #25d366;

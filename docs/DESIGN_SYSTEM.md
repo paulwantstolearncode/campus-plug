@@ -27,7 +27,7 @@ Personality: **grounded, discerning, warm.**
 ## Typography
 
 ### Fonts
-- **Headlines**: Playfair Display (serif, italic) — used ONLY for the `font-serif-accent` class on hero keywords ("guesswork", "works", "category", "Plug", "specific")
+- **Headlines**: Instrument Serif (serif, italic) — used ONLY for the `font-serif-accent` class on hero keywords ("guesswork", "works", "category", "Plug", "specific")
 - **Body/UI**: System font stack (Manrope when available, fallback to `-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`)
 - **Section numbers**: Uppercase, tracking-widest, gold color, font-semibold
 
