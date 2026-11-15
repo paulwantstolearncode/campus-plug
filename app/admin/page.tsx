@@ -425,6 +425,12 @@ export default function AdminPage() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg> View Sales Dashboard
           </Link>
           <Link
+            href="/admin/payouts"
+            className="inline-flex items-center gap-2 bg-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/20 transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold"><path d="M12 2c3.9 0 7 3.1 7 7h-4c0-2.8-2.2-5-5-5s-5 2.2-5 5h4c0-3.9 3.1-7 7-7z"/><polyline points="12 11 12 17 16 17"/></svg> Payouts
+          </Link>
+          <Link
             href="/admin/feedback"
             className="inline-flex items-center gap-2 bg-white/10 text-white px-6 py-3 rounded-full font-bold hover:bg-white/20 transition-colors"
           >
