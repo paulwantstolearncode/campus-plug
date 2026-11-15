@@ -41,9 +41,9 @@ If a task requires changes to any of these, ask the user first.
 
 ### Design system
 - Charcoal `#0f0f0f` + gold `#d4af37` on off-white `#f8f8f8`
-- `rounded-3xl` cards, `rounded-full` buttons
+- `rounded-card` cards (1.5rem), `rounded-full` buttons
 - GH₵ currency
-- Playfair Display serif italic gold for accent words in headings
+- Instrument Serif serif italic gold for accent words in headings
 
 ### Repository facts
 - Repo: github.com/paulwantstolearncode/campus-plug (origin/main)
