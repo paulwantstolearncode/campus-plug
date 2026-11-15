@@ -163,7 +163,8 @@ BEGIN
 
   -- Terminal states can't be left (except cancelled is terminal too).
   IF v_order.status IN ('complete', 'cancelled') THEN
-    RAISE EXCEPTION 'Order is already in a terminal state (' || v_order.status || ')';
+    -- RAISE's format string must be a literal; pass values as arguments.
+    RAISE EXCEPTION 'Order is already in a terminal state (%)', v_order.status;
   END IF;
 
   -- Allowed transitions: seller-driven progress.

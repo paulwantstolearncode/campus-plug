@@ -30,6 +30,16 @@ CREATE TABLE IF NOT EXISTS public.payment_transactions (
   released_at TIMESTAMPTZ
 );
 
+-- Offline orders may have no buyer account; keep buyer_id optional.
+ALTER TABLE public.payment_transactions
+  ALTER COLUMN buyer_id DROP NOT NULL;
+
+-- record_payment() upserts with ON CONFLICT (mo_mo_reference), which requires a
+-- unique index on that column. NULLs stay distinct, so un-referenced attempts
+-- are still allowed.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_payment_transactions_momo_reference
+ON public.payment_transactions (mo_mo_reference);
+
 ALTER TABLE public.payment_transactions ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Parties can view own payment transactions" ON public.payment_transactions;
@@ -92,6 +102,14 @@ BEGIN
     RAISE EXCEPTION 'Order not found';
   END IF;
 
+  IF v_order.status = 'cancelled' THEN
+    RAISE EXCEPTION 'Order is cancelled; refusing to record payment';
+  END IF;
+
+  IF p_amount IS NULL OR p_amount <= 0 THEN
+    RAISE EXCEPTION 'Payment amount must be positive';
+  END IF;
+
   -- Upsert the payment transaction (idempotent by mo_mo_reference).
   INSERT INTO public.payment_transactions (
     order_id, buyer_id, seller_id, amount, platform_fee,
@@ -113,13 +131,32 @@ BEGIN
   WHERE payment_transactions.status <> 'paid'
   RETURNING id INTO v_payment;
 
+  -- Already-paid reference: the guarded DO UPDATE returns no row, so read the
+  -- existing transaction instead of inserting a NULL payment_id below.
+  IF v_payment IS NULL THEN
+    SELECT id INTO v_payment
+    FROM public.payment_transactions
+    WHERE mo_mo_reference = p_mo_mo_reference;
+  END IF;
+
   -- Link order → payment (idempotent).
   INSERT INTO public.order_payments (order_id, payment_id)
   VALUES (p_order_id, v_payment)
   ON CONFLICT (order_id) DO NOTHING;
 
-  -- Advance order to paid via the existing RPC (enforces transition rules).
-  PERFORM public.advance_order(p_order_id, 'paid', 'MoMo payment received: ' || p_mo_mo_reference);
+  -- Advance the order directly rather than through advance_order(): the MoMo
+  -- webhook runs without a user JWT, so advance_order()'s auth.uid() role check
+  -- would reject confirmed -> paid. This function is SECURITY DEFINER, so it
+  -- can write the order and its audit event itself.
+  IF v_order.status = 'confirmed' THEN
+    INSERT INTO public.order_events (order_id, actor_id, from_status, to_status, note)
+    VALUES (p_order_id, NULL, v_order.status, 'paid', 'MoMo payment received: ' || p_mo_mo_reference);
+
+    UPDATE public.orders
+    SET status = 'paid',
+        updated_at = now()
+    WHERE id = p_order_id;
+  END IF;
 END;
 $$;
 
