@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
@@ -370,6 +371,18 @@ export default function OrderDetailPage() {
               <p className="text-[11px] text-ink-muted text-center mt-2">
                 Admin will review and can release funds, refund, or dismiss.
               </p>
+            </div>
+          )}
+
+          {/* Leave a review */}
+          {order.status === 'complete' && (
+            <div className="mt-8">
+              <Link
+                href={'/reviews/new?orderId=' + order.id + '&sellerId=' + order.seller_id}
+                className="flex items-center justify-center gap-2 w-full bg-gold text-charcoal px-6 py-3.5 rounded-full font-bold hover:bg-gold-dark transition-colors shadow-lg shadow-gold/30 min-h-[44px]"
+              >
+                ⭐ Leave a review for {order.seller?.full_name ? formatName(order.seller.full_name) : 'this seller'}
+              </Link>
             </div>
           )}
 

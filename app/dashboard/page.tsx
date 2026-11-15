@@ -694,6 +694,21 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
             </div>
           </div>
 
+          {/* SELLER PAYOUTS CARD */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 shadow-lg border border-gold/40 mb-12">
+            <div className="flex items-center gap-2 mb-4">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><path d="M12 2c3.9 0 7 3.1 7 7h-4c0-2.8-2.2-5-5-5s-5 2.2-5 5h4c0-3.9 3.1-7 7-7z"/><polyline points="12 11 12 17 16 17"/></svg>
+              <h2 className="font-bold text-charcoal">Payouts</h2>
+              <span className="text-xs text-ink-muted font-normal">(earnings held & released)</span>
+            </div>
+            <Link
+              href="/dashboard/payouts"
+              className="inline-flex items-center gap-2 bg-ink text-white px-6 py-4 rounded-full font-bold text-sm hover:bg-black transition-colors shadow-lg shadow-charcoal/25"
+            >
+              View payouts <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+
           {/* LISTING ANALYTICS */}
           {analytics.length > 0 && (
             <div className="mb-10">
