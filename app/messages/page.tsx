@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase'
 import { formatName } from '@/lib/formatName'
 import NavBar from '@/app/components/NavBar'
 import { getConversations, subscribeToInbox } from '@/lib/chat'
+import { enablePushForCurrentUser, getPushSupport, isPushEnabled } from '@/lib/push'
 
 interface ConversationRow {
   id: string
@@ -72,6 +73,56 @@ export default function MessagesInbox() {
       window.removeEventListener('focus', refresh)
     }
   }, [userId, loadConversations])
+
+  // Mobile-first alert opt-in, right where conversations are. The nav menu is
+  // easy to miss on a phone, and this is the moment alerts are worth having.
+  const [pushPrompt, setPushPrompt] = useState<'hidden' | 'ready' | 'busy' | 'error'>(
+    'hidden'
+  )
+  const [pushError, setPushError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!userId) return
+    let cancelled = false
+
+    async function check() {
+      try {
+        if (localStorage.getItem('cp_push_prompt_dismissed')) return
+      } catch {
+        // Safari private mode throws on storage access; just skip the prompt.
+        return
+      }
+      if (getPushSupport() !== 'ready') return
+      const alreadyEnabled = await isPushEnabled()
+      if (!cancelled && !alreadyEnabled) setPushPrompt('ready')
+    }
+
+    void check()
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
+
+  async function enableAlerts() {
+    setPushPrompt('busy')
+    setPushError(null)
+    try {
+      await enablePushForCurrentUser()
+      setPushPrompt('hidden')
+    } catch (err) {
+      setPushPrompt('error')
+      setPushError(err instanceof Error ? err.message : 'Could not turn on alerts')
+    }
+  }
+
+  function dismissPushPrompt() {
+    try {
+      localStorage.setItem('cp_push_prompt_dismissed', '1')
+    } catch {
+      /* storage unavailable */
+    }
+    setPushPrompt('hidden')
+  }
 
   const otherParty = (c: ConversationRow) => {
     if (userId && c.buyer_id === userId) return c.seller
@@ -155,6 +206,39 @@ export default function MessagesInbox() {
 
       <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
+
+          {pushPrompt !== 'hidden' && (
+            <div className="mb-4 rounded-card border border-rule bg-surface p-4 flex items-start gap-3 shadow-lift">
+              <div className="w-9 h-9 rounded-xl bg-gold-soft flex items-center justify-center text-base shrink-0">
+                🔔
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-ink">Get alerts on this phone</p>
+                <p className="text-xs text-ink-muted mt-0.5 leading-relaxed">
+                  Know the moment someone replies — even with the app closed.
+                </p>
+                {pushPrompt === 'error' && pushError && (
+                  <p className="text-xs text-red-600 mt-1">{pushError}</p>
+                )}
+                <button
+                  type="button"
+                  onClick={enableAlerts}
+                  disabled={pushPrompt === 'busy'}
+                  className="mt-2 bg-ink text-white px-4 py-2 rounded-full text-xs font-bold hover:bg-black transition-colors min-h-[40px] disabled:opacity-50"
+                >
+                  {pushPrompt === 'busy' ? 'Turning on…' : 'Turn on alerts'}
+                </button>
+              </div>
+              <button
+                type="button"
+                onClick={dismissPushPrompt}
+                aria-label="Dismiss"
+                className="text-ink-muted/60 hover:text-ink leading-none text-lg shrink-0"
+              >
+                ×
+              </button>
+            </div>
+          )}
 
           {conversations.length === 0 ? (
             <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule">

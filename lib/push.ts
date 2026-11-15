@@ -14,30 +14,50 @@ function fnUrl(path: string): string {
   return `${base}/functions/v1/admin-push${path}`
 }
 
-export type PushSupport = 'ready' | 'unsupported' | 'denied' | 'insecure'
+export type PushSupport =
+  | 'ready'
+  /** iOS Safari tab: push only works from an installed (home-screen) app. */
+  | 'ios-needs-install'
+  /** The user blocked notifications for this site in browser settings. */
+  | 'denied'
+  | 'unsupported'
+  | 'insecure'
 
 /**
- * Can this browser/device do web push at all?
- * - Requires a secure context (https or localhost).
- * - iOS Safari only supports push when the site runs as an installed PWA
- *   (Add to Home Screen), not in a regular Safari tab.
+ * Can this browser/device do web push, and if not, why?
+ *
+ * The reasons are reported distinctly rather than collapsed into
+ * "unsupported" so the UI can act on them — on iPhone the fix is "Add to Home
+ * Screen", and when permission was blocked the fix lives in browser settings.
+ * Hiding the control in both cases just leaves the user with no path.
  */
 export function getPushSupport(): PushSupport {
   if (typeof window === 'undefined' || !('Notification' in window) || !('serviceWorker' in navigator) || !('PushManager' in window)) {
     return 'unsupported'
   }
   if (!window.isSecureContext) return 'insecure'
+
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !('MSStream' in window)
-  const standalone = window.matchMedia('(display-mode: standalone)').matches
-  if (isIOS && !standalone) return 'unsupported'
+  // iOS reports standalone through the legacy navigator.standalone flag as
+  // well as display-mode; older iOS only sets the former.
+  const standalone =
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (navigator as Navigator & { standalone?: boolean }).standalone === true
+  if (isIOS && !standalone) return 'ios-needs-install'
+
+  if (Notification.permission === 'denied') return 'denied'
   return 'ready'
 }
 
 async function getVapidKey(): Promise<string> {
   const res = await fetch(fnUrl('/vapid-public-key'))
-  if (!res.ok) throw new Error('Could not load push key')
+  if (!res.ok) {
+    // Mobile networks drop this more often than desktops do; say something a
+    // user can act on instead of naming an internal key.
+    throw new Error("Couldn't reach the alerts service. Check your connection and try again.")
+  }
   const { key } = (await res.json()) as { key: string }
-  if (!key) throw new Error('Empty VAPID key')
+  if (!key) throw new Error('Alerts are not set up on this device yet.')
   return key
 }
 
@@ -47,8 +67,15 @@ async function getVapidKey(): Promise<string> {
  * subscribed, and throws on permission denial / unsupported browsers.
  */
 export async function enablePushForCurrentUser(): Promise<boolean> {
-  if (getPushSupport() !== 'ready') {
-    throw new Error('This browser does not support push notifications')
+  const support = getPushSupport()
+  if (support === 'ios-needs-install') {
+    throw new Error('Add Campus Plug to your Home Screen first — iPhone alerts need the installed app.')
+  }
+  if (support === 'denied') {
+    throw new Error('Notifications are blocked for this site. Enable them in your browser settings, then try again.')
+  }
+  if (support !== 'ready') {
+    throw new Error('This browser does not support notifications')
   }
 
   const {

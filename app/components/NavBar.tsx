@@ -497,7 +497,7 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
               </Link>
             )}
 
-            <PushNotificationsToggle />
+            <PushNotificationsToggle tone={isDark ? 'dark' : 'light'} />
 
             {user && (
               <Link
