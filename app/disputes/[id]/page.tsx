@@ -45,6 +45,7 @@ export default function DisputeDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
   const router = useRouter()
@@ -96,6 +97,7 @@ export default function DisputeDetailPage() {
         .eq('id', user.id)
         .single()
       const isAdminUser = !!profile?.is_admin
+      setIsAdmin(isAdminUser)
 
       if (!isParty && !isAdminUser) {
         setError('You are not a party to this dispute.')
@@ -171,32 +173,15 @@ export default function DisputeDetailPage() {
     if (!confirm('Resolve this dispute as "' + resolution + '"? This cannot be undone.')) return
 
     try {
-      const { error: updError } = await supabase
-        .from('disputes')
-        .update({
-          status: 'resolved',
-          resolution: resolution,
-          resolved_by: userId,
-          resolved_at: new Date().toISOString(),
-        })
-        .eq('id', disputeId)
+      // One SECURITY DEFINER call resolves the dispute, settles the order and
+      // moves the money. advance_order() cannot be used here: admins are not a
+      // party to the order, so its role check rejects the transition.
+      const { error: rpcError } = await supabase.rpc('resolve_dispute', {
+        p_dispute_id: disputeId,
+        p_resolution: resolution,
+      })
 
-      if (updError) throw updError
-
-      // Also advance order based on resolution
-      if (dispute) {
-        const { error: advError } = await supabase.rpc('advance_order', {
-          p_order_id: dispute.order_id,
-          p_to_status:
-            resolution === 'release_to_seller'
-              ? 'complete'
-              : resolution === 'refund_full' || resolution === 'refund_partial'
-                ? 'cancelled'
-                : dispute.order.status,
-          p_note: 'Dispute resolved: ' + resolution,
-        })
-        if (advError) console.error('Order advance failed:', advError)
-      }
+      if (rpcError) throw rpcError
 
       await loadDispute()
     } catch (err) {
@@ -253,7 +238,8 @@ export default function DisputeDetailPage() {
   }
 
   const order = dispute.order
-  const canResolve = false // admin resolution is handled server-side; UI shows the option but RPC enforces admin-only
+  // Admins resolve open disputes; parties only read and reply.
+  const canResolve = isAdmin && dispute.status === 'open'
   const otherParty = order.buyer_id === userId ? order.seller : order.buyer
 
   return (

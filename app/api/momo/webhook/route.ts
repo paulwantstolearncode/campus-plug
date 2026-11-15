@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHmac, timingSafeEqual } from 'node:crypto'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@supabase/supabase-js'
 
 export const runtime = 'nodejs'
 
@@ -150,8 +150,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing or invalid amount' }, { status: 400 })
     }
 
-    // SECURITY DEFINER RPC: records payment + advances the order.
-    const { error } = await supabase.rpc('record_payment', {
+    // SECURITY DEFINER RPC: records payment + advances the order. It is
+    // executable by the service role only, so it must be called with the
+    // server-side key — never with the public anon key.
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error('MoMo webhook: SUPABASE_SERVICE_ROLE_KEY is not configured')
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 503 })
+    }
+
+    const admin = createClient(supabaseUrl, serviceRoleKey, {
+      auth: { persistSession: false },
+    })
+
+    const { error } = await admin.rpc('record_payment', {
       p_order_id: orderId,
       p_mo_mo_reference: reference ?? `momo_${orderId}`,
       p_amount: amount,

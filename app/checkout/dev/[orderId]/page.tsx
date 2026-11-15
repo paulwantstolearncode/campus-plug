@@ -12,6 +12,7 @@ import NavBar from '@/app/components/NavBar'
 export default function DevCheckoutPage() {
   const [status, setStatus] = useState<'pending' | 'paid' | 'failed'>('pending')
   const [loading, setLoading] = useState(true)
+  const [amount, setAmount] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const params = useParams()
@@ -26,6 +27,16 @@ export default function DevCheckoutPage() {
           const urlStatus = new URLSearchParams(window.location.search).get('status')
           if (urlStatus === 'paid') setStatus('paid')
           else if (urlStatus === 'failed') setStatus('failed')
+
+          // The order is the source of truth for the amount: record_payment()
+          // needs the real total, not a placeholder, or the seller's payout and
+          // the 5% platform fee are both zero.
+          const { data } = await supabase
+            .from('orders')
+            .select('amount')
+            .eq('id', id)
+            .maybeSingle()
+          if (!cancelled && data) setAmount(Number(data.amount))
         }
         if (!cancelled) setLoading(false)
       })()
@@ -35,16 +46,30 @@ export default function DevCheckoutPage() {
 
   const completePayment = async () => {
     if (!id) return
+    if (amount === null) {
+      setError('Could not read this order’s total. Go back and try again.')
+      return
+    }
     setLoading(true)
     try {
-      // Call the record_payment RPC with a simulated reference
-      const { error } = await supabase.rpc('record_payment', {
-        p_order_id: id,
-        p_mo_mo_reference: 'dev_sim_' + id,
-        p_amount: 0, // amount filled by the order itself via RPC? No — RPC takes amount
+      // record_payment() is service-role-only, so the browser never calls it
+      // directly: this sandbox route verifies the session + order ownership.
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) throw new Error('Please sign in again to complete this payment.')
+
+      const res = await fetch('/api/dev/complete-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer ' + session.access_token,
+        },
+        body: JSON.stringify({ orderId: id }),
       })
 
-      if (error) throw error
+      if (!res.ok) {
+        const payload = (await res.json().catch(() => null)) as { error?: string } | null
+        throw new Error(payload?.error || 'Failed to complete payment')
+      }
 
       // Refresh order page
       router.push('/orders/' + id)
@@ -93,7 +118,7 @@ export default function DevCheckoutPage() {
               <h2 className="text-3xl font-bold text-charcoal mb-4">Approve the STK prompt</h2>
               <p className="text-ink-muted mb-8">
                 We’ve sent a Mobile Money prompt to your phone. Approve it to pay
-                <span className="text-gold-dark font-bold">{formatPrice(0)}</span> for this order.
+                <span className="text-gold-dark font-bold">{formatPrice(amount ?? 0)}</span> for this order.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <button

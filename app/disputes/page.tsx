@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
@@ -38,7 +38,7 @@ export default function DisputesPage() {
   const [userId, setUserId] = useState<string | null>(null)
   const router = useRouter()
 
-  const loadDisputes = async () => {
+  const loadDisputes = useCallback(async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
@@ -63,13 +63,26 @@ export default function DisputesPage() {
 
       if (dbError) throw dbError
 
-      // Filter to only disputes this user is a party to (buyer or seller of the order)
-      const filtered = (data as DisputeRow[] || []).filter((d) => {
-        if (!d.order) return false
-        return d.order.buyer_id === userId || d.order.seller_id === userId
-      })
+      // Admins see every dispute (they resolve them); everyone else only sees
+      // disputes on orders they are the buyer or seller of. Filter on user.id
+      // directly — the userId state is still null on the first load.
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_admin')
+        .eq('id', user.id)
+        .single()
+      const isAdminUser = !!profile?.is_admin
 
-      setDisputes(filtered)
+      const rows = (data as DisputeRow[] | null) || []
+      setDisputes(
+        rows.filter(
+          (d) =>
+            d.order &&
+            (isAdminUser ||
+              d.order.buyer_id === user.id ||
+              d.order.seller_id === user.id)
+        )
+      )
       setError(null)
     } catch (err) {
       console.error('Failed to load disputes:', err)
@@ -77,7 +90,7 @@ export default function DisputesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
 
   useEffect(() => {
     let cancelled = false

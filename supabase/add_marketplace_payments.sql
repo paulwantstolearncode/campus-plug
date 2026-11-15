@@ -110,6 +110,11 @@ BEGIN
     RAISE EXCEPTION 'Payment amount must be positive';
   END IF;
 
+  -- A provider callback must settle the order total, not an arbitrary amount.
+  IF round(p_amount, 2) <> round(v_order.amount, 2) THEN
+    RAISE EXCEPTION 'Payment amount (%) does not match order amount (%)', p_amount, v_order.amount;
+  END IF;
+
   -- Upsert the payment transaction (idempotent by mo_mo_reference).
   INSERT INTO public.payment_transactions (
     order_id, buyer_id, seller_id, amount, platform_fee,
@@ -159,6 +164,13 @@ BEGIN
   END IF;
 END;
 $$;
+
+-- Only the server may record payments. Without this, any signed-in browser
+-- could call the RPC and mark an order paid for free.
+REVOKE ALL ON FUNCTION public.record_payment(UUID, TEXT, NUMERIC) FROM PUBLIC;
+REVOKE ALL ON FUNCTION public.record_payment(UUID, TEXT, NUMERIC) FROM anon;
+REVOKE ALL ON FUNCTION public.record_payment(UUID, TEXT, NUMERIC) FROM authenticated;
+GRANT EXECUTE ON FUNCTION public.record_payment(UUID, TEXT, NUMERIC) TO service_role;
 
 -- ── 4. SECURITY DEFINER: release_escrow() ──────────────────────────────────
 -- Called when buyer confirms delivery (order → complete). Marks payment
