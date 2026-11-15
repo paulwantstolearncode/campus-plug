@@ -72,7 +72,21 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
     let cancelled = false
     const refresh = async () => {
       const count = user ? await getTotalUnread(user.id) : 0
-      if (!cancelled) setUnreadMessages(count)
+      if (cancelled) return
+      setUnreadMessages(count)
+
+      // Mirror the count onto the installed app icon where the Badging API
+      // exists (Android/Chrome). Silently ignored elsewhere.
+      const nav = navigator as Navigator & {
+        setAppBadge?: (count: number) => Promise<void>
+        clearAppBadge?: () => Promise<void>
+      }
+      try {
+        if (count > 0) await nav.setAppBadge?.(count)
+        else await nav.clearAppBadge?.()
+      } catch {
+        /* badging unsupported */
+      }
     }
 
     void refresh()
@@ -334,7 +348,9 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
                           </Link>
                         )}
 
-                        {isAdmin && <PushNotificationsToggle />}
+                        {/* Push is for every signed-in user, not just admins:
+                            chat, order and review alerts are delivered per user. */}
+                        <PushNotificationsToggle />
 
                         <div className="border-t border-gray-100 my-1" />
 
@@ -481,7 +497,7 @@ export default function NavBar({ variant = 'dark', back, rightSlot, className: e
               </Link>
             )}
 
-            {isAdmin && <PushNotificationsToggle />}
+            <PushNotificationsToggle />
 
             {user && (
               <Link

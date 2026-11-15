@@ -8,10 +8,11 @@ import {
 } from '@/lib/push'
 
 /**
- * Web push opt-in for admins: stores this device's subscription so the
- * admin-push worker can deliver OS-level alerts (seller applications, new
- * listings) even when the tab is closed. Renders nothing on unsupported
- * browsers/devices — no dead UI.
+ * Web push opt-in for any signed-in user: stores this device's subscription so
+ * the admin-push worker can deliver OS-level alerts (messages, orders, reviews)
+ * to this device even when the tab is closed. `push_messages.user_id` routes
+ * each alert to its owner, so a subscriber only ever sees their own. Renders
+ * nothing on unsupported browsers/devices — no dead UI.
  */
 export default function PushNotificationsToggle() {
   // Support detection runs once at mount in the initializer (same pattern as
@@ -78,7 +79,7 @@ export default function PushNotificationsToggle() {
       {error && <p className="text-xs text-red-500 mt-1.5">{error}</p>}
       {!enabled && !error && (
         <p className="text-[11px] text-gray-400 mt-1">
-          Get notified when sellers apply or listings need review — even with the tab closed.
+          Messages, orders and reviews as phone alerts — even with the tab closed.
         </p>
       )}
     </div>
