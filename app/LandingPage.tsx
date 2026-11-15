@@ -311,7 +311,7 @@ export default async function LandingPage() {
                 without the <em className="font-serif-accent text-gold italic">guesswork</em>.
               </h1>
 
-              <p className="fade-up fade-up-delay-1 text-base sm:text-lg text-gold-vivid font-semibold tracking-wide mb-4">
+              <p className="fade-up fade-up-delay-1 text-base sm:text-lg text-white/50 font-medium tracking-wide mb-4">
                 Good finds. Better plug.
               </p>
 
