@@ -72,7 +72,7 @@ export default function ListingDetailClient() {
   // Buyer review entry: myReview = already reviewed; reviewAnchor = a
   // qualifying completed transaction I haven't reviewed yet.
   const [myReview, setMyReview] = useState<ReviewWithResponse | null>(null)
-  const [reviewAnchor, setReviewAnchor] = useState<{ kind: 'booking' | 'sale'; id: string } | null>(null)
+  const [reviewAnchor, setReviewAnchor] = useState<{ kind: 'booking' | 'sale' | 'order'; id: string } | null>(null)
   const [user, setUser] = useState<{ id: string } | null>(null)
   const [isFavorited, setIsFavorited] = useState(false)
   const [showMessagePreview, setShowMessagePreview] = useState(false)
@@ -192,6 +192,19 @@ export default function ListingDetailClient() {
         .limit(1)
       if (sale && sale[0]) {
         setReviewAnchor({ kind: 'sale', id: sale[0].id })
+      }
+
+      // Order path: completed orders also qualify for review.
+      const { data: order } = await supabase
+        .from('orders')
+        .select('id')
+        .eq('seller_id', sellerId)
+        .eq('buyer_id', user?.id || '')
+        .eq('status', 'complete')
+        .order('created_at', { ascending: false })
+        .limit(1)
+      if (order && order[0] && !reviewAnchor) {
+        setReviewAnchor({ kind: 'order', id: order[0].id })
       }
     } catch (err) {
       console.error('Failed to load reviews:', err)
@@ -1041,7 +1054,17 @@ export default function ListingDetailClient() {
                       Share your experience — it helps other buyers on campus trust real sellers. ✅ Your review is verified against your completed transaction.
                     </p>
                     <Link
-                      href={'/reviews/new?' + (reviewAnchor.kind === 'booking' ? 'bookingId=' : 'saleId=') + reviewAnchor.id + '&sellerId=' + listing.seller_id}
+                      href={
+                        '/reviews/new?' +
+                        (reviewAnchor.kind === 'booking'
+                          ? 'bookingId='
+                          : reviewAnchor.kind === 'order'
+                            ? 'orderId='
+                            : 'saleId=') +
+                        reviewAnchor.id +
+                        '&sellerId=' +
+                        listing.seller_id
+                      }
                       className="inline-flex items-center gap-1.5 bg-gold text-charcoal px-5 py-2.5 rounded-full font-bold text-sm hover:bg-gold-dark transition-all hover:scale-[1.02] shadow-md"
                     >
                       ⭐ Leave a Review

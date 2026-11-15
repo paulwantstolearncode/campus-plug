@@ -27,6 +27,7 @@ export interface ReviewWithResponse {
   reviewer_id: string | null
   booking_id: string | null
   sale_id: string | null
+  order_id: string | null
   rating: number
   review_text: string | null
   is_flagged: boolean
@@ -106,7 +107,7 @@ export async function getReviewById(reviewId: string) {
   return supabase
     .from('reviews')
     .select(
-      '*, booking:bookings!booking_id (listing:listings!listing_id (id, title)), sale:sales!sale_id (listing:listings!listing_id (id, title))'
+      '*, booking:bookings!booking_id (listing:listings!listing_id (id, title)), sale:sales!sale_id (listing:listings!listing_id (id, title)), order:orders!order_id (listing:listings!listing_id (id, title))'
     )
     .eq('id', reviewId)
     .single()
@@ -118,6 +119,7 @@ export async function createReview(input: {
   sellerId: string
   bookingId?: string | null
   saleId?: string | null
+  orderId?: string | null
   rating: number
   reviewText: string
 }) {
@@ -127,6 +129,7 @@ export async function createReview(input: {
       seller_id: input.sellerId,
       booking_id: input.bookingId || null,
       sale_id: input.saleId || null,
+      order_id: input.orderId || null,
       rating: input.rating,
       review_text: input.reviewText.trim() || null,
     })

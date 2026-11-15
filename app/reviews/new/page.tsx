@@ -16,6 +16,7 @@ function NewReviewInner() {
 
   const bookingId = searchParams.get('bookingId')
   const saleId = searchParams.get('saleId')
+  const orderId = searchParams.get('orderId')
   const sellerId = searchParams.get('sellerId')
   const reviewId = searchParams.get('reviewId')
 
@@ -52,7 +53,9 @@ function NewReviewInner() {
           setRating(data.rating)
           setText(data.review_text || '')
           const listing =
-            (data.booking && data.booking.listing) || (data.sale && data.sale.listing)
+            (data.booking && data.booking.listing) ||
+            (data.sale && data.sale.listing) ||
+            (data.order && data.order.listing)
           if (listing) setListingHref('/listing/' + listing.id)
 
           const created = new Date(data.created_at).getTime()
@@ -62,8 +65,9 @@ function NewReviewInner() {
         }
 
         // ── CREATE MODE: need a seller + exactly one transaction anchor ──
-        if (!sellerId || (!bookingId && !saleId) || (bookingId && saleId)) {
-          setError('Missing booking or sale reference. Open this page from your booking or a listing.')
+        const anchorCount = [bookingId, saleId, orderId].filter(Boolean).length
+        if (!sellerId || anchorCount === 0 || anchorCount > 1) {
+          setError('Missing order/booking/sale reference. Open this page from your order, booking, or listing.')
           setLoading(false)
           return
         }
@@ -125,6 +129,36 @@ function NewReviewInner() {
           if (sale.listing) setListingHref('/listing/' + sale.listing.id)
           setAnchorLabel(sale.listing?.title ? 'your purchase from &quot;' + sale.listing.title + '&quot;' : 'your purchase')
           setLoading(false)
+          return
+        }
+
+        // Order path: verify the order is complete and the user is a party.
+        if (orderId) {
+          const { data: order, error: orderError } = await supabase
+            .from('orders')
+            .select('*, listing:listings!listing_id (id, title, seller_id)')
+            .eq('id', orderId)
+            .single()
+
+          if (orderError || !order) {
+            setError("We couldn't find this order for your account.")
+            setLoading(false)
+            return
+          }
+          if (order.listing?.seller_id !== sellerId) {
+            setError("This order doesn't match the seller you're reviewing.")
+            setLoading(false)
+            return
+          }
+          if (order.status !== 'complete') {
+            setError("This order hasn't been completed yet — reviews are for finished transactions.")
+            setLoading(false)
+            return
+          }
+          if (order.listing) setListingHref('/listing/' + order.listing.id)
+          setAnchorLabel(order.listing?.title ? 'your order for &quot;' + order.listing.title + '&quot;' : 'your order')
+          setLoading(false)
+          return
         }
       } catch (err) {
         console.error('Review form load failed:', err)
@@ -167,6 +201,7 @@ function NewReviewInner() {
           sellerId,
           bookingId,
           saleId,
+          orderId,
           rating,
           reviewText: text,
         })
