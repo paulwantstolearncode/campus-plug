@@ -7,8 +7,7 @@
 -- Adds order_id to public.reviews so a buyer can only review a seller after
 -- completing an order (status = 'complete'). The existing verify_review_buyer
 -- function accepts booking_id or sale_id anchors; this extends it to order_id.
-//
-// Dependencies: reviews (add_reviews_system.sql), orders (add_orders.sql).
+-- Dependencies: reviews (add_reviews_system.sql), orders (add_orders.sql).
 -- ============================================================================
 
 -- ── 1. Add order_id column ─────────────────────────────────────────────────

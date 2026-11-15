@@ -10,10 +10,9 @@
 --   * dispute_messages: chat-like messages within a dispute (admin + parties).
 --
 -- RLS: parties (buyer/seller) + admin see their own disputes.
-//   Only admin can change status/resolution.
-//
-// Dependencies: orders (add_orders.sql), profiles.
-// ============================================================================
+--   Only admin can change status/resolution.
+-- Dependencies: orders (add_orders.sql), profiles.
+-- ============================================================================
 
 -- ── 1. Disputes table ──────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.disputes (

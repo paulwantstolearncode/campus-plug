@@ -10,10 +10,9 @@
 --   * order_payments: links an order to its payment transaction(s).
 --
 -- RLS: buyer/seller/admin see their own rows. Service role (Edge Function)
-//   manages webhook updates.
-//
-// Dependencies: orders (add_orders.sql), profiles, listings.
-// ============================================================================
+--   manages webhook updates.
+-- Dependencies: orders (add_orders.sql), profiles, listings.
+-- ============================================================================
 
 -- ── 1. Payment transactions ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS public.payment_transactions (
