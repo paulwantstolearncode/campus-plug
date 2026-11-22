@@ -19,9 +19,10 @@ import {
   type SellerRating,
   type ReviewWithResponse,
 } from '@/lib/reviews'
-import { getOrders, advanceOrderStatus, orderStatusLabel, type Order } from '@/lib/orders'
+import { getOrders, advanceOrderStatus, orderActionLabel, type Order, type OrderStatus } from '@/lib/orders'
 import { OrderStatusChip } from '@/app/components/OrderStatusChip'
 import { ConfirmButton } from '@/app/components/ConfirmButton'
+import VerificationCard from '@/app/components/VerificationCard'
 
 interface MyListing {
   id: string
@@ -37,6 +38,7 @@ interface MyListing {
 
 interface MyBooking {
   id: string
+  order_id: string | null
   booking_date: string | null
   booking_time: string | null
   notes: string | null
@@ -61,6 +63,7 @@ interface MySale {
 // A completed booking where the current user was the BUYER (review entry).
 interface BuyerBooking {
   id: string
+  order_id: string | null
   seller_id: string
   listing: { id: string; title: string } | null
 }
@@ -68,6 +71,7 @@ interface BuyerBooking {
 // Any booking the current user MADE as a buyer (buyer dashboard view).
 interface MyBuyerBooking {
   id: string
+  order_id: string | null
   status: string | null
   booking_date: string | null
   booking_time: string | null
@@ -153,7 +157,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
       // Buyer side: completed bookings I made as a buyer + reviews I wrote.
       const { data: asBuyer, error: asBuyerError } = await supabase
         .from('bookings')
-        .select('id, seller_id, listing:listings!listing_id (id, title)')
+        .select('id, seller_id, order_id, listing:listings!listing_id (id, title)')
         .eq('buyer_id', userId)
         .eq('status', 'completed')
         .order('created_at', { ascending: false })
@@ -288,7 +292,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
           // bookings" RLS policy) — best-effort, never blocks the page.
           const { data: myBookingData, error: myBookingError } = await supabase
             .from('bookings')
-            .select('id, status, booking_date, booking_time, listing:listings!listing_id (id, title)')
+            .select('id, order_id, status, booking_date, booking_time, listing:listings!listing_id (id, title)')
             .eq('buyer_id', user.id)
             .order('created_at', { ascending: false })
             .limit(20)
@@ -456,15 +460,18 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
     return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Rejected</span>
   }
 
-  const bookingStatusChip = (status: string | null) => {
+  const bookingStatusChip = (status: string | null, orderLinked = false) => {
     if (status === 'completed') {
       return <span className="inline-flex items-center gap-1 bg-green-100 text-green-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Completed</span>
+    }
+    if (status === 'confirmed') {
+      return <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Confirmed</span>
     }
     if (status === 'cancelled') {
       return <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg> Cancelled</span>
     }
     // Legacy bookings (status NULL before add_sales_tracking.sql) default to pending.
-    return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Pending</span>
+    return <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-2.5 py-1 rounded-full text-xs font-bold"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {orderLinked ? 'Awaiting payment' : 'Pending'}</span>
   }
 
   const saleStatusChip = (status: string) => {
@@ -654,6 +661,9 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
               </div>
             </div>
           )}
+
+          {/* STUDENT VERIFICATION — the trust badge behind the shop */}
+          <VerificationCard />
 
           {/* STATS */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -889,7 +899,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
                     {booking.listing && (
                       <Link href={"/listing/" + booking.listing.id} className="text-xs text-gold-dark hover:underline">view →</Link>
                     )}
-                    {bookingStatusChip(booking.status)}
+                    {bookingStatusChip(booking.status, !!booking.order_id)}
                   </div>
                   <p className="text-xs text-ink-muted mt-1">
                     <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{formatDate(booking.booking_date)}</span> · <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{booking.booking_time || '—'}</span> · <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Booking from: {formatName(booking.buyer?.full_name)}</span>
@@ -899,7 +909,17 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
                     <p className="text-xs text-ink-muted mt-1 font-semibold inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 text-gold-dark"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></svg>Received: {formatPrice(booking.actual_amount)}</p>
                   )}
 
-                  {booking.status !== 'completed' && booking.status !== 'cancelled' && (
+                  {booking.order_id ? (
+                    <div className="flex flex-wrap items-center gap-2 mt-3">
+                      <Link
+                        href={'/orders/' + booking.order_id}
+                        className="inline-flex items-center gap-1.5 bg-ink text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors"
+                      >
+                        Manage order →
+                      </Link>
+                      <span className="text-[11px] text-ink-muted">Payment, delivery, cancellation and completion are managed on the order.</span>
+                    </div>
+                  ) : booking.status !== 'completed' && booking.status !== 'cancelled' && (
                     <div className="flex flex-wrap gap-2 mt-3">
                       <button
                         onClick={() => openCompleteModal(booking)}
@@ -1021,14 +1041,13 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
                 let nextStatus: string | null = null
                 if (userId === o.seller_id) {
                   switch (o.status) {
-                    case 'confirmed': nextStatus = 'paid'; break
-                    case 'paid': nextStatus = 'preparing'; break
-                    case 'preparing': nextStatus = 'shipped'; break
-                    case 'shipped': nextStatus = 'delivered'; break
+                    case 'paid': nextStatus = 'collecting'; break
+                    case 'collecting': nextStatus = 'out_for_delivery'; break
+                    case 'out_for_delivery': nextStatus = 'delivered'; break
                     default: nextStatus = null
                   }
                 } else if (userId === o.buyer_id && o.status === 'delivered') {
-                  nextStatus = 'complete'
+                  nextStatus = 'confirmed'
                 }
 
                 return (
@@ -1041,7 +1060,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
                         </p>
                       </div>
                       <span className="font-bold text-gold-dark text-sm ml-auto">{formatPrice(o.amount)}</span>
-                      {<OrderStatusChip status={o.status} />}
+                      {<OrderStatusChip status={o.status} kind={o.kind} />}
                     </div>
                     <p className="text-xs text-ink-muted mt-1">
                       <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{new Date(o.created_at).toLocaleDateString()}</span>
@@ -1057,13 +1076,36 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
                       </Link>
                       {nextStatus && (
                         <ConfirmButton
-                          label={orderStatusLabel(nextStatus)}
+                          label={orderActionLabel(nextStatus, o.kind)}
                           confirmLabel="Tap again to confirm"
                           onConfirm={async () => {
-                            await advanceOrderStatus(o.id, nextStatus as Order['status'])
+                            const targetStatus = nextStatus as OrderStatus
+                            const result = await advanceOrderStatus(o.id, targetStatus)
+                            if (result.error) {
+                              alert('Could not update order: ' + result.error)
+                              return
+                            }
+                            setOrders(prev => prev.map(order => order.id === o.id ? {
+                              ...order,
+                              status: targetStatus,
+                              updated_at: new Date().toISOString(),
+                              completed_at: targetStatus === 'confirmed' ? new Date().toISOString() : order.completed_at,
+                            } : order))
+                            if (o.kind === 'service') {
+                              setBookings(prev => prev.map(booking => booking.order_id === o.id ? {
+                                ...booking,
+                                status: targetStatus === 'confirmed'
+                                  ? 'completed'
+                                  : targetStatus === 'cancelled'
+                                    ? 'cancelled'
+                                    : targetStatus === 'awaiting_payment' ? 'pending' : 'confirmed',
+                                completed_at: targetStatus === 'confirmed' ? new Date().toISOString() : null,
+                                actual_amount: targetStatus === 'confirmed' ? o.amount : null,
+                              } : booking))
+                            }
                           }}
                           className={`
-                            ${nextStatus === 'complete'
+                            ${nextStatus === 'confirmed'
                               ? 'bg-green-500 text-white hover:bg-green-600'
                               : 'bg-ink text-white hover:bg-black'}
                           `}
@@ -1145,11 +1187,19 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
                       {booking.listing && (
                         <Link href={"/listing/" + booking.listing.id} className="text-xs text-gold-dark hover:underline">view →</Link>
                       )}
-                      {bookingStatusChip(booking.status)}
+                      {bookingStatusChip(booking.status, !!booking.order_id)}
                     </div>
                     <p className="text-xs text-ink-muted mt-1">
                       <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>{formatDate(booking.booking_date)}</span> · <span className="inline-flex items-center gap-1"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>{booking.booking_time || '—'}</span>
                     </p>
+                    {booking.order_id && (
+                      <Link
+                        href={booking.status === 'pending' ? '/checkout/' + booking.order_id : '/orders/' + booking.order_id}
+                        className="inline-flex items-center gap-1.5 bg-ink text-white px-4 py-2 rounded-full font-semibold text-xs hover:bg-black transition-colors mt-3"
+                      >
+                        {booking.status === 'pending' ? 'Continue to payment →' : 'View booking order →'}
+                      </Link>
+                    )}
                   </div>
                 ))}
               </div>
@@ -1161,7 +1211,7 @@ const [ordersError, setOrdersError] = useState<string | null>(null)
               I wrote. Only renders when there is something to show. */}
           {(() => {
             const reviewable = reviewableBookings.filter(
-              (b) => !writtenReviews.some((w) => w.booking_id === b.id)
+              (b) => !b.order_id && !writtenReviews.some((w) => w.booking_id === b.id)
             )
             if (reviewable.length === 0 && writtenReviews.length === 0) return null
 

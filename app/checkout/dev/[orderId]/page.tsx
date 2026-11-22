@@ -6,9 +6,9 @@ import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/format'
 import NavBar from '@/app/components/NavBar'
 
-// Dev-only completion page. Simulates MoMo payment success/failure when
-// NEXT_PUBLIC_MOMO_API_KEY is not set (sandbox mode). In production this
-// route is unreachable — real providers POST to /api/momo/webhook instead.
+// Dev-only completion page. The server permits simulated completion only for
+// local development/test with no real provider configured. In production the
+// completion API returns 404; real providers POST to /api/momo/webhook instead.
 export default function DevCheckoutPage() {
   const [status, setStatus] = useState<'pending' | 'paid' | 'failed'>('pending')
   const [loading, setLoading] = useState(true)
@@ -30,7 +30,7 @@ export default function DevCheckoutPage() {
 
           // The order is the source of truth for the amount: record_payment()
           // needs the real total, not a placeholder, or the seller's payout and
-          // the 5% platform fee are both zero.
+          // the platform commission are both zero.
           const { data } = await supabase
             .from('orders')
             .select('amount')

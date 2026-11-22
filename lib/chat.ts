@@ -19,7 +19,7 @@ export interface Conversation {
   unread_count: number
   buyer?: { id: string; full_name: string | null } | null
   seller?: { id: string; full_name: string | null } | null
-  listing?: { id: string; title: string | null } | null
+  listing?: { id: string; title: string | null; price: number; listing_type: 'product' | 'service' } | null
 }
 
 export interface ChatMessage {
@@ -71,7 +71,7 @@ export async function getConversations(userId: string): Promise<Conversation[]> 
   const [convResult, unreadResult] = await Promise.all([
     supabase
       .from('conversations')
-      .select('*, listing:listings!listing_id (id, title)')
+      .select('*, listing:listings!listing_id (id, title, price, listing_type)')
       .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
       .order('last_message_at', { ascending: false }),
     supabase
@@ -180,7 +180,7 @@ export async function getConversation(
 ): Promise<{ conversation: Conversation | null; error?: string }> {
   const { data, error } = await supabase
     .from('conversations')
-    .select('*, listing:listings!listing_id (id, title)')
+    .select('*, listing:listings!listing_id (id, title, price, listing_type)')
     .eq('id', conversationId)
     .maybeSingle()
 

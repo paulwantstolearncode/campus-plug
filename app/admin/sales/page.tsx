@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import NavBar from '@/app/components/NavBar'
 import { formatPrice } from '@/lib/format'
+import { COMMISSION_RATE } from '@/lib/commerceConfig'
 import { getCategoryLabel } from '@/lib/categories'
 import { formatDateTime } from '@/lib/sales'
 
@@ -51,7 +52,7 @@ interface Txn {
 }
 
 type TimeFilter = 'all' | 'month' | 'week' | 'custom'
-type StatusFilter = 'all' | 'completed' | 'pending' | 'cancelled'
+type StatusFilter = 'all' | 'completed' | 'pending' | 'confirmed' | 'cancelled'
 
 // Pure helper (module scope) so filtering never calls impure functions during
 // render. `now` and `monthStart` are snapshotted once via lazy state init.
@@ -245,6 +246,7 @@ export default function AdminSalesPage() {
 
   const statusLabel = (status: string) => {
     if (status === 'completed') return 'Completed'
+    if (status === 'confirmed') return 'Confirmed'
     if (status === 'refunded') return 'Refunded'
     if (status === 'cancelled') return 'Cancelled'
     return 'Pending'
@@ -253,9 +255,10 @@ export default function AdminSalesPage() {
   const statusChip = (status: string) => {
     const base = 'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold '
     if (status === 'completed') return <span className={base + 'bg-green-100 text-green-700'}>✅ Completed</span>
+    if (status === 'confirmed') return <span className={base + 'bg-blue-100 text-blue-700'}>✓ Confirmed</span>
     if (status === 'refunded') return <span className={base + 'bg-amber-100 text-amber-700'}>↩️ Refunded</span>
     if (status === 'cancelled') return <span className={base + 'bg-red-100 text-red-700'}>❌ Cancelled</span>
-    return <span className={base + 'bg-gray-100 text-gray-600'}>⏳ Pending</span>
+    return <span className={base + 'bg-paper-deep text-ink-muted'}>⏳ Pending</span>
   }
 
   function csvCell(value: string | number | null): string {
@@ -369,9 +372,9 @@ export default function AdminSalesPage() {
 
           {/* Status filter */}
           <div className="flex flex-wrap items-center gap-2 mb-8">
-            {(['all', 'completed', 'pending', 'cancelled'] as StatusFilter[]).map((status) => {
+            {(['all', 'completed', 'pending', 'confirmed', 'cancelled'] as StatusFilter[]).map((status) => {
               const count = status === 'all' ? allTxns.length : allTxns.filter((t) => t.status === status).length
-              const labels: Record<StatusFilter, string> = { all: 'All', completed: 'Completed', pending: 'Pending', cancelled: 'Cancelled' }
+              const labels: Record<StatusFilter, string> = { all: 'All', completed: 'Completed', pending: 'Pending', confirmed: 'Confirmed', cancelled: 'Cancelled' }
               return (
                 <button
                   key={status}
@@ -391,8 +394,8 @@ export default function AdminSalesPage() {
               <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Completed</div>
             </div>
             <div className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule text-center">
-              <div className="text-2xl font-bold text-amber-600">{allTxns.filter((t) => t.status === 'pending').length}</div>
-              <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Pending</div>
+              <div className="text-2xl font-bold text-amber-600">{allTxns.filter((t) => t.status === 'pending' || t.status === 'confirmed').length}</div>
+              <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider mt-1">Pending / Confirmed</div>
             </div>
             <div className="bg-white/90 backdrop-blur-sm rounded-card p-5 shadow-lg border border-rule text-center">
               <div className="text-2xl font-bold text-red-600">{allTxns.filter((t) => t.status === 'cancelled').length}</div>
@@ -448,7 +451,7 @@ export default function AdminSalesPage() {
               <span className="text-xs text-ink-muted font-normal">(for planning only)</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {[0.05, 0.1, 0.15].map((rate) => (
+              {[COMMISSION_RATE, 0.1, 0.15].map((rate) => (
                 <div key={rate} className="rounded-2xl bg-paper-deep p-4">
                   <div className="text-xs text-ink-muted font-semibold uppercase tracking-wider">At {Math.round(rate * 100)}%</div>
                   <div className="text-2xl font-bold text-gold-dark mt-1">{formatPrice(totalFacilitated * rate)}</div>

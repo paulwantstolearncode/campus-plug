@@ -11,7 +11,7 @@
 --
 --  2. notify_on_order_status_change() — AFTER UPDATE OF status ON orders:
 --     notify the OTHER party (not the actor) with a human-readable status
---     message ("Your order is now Shipped"). When status hits 'complete', also
+--     message ("Your order is now Out for delivery"). When status hits 'confirmed', also
 --     nudge the buyer to leave a review (link to /reviews/new with an order
 --     anchor — see note below).
 --
@@ -154,18 +154,20 @@ BEGIN
 
   -- Human-readable status label.
   v_status_label := CASE NEW.status
-    WHEN 'confirmed' THEN 'Confirmed'
+    WHEN 'awaiting_payment' THEN 'Awaiting payment'
     WHEN 'paid' THEN 'Paid'
-    WHEN 'preparing' THEN 'Preparing'
-    WHEN 'shipped' THEN 'Shipped'
+    WHEN 'collecting' THEN 'Collecting'
+    WHEN 'out_for_delivery' THEN 'Out for delivery'
     WHEN 'delivered' THEN 'Delivered'
-    WHEN 'complete' THEN 'Completed'
+    WHEN 'confirmed' THEN 'Confirmed'
     WHEN 'cancelled' THEN 'Cancelled'
+    WHEN 'disputed' THEN 'Disputed'
+    WHEN 'refunded' THEN 'Refunded'
     ELSE NEW.status
   END;
 
-  -- When complete, nudge the buyer to review (only if buyer is the target).
-  IF NEW.status = 'complete' AND v_target_user = NEW.buyer_id THEN
+  -- When confirmed, nudge the buyer to review (only if buyer is the target).
+  IF NEW.status = 'confirmed' AND v_target_user = NEW.buyer_id THEN
     v_review_nudge := true;
   END IF;
 

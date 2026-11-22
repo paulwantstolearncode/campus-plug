@@ -125,7 +125,7 @@ BEGIN
     v_order.buyer_id,
     v_order.seller_id,
     p_amount,
-    round(p_amount * 0.05, 2),   -- 5% platform fee
+    round(p_amount * 0.08, 2),   -- 8% platform fee
     p_mo_mo_reference,
     'paid',
     now()
@@ -151,9 +151,9 @@ BEGIN
 
   -- Advance the order directly rather than through advance_order(): the MoMo
   -- webhook runs without a user JWT, so advance_order()'s auth.uid() role check
-  -- would reject confirmed -> paid. This function is SECURITY DEFINER, so it
+  -- would reject awaiting_payment -> paid. This function is SECURITY DEFINER, so it
   -- can write the order and its audit event itself.
-  IF v_order.status = 'confirmed' THEN
+  IF v_order.status = 'awaiting_payment' THEN
     INSERT INTO public.order_events (order_id, actor_id, from_status, to_status, note)
     VALUES (p_order_id, NULL, v_order.status, 'paid', 'MoMo payment received: ' || p_mo_mo_reference);
 
@@ -173,7 +173,7 @@ REVOKE ALL ON FUNCTION public.record_payment(UUID, TEXT, NUMERIC) FROM authentic
 GRANT EXECUTE ON FUNCTION public.record_payment(UUID, TEXT, NUMERIC) TO service_role;
 
 -- ── 4. SECURITY DEFINER: release_escrow() ──────────────────────────────────
--- Called when buyer confirms delivery (order → complete). Marks payment
+-- Called when buyer confirms delivery (order → confirmed). Marks payment
 -- released and credits seller net of platform fee.
 CREATE OR REPLACE FUNCTION public.release_escrow(
   p_order_id UUID
@@ -195,8 +195,8 @@ BEGIN
     RAISE EXCEPTION 'Order not found';
   END IF;
 
-  IF v_order.status <> 'complete' THEN
-    RAISE EXCEPTION 'Order is not complete; cannot release escrow';
+  IF v_order.status <> 'confirmed' THEN
+    RAISE EXCEPTION 'Order is not confirmed; cannot release escrow';
   END IF;
 
   SELECT * INTO v_payment

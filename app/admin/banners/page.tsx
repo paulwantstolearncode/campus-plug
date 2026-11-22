@@ -178,10 +178,10 @@ export default function BannerAdsPage() {
           )}
 
           {banners.length === 0 ? (
-            <div className="bg-white rounded-card p-12 text-center border border-gray-100">
+            <div className="bg-white rounded-card p-12 text-center border border-rule">
               <div className="text-5xl mb-4 opacity-50">📢</div>
               <p className="text-xl font-bold text-charcoal mb-2">No banners yet</p>
-              <p className="text-gray-500 mb-6">Create a banner to advertise local businesses or promotions.</p>
+              <p className="text-ink-muted mb-6">Create a banner to advertise local businesses or promotions.</p>
               <button onClick={openCreate} className="bg-charcoal text-white px-6 py-3 rounded-full font-semibold hover:bg-black transition-colors">
                 ＋ Create first banner
               </button>
@@ -189,7 +189,7 @@ export default function BannerAdsPage() {
           ) : (
             <div className="space-y-4">
               {banners.map((banner) => (
-                <div key={banner.id} className="bg-white rounded-card overflow-hidden shadow-lg border border-gray-100">
+                <div key={banner.id} className="bg-white rounded-card overflow-hidden shadow-lg border border-rule">
                   {/* Preview */}
                   <div className="p-4">
                     <a
@@ -216,26 +216,26 @@ export default function BannerAdsPage() {
                   </div>
 
                   {/* Controls */}
-                  <div className="flex items-center gap-3 px-5 py-3 border-t border-gray-100">
-                    <span className="text-xs text-gray-400 font-mono">Slot {banner.slot}</span>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${banner.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <div className="flex items-center gap-3 px-5 py-3 border-t border-rule">
+                    <span className="text-xs text-ink-muted font-mono">Slot {banner.slot}</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${banner.is_active ? 'bg-green-100 text-green-700' : 'bg-paper-deep text-ink-muted'}`}>
                       {banner.is_active ? 'Active' : 'Inactive'}
                     </span>
                     {banner.expires_at && (
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-ink-muted">
                         Expires {new Date(banner.expires_at).toLocaleDateString('en-GB')}
                       </span>
                     )}
                     <div className="ml-auto flex gap-2">
                       <button
                         onClick={() => toggleActive(banner.id, banner.is_active)}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-200 hover:border-charcoal transition-colors"
+                        className="text-xs font-semibold px-3 py-1.5 rounded-full border border-rule hover:border-ink transition-colors"
                       >
                         {banner.is_active ? 'Deactivate' : 'Activate'}
                       </button>
                       <button
                         onClick={() => openEdit(banner)}
-                        className="text-xs font-semibold px-3 py-1.5 rounded-full border border-gray-200 hover:border-charcoal transition-colors"
+                        className="text-xs font-semibold px-3 py-1.5 rounded-full border border-rule hover:border-ink transition-colors"
                       >
                         Edit
                       </button>
@@ -259,7 +259,7 @@ export default function BannerAdsPage() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowForm(false)} />
           <div className="relative bg-white rounded-card shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 md:p-8">
-            <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-gray-400 hover:text-charcoal text-xl">✕</button>
+            <button onClick={() => setShowForm(false)} className="absolute top-4 right-4 text-ink-muted hover:text-charcoal text-xl">✕</button>
             <h2 className="text-2xl font-bold text-charcoal mb-6">{editingId ? 'Edit Banner' : 'New Banner'}</h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -268,7 +268,7 @@ export default function BannerAdsPage() {
                 <input
                   type="text" value={formTitle} onChange={(e) => setFormTitle(e.target.value)}
                   placeholder="e.g., Legon Barber Shop"
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors"
+                  className="w-full px-4 py-3 rounded-2xl border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-colors"
                   required
                 />
               </div>
@@ -277,7 +277,7 @@ export default function BannerAdsPage() {
                 <input
                   type="text" value={formSubtitle} onChange={(e) => setFormSubtitle(e.target.value)}
                   placeholder="e.g., Haircuts from GH₵ 30"
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors"
+                  className="w-full px-4 py-3 rounded-2xl border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-colors"
                 />
               </div>
               <div>
@@ -285,7 +285,7 @@ export default function BannerAdsPage() {
                 <input
                   type="url" value={formImageUrl} onChange={(e) => setFormImageUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors"
+                  className="w-full px-4 py-3 rounded-2xl border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-colors"
                 />
               </div>
               <div>
@@ -293,7 +293,7 @@ export default function BannerAdsPage() {
                 <input
                   type="url" value={formLinkUrl} onChange={(e) => setFormLinkUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors"
+                  className="w-full px-4 py-3 rounded-2xl border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-colors"
                   required
                 />
               </div>
@@ -301,22 +301,22 @@ export default function BannerAdsPage() {
                 <div>
                   <label className="block text-sm font-semibold text-charcoal mb-2">Background</label>
                   <div className="flex gap-2">
-                    <input type="color" value={formBgColor} onChange={(e) => setFormBgColor(e.target.value)} className="w-12 h-12 rounded-xl border-2 border-gray-200 cursor-pointer" />
-                    <input type="text" value={formBgColor} onChange={(e) => setFormBgColor(e.target.value)} className="flex-1 px-3 py-2 rounded-xl border-2 border-gray-200 text-charcoal font-mono text-sm focus:outline-none focus:border-gold" />
+                    <input type="color" value={formBgColor} onChange={(e) => setFormBgColor(e.target.value)} className="w-12 h-12 rounded-xl border-2 border-rule cursor-pointer" />
+                    <input type="text" value={formBgColor} onChange={(e) => setFormBgColor(e.target.value)} className="flex-1 px-3 py-2 rounded-xl border-2 border-rule text-charcoal font-mono text-sm focus:outline-none focus:border-gold" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-charcoal mb-2">Text Color</label>
                   <div className="flex gap-2">
-                    <input type="color" value={formTextColor} onChange={(e) => setFormTextColor(e.target.value)} className="w-12 h-12 rounded-xl border-2 border-gray-200 cursor-pointer" />
-                    <input type="text" value={formTextColor} onChange={(e) => setFormTextColor(e.target.value)} className="flex-1 px-3 py-2 rounded-xl border-2 border-gray-200 text-charcoal font-mono text-sm focus:outline-none focus:border-gold" />
+                    <input type="color" value={formTextColor} onChange={(e) => setFormTextColor(e.target.value)} className="w-12 h-12 rounded-xl border-2 border-rule cursor-pointer" />
+                    <input type="text" value={formTextColor} onChange={(e) => setFormTextColor(e.target.value)} className="flex-1 px-3 py-2 rounded-xl border-2 border-rule text-charcoal font-mono text-sm focus:outline-none focus:border-gold" />
                   </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-semibold text-charcoal mb-2">Slot (order)</label>
-                  <select value={formSlot} onChange={(e) => setFormSlot(Number(e.target.value))} className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors">
+                  <select value={formSlot} onChange={(e) => setFormSlot(Number(e.target.value))} className="w-full px-4 py-3 rounded-2xl border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-colors">
                     <option value={1}>1 (first)</option>
                     <option value={2}>2</option>
                     <option value={3}>3 (last)</option>
@@ -326,7 +326,7 @@ export default function BannerAdsPage() {
                   <label className="block text-sm font-semibold text-charcoal mb-2">Expires</label>
                   <input
                     type="datetime-local" value={formExpiresAt} onChange={(e) => setFormExpiresAt(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl border-2 border-gray-200 text-charcoal focus:outline-none focus:border-gold transition-colors"
+                    className="w-full px-4 py-3 rounded-2xl border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-colors"
                   />
                 </div>
               </div>

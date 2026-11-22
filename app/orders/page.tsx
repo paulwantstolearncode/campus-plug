@@ -68,6 +68,24 @@ export default function OrdersPage() {
     return party?.full_name ? formatName(party.full_name) : 'Unknown'
   }
 
+  // Repeat bookings (item 17): a completed service (braids, repairs, printing)
+  // or product the buyer already received, deduped by listing and capped at 6,
+  // so re-ordering is one tap instead of a fresh search. Orders arrive newest
+  // first, so the first hit per listing is the most recent one.
+  const repeatables: OrderRow[] = (() => {
+    if (!userId) return []
+    const seen = new Set<string>()
+    const out: OrderRow[] = []
+    for (const o of orders) {
+      if (o.status !== 'confirmed') continue
+      if (!o.listing_id || o.buyer_id !== userId) continue
+      if (seen.has(o.listing_id)) continue
+      seen.add(o.listing_id)
+      out.push(o)
+    }
+    return out.slice(0, 6)
+  })()
+
   if (loading) {
     return (
       <main className="min-h-screen bg-ink">
@@ -140,6 +158,41 @@ export default function OrdersPage() {
       <section className="relative pb-24 md:pb-32 bg-off-white -mt-6">
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 pt-8">
 
+          {/* Book again — repeat bookings / reorders (item 17) */}
+          {repeatables.length > 0 && (
+            <div className="mb-6">
+              <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-3">
+                Book again
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {repeatables.map((o) => {
+                  const title = o.listing?.title || 'Previous order'
+                  const isService = o.kind === 'service'
+                  const href = isService
+                    ? '/services/' + o.listing_id + '/book'
+                    : '/listing/' + o.listing_id
+                  return (
+                    <Link
+                      key={o.id}
+                      href={href}
+                      className="flex items-center justify-between gap-3 p-4 rounded-2xl border border-rule bg-white/90 backdrop-blur-sm hover:border-gold transition-colors"
+                    >
+                      <div className="min-w-0">
+                        <p className="font-semibold text-charcoal truncate">{title}</p>
+                        <p className="text-xs text-ink-muted">
+                          {isService ? 'Rebook this service' : 'Buy this again'} · {formatPrice(o.amount)}
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-xs font-bold text-gold-dark whitespace-nowrap">
+                        {isService ? 'Book →' : 'View →'}
+                      </span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
           {orders.length === 0 ? (
             <div className="bg-white/90 backdrop-blur-sm rounded-card p-12 text-center border border-rule">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="inline-block shrink-0 mb-4 text-ink-muted opacity-50"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -178,7 +231,7 @@ export default function OrdersPage() {
                       </div>
                     </div>
                     <div className="text-right hidden sm:block">
-                      {<OrderStatusChip status={o.status} />}
+                      {<OrderStatusChip status={o.status} kind={o.kind} />}
                     </div>
                   </Link>
                 )

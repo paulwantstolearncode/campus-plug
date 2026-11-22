@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/format'
+import { COMMISSION_RATE } from '@/lib/commerceConfig'
 import { formatName } from '@/lib/formatName'
 import NavBar from '@/app/components/NavBar'
 import {
@@ -11,9 +12,13 @@ import {
   getAdminPayoutSummary,
   type AdminPayoutTransaction,
 } from '@/lib/adminPayouts'
+import { getOpenDisbursements, type Disbursement } from '@/lib/wallet'
 
 export default function AdminPayoutsPage() {
   const [payouts, setPayouts] = useState<AdminPayoutTransaction[]>([])
+  const [disbursements, setDisbursements] = useState<Disbursement[]>([])
+  const [sendingId, setSendingId] = useState<string | null>(null)
+  const [notice, setNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
   const [summary, setSummary] = useState<{
     total_platform_fees: number
     total_seller_earnings: number
@@ -47,16 +52,23 @@ export default function AdminPayoutsPage() {
       }
 
       setLoading(true)
-      const [summaryResult, payoutsResult] = await Promise.all([
+      const [summaryResult, payoutsResult, disbursementsResult] = await Promise.all([
         getAdminPayoutSummary(),
         getAllPayouts(),
+        getOpenDisbursements(),
       ])
 
       setSummary(summaryResult)
       setPayouts(payoutsResult)
+      setDisbursements(disbursementsResult)
 
       // Fetch seller names for display
-      const sellerIds = [...new Set(payoutsResult.map((p) => p.seller_id).filter(Boolean))]
+      const sellerIds = [
+        ...new Set([
+          ...payoutsResult.map((p) => p.seller_id),
+          ...disbursementsResult.map((d) => d.seller_id),
+        ].filter(Boolean)),
+      ]
       if (sellerIds.length > 0) {
         const { data: profiles } = await supabase
           .from('profiles')
@@ -87,6 +99,47 @@ export default function AdminPayoutsPage() {
     }
     return () => { cancelled = true }
   }, [loadPayouts])
+
+  const handleSend = async (id: string) => {
+    setSendingId(id)
+    setNotice(null)
+    try {
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        setNotice({ kind: 'error', text: 'Your session expired. Please sign in again.' })
+        return
+      }
+
+      const res = await fetch('/api/momo/disburse', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ disbursementId: id }),
+      })
+      const data = (await res.json()) as { status?: string; error?: string }
+
+      if (!res.ok) {
+        setNotice({ kind: 'error', text: data.error || 'Could not send the transfer.' })
+        return
+      }
+
+      setNotice({
+        kind: 'ok',
+        text:
+          data.status === 'paid'
+            ? 'Transfer sent and recorded in the seller wallet.'
+            : 'Transfer accepted by the provider. Press Re-check shortly to confirm.',
+      })
+      await loadPayouts()
+    } catch (err) {
+      console.error('Disbursement request failed:', err)
+      setNotice({ kind: 'error', text: 'Could not send the transfer. Please try again.' })
+    } finally {
+      setSendingId(null)
+    }
+  }
 
   if (loading) {
     return (
@@ -161,7 +214,7 @@ export default function AdminPayoutsPage() {
             <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 md:p-8 shadow-xl border border-rule">
               <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-3">Platform fees</p>
               <p className="text-3xl font-bold text-gold-dark">{formatPrice(s.total_platform_fees)}</p>
-              <p className="text-xs text-ink-muted mt-2">5% collected on every sale</p>
+              <p className="text-xs text-ink-muted mt-2">{Math.round(COMMISSION_RATE * 100)}% collected on every sale</p>
             </div>
             <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 md:p-8 shadow-xl border border-rule">
               <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-3">Seller earnings</p>
@@ -180,6 +233,89 @@ export default function AdminPayoutsPage() {
                 {s.pending_count} pending · {s.released_count} released
               </p>
             </div>
+          </div>
+
+          {notice && (
+            <div
+              className={`mb-6 p-4 rounded-2xl text-sm font-medium border ${
+                notice.kind === 'ok'
+                  ? 'bg-green-50 border-green-200 text-green-800'
+                  : 'bg-red-50 border-red-200 text-red-700'
+              }`}
+            >
+              {notice.text}
+            </div>
+          )}
+
+          {/* Pending disbursements: seller payouts + buyer refunds */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 md:p-8 shadow-xl border border-gold/40 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <p className="text-xs font-bold text-charcoal uppercase tracking-widest">Pending transfers</p>
+              {disbursements.length === 0 && (
+                <p className="text-xs text-ink-muted">Nothing waiting</p>
+              )}
+            </div>
+
+            {disbursements.length === 0 ? (
+              <div className="p-6 text-center text-ink-muted text-sm">
+                No payouts or refunds are waiting to be sent.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="border-b border-rule">
+                      <th className="pb-3 text-xs font-bold text-charcoal uppercase tracking-widest">Type</th>
+                      <th className="pb-3 text-xs font-bold text-charcoal uppercase tracking-widest">Seller</th>
+                      <th className="pb-3 text-xs font-bold text-charcoal uppercase tracking-widest">MoMo</th>
+                      <th className="pb-3 text-xs font-bold text-charcoal uppercase tracking-widest">Network</th>
+                      <th className="pb-3 text-xs font-bold text-charcoal uppercase tracking-widest text-right">Amount</th>
+                      <th className="pb-3 text-xs font-bold text-charcoal uppercase tracking-widest">Status</th>
+                      <th className="pb-3 text-xs font-bold text-charcoal uppercase tracking-widest text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-rule">
+                    {disbursements.map((d) => (
+                      <tr key={d.id} className="hover:bg-white/50 transition-colors">
+                        <td className="py-3 text-sm text-charcoal font-semibold">
+                          {d.kind === 'seller_payout' ? 'Payout' : 'Refund'}
+                        </td>
+                        <td className="py-3 text-sm text-charcoal">
+                          {formatName(sellerNames[d.seller_id] || 'Unknown')}
+                        </td>
+                        <td className="py-3 text-sm text-ink font-mono">
+                          {d.momo_phone.slice(0, 3)}•••{d.momo_phone.slice(-2)}
+                        </td>
+                        <td className="py-3 text-sm text-ink uppercase">{d.provider}</td>
+                        <td className="py-3 text-sm text-right font-semibold">{formatPrice(d.amount)}</td>
+                        <td className="py-3">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                            d.status === 'processing'
+                              ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                              : 'bg-amber-50 text-amber-800 border border-amber-200'
+                          }`}>
+                            {d.status === 'processing' ? 'Processing' : 'Requested'}
+                          </span>
+                        </td>
+                        <td className="py-3 text-right">
+                          <button
+                            onClick={() => handleSend(d.id)}
+                            disabled={sendingId === d.id}
+                            className="bg-gold text-charcoal px-4 py-2 rounded-full text-xs font-bold hover:bg-gold-dark transition-colors disabled:opacity-50"
+                          >
+                            {sendingId === d.id
+                              ? 'Sending…'
+                              : d.status === 'processing'
+                                ? 'Re-check'
+                                : 'Send'}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           {/* Transaction table */}

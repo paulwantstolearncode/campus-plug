@@ -176,6 +176,7 @@ export default function ListingDetailClient() {
         .eq('seller_id', sellerId)
         .eq('buyer_id', user.id)
         .eq('status', 'completed')
+        .is('order_id', null)
         .order('created_at', { ascending: false })
         .limit(1)
       if (booking && booking[0]) {
@@ -200,7 +201,7 @@ export default function ListingDetailClient() {
         .select('id')
         .eq('seller_id', sellerId)
         .eq('buyer_id', user?.id || '')
-        .eq('status', 'complete')
+        .eq('status', 'confirmed')
         .order('created_at', { ascending: false })
         .limit(1)
       if (order && order[0] && !reviewAnchor) {
@@ -480,17 +481,19 @@ export default function ListingDetailClient() {
       return
     }
 
+    if (listing.listing_type === 'service') {
+      router.push('/services/' + listingId + '/book')
+      return
+    }
+
     setCreatingOrder(true)
     setToast(null)
 
     try {
+      if (!listingId) throw new Error('Listing not found')
       const { id, error } = await createOrder({
-        buyerId: user.id,
-        buyerWhatsapp: null,
-        buyerName: null,
-        sellerId: listing.seller_id,
-        listingId: listingId || null,
-        kind: listing.listing_type === 'service' ? 'service' : 'product',
+        listingId,
+        kind: 'product',
         amount: listing.price,
         paymentMethod: 'prepaid',
       })
@@ -541,7 +544,7 @@ export default function ListingDetailClient() {
             )}
           </div>
 
-          <h1 className="fade-up fade-up-delay-1 text-3xl md:text-5xl font-bold text-white leading-tight tracking-tight mb-3">
+          <h1 className="fade-up fade-up-delay-1 text-3xl md:text-5xl font-bold text-white leading-tight tracking-tight mb-3 break-words">
             {listing.title}
           </h1>
           <div className="fade-up fade-up-delay-2 flex flex-wrap items-end gap-x-4 gap-y-2">
@@ -604,7 +607,7 @@ export default function ListingDetailClient() {
                         priority
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-charcoal via-gray-800 to-charcoal">
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-charcoal via-ink-soft to-charcoal">
                         <span className="text-8xl opacity-40">{isService ? '💼' : '📦'}</span>
                       </div>
                     )}
@@ -774,7 +777,11 @@ export default function ListingDetailClient() {
                             <polyline points="8 12 12 16 16 12" />
                             <line x1="12" y1="8" x2="12" y2="16" />
                           </svg>
-                          {creatingOrder ? 'Creating order...' : 'Buy now — pay with MoMo'}
+                          {creatingOrder
+                            ? 'Creating order...'
+                            : isService
+                              ? 'Book & pay with MoMo'
+                              : 'Buy now — pay with MoMo'}
                         </button>
                       )}
 
@@ -785,31 +792,39 @@ export default function ListingDetailClient() {
 
                       {/* Safety strip */}
                       <div className="mt-4 p-3 rounded-xl border border-rule bg-white text-[11px] text-ink-muted leading-relaxed">
-                        🛡️ <span className="font-semibold text-ink-muted">Safety First:</span> Meet in a public campus location (e.g. Balme Library, Night Market) · Inspect item/service before paying · Pay via MoMo or cash after meeting.
+                        🛡️ <span className="font-semibold text-ink-muted">Safety First:</span> {isService
+                          ? 'Choose an appointment and pay through Campus Plug — your money stays in escrow until the service is completed.'
+                          : 'Meet in a public campus location (e.g. Balme Library, Night Market) · Inspect the item before confirming delivery · Pay through Campus Plug for escrow protection.'}
                       </div>
 
                       {/* WhatsApp follow-up panel — in-flow, below safety strip */}
                       {whatsappClicked && !outcomeDismissed && user && user.id !== listing.seller_id && (
                         <div className="mt-4 p-4 rounded-2xl bg-paper-deep border border-rule animate-fade-in">
-                          <div className="flex items-center justify-between mb-3">
-                            <p className="text-[13px] font-semibold text-ink">How did it go with the seller?</p>
-                            <button onClick={dismissOutcome} className="text-ink-muted hover:text-ink text-sm" aria-label="Dismiss">✕</button>
+                          <div className="flex items-start justify-between gap-2 mb-3">
+                            <p className="text-[13px] font-semibold text-ink min-w-0">How did it go with the seller?</p>
+                            <button
+                              onClick={dismissOutcome}
+                              className="-mr-2 -mt-1 w-9 h-9 shrink-0 flex items-center justify-center rounded-full text-ink-muted hover:text-ink hover:bg-black/5 transition-colors"
+                              aria-label="Dismiss"
+                            >
+                              ✕
+                            </button>
                           </div>
                           <div className="grid grid-cols-2 gap-2">
-                            <button onClick={() => handleOutcome('sold')} className="flex items-center justify-center gap-1.5 bg-white border border-rule rounded-xl py-3 text-[13px] font-medium text-ink hover:border-gold hover:bg-gold-soft/30 transition-colors min-h-[44px]">
+                            <button onClick={() => handleOutcome('sold')} className="flex items-center justify-center gap-1.5 px-2 bg-white border border-rule rounded-xl py-3 text-[12px] sm:text-[13px] font-medium text-ink leading-snug hover:border-gold hover:bg-gold-soft/30 transition-colors min-h-[44px]">
                               ✅ It sold
                             </button>
-                            <button onClick={() => handleOutcome('replied')} className="flex items-center justify-center gap-1.5 bg-white border border-rule rounded-xl py-3 text-[13px] font-medium text-ink hover:border-gold hover:bg-gold-soft/30 transition-colors min-h-[44px]">
+                            <button onClick={() => handleOutcome('replied')} className="flex items-center justify-center gap-1.5 px-2 bg-white border border-rule rounded-xl py-3 text-[12px] sm:text-[13px] font-medium text-ink leading-snug hover:border-gold hover:bg-gold-soft/30 transition-colors min-h-[44px]">
                               💬 Got a reply
                             </button>
-                            <button onClick={() => handleOutcome('messaged')} className="flex items-center justify-center gap-1.5 bg-white border border-rule rounded-xl py-3 text-[13px] font-medium text-ink hover:border-gold hover:bg-gold-soft/30 transition-colors min-h-[44px]">
+                            <button onClick={() => handleOutcome('messaged')} className="flex items-center justify-center gap-1.5 px-2 bg-white border border-rule rounded-xl py-3 text-[12px] sm:text-[13px] font-medium text-ink leading-snug hover:border-gold hover:bg-gold-soft/30 transition-colors min-h-[44px]">
                               ✉️ Messaged them
                             </button>
-                            <button onClick={() => handleOutcome('no_response')} className="flex items-center justify-center gap-1.5 bg-white border border-rule rounded-xl py-3 text-[13px] font-medium text-ink hover:border-gold hover:bg-gold-soft/30 transition-colors min-h-[44px]">
+                            <button onClick={() => handleOutcome('no_response')} className="flex items-center justify-center gap-1.5 px-2 bg-white border border-rule rounded-xl py-3 text-[12px] sm:text-[13px] font-medium text-ink leading-snug hover:border-gold hover:bg-gold-soft/30 transition-colors min-h-[44px]">
                               ❌ No response
                             </button>
                           </div>
-                          <button onClick={dismissOutcome} className="mt-2 w-full text-center text-[12px] text-ink-muted hover:text-ink py-1 transition-colors">
+                          <button onClick={dismissOutcome} className="mt-1 w-full text-center text-[12px] text-ink-muted hover:text-ink py-2.5 min-h-[40px] transition-colors">
                             Skip
                           </button>
                         </div>
@@ -969,7 +984,7 @@ export default function ListingDetailClient() {
                             rel="noopener noreferrer"
                             className="mt-3 inline-flex items-center gap-2 bg-ink text-white px-5 py-2.5 rounded-full font-semibold text-sm hover:bg-black transition-all hover:scale-[1.02]"
                           >
-                            {isService ? '📅 Book This' : '💬 Message Seller'}
+                            {isService ? '💬 Ask About This Service' : '💬 Message Seller'}
                           </a>
                         )}
                       </div>
@@ -985,9 +1000,13 @@ export default function ListingDetailClient() {
                     💬
                   </div>
                   <div>
-                    <p className="font-bold text-charcoal text-sm mb-1">Booking works over WhatsApp</p>
+                    <p className="font-bold text-charcoal text-sm mb-1">
+                      {isService ? 'Book and pay on Campus Plug' : 'Message the seller directly'}
+                    </p>
                     <p className="text-xs text-ink-muted leading-relaxed">
-                      Tap a button to message the seller directly with the item pre-filled — arrange a time and pay them on WhatsApp.
+                      {isService
+                        ? 'Use Book & pay with MoMo to choose an appointment. Payment confirms your booking and escrow is released only after completion.'
+                        : 'Tap a button to message the seller directly with the item pre-filled, or use MoMo checkout for escrow protection.'}
                     </p>
                   </div>
                 </div>
@@ -1119,8 +1138,10 @@ export default function ListingDetailClient() {
         <div
           className={"fixed bottom-0 left-0 right-0 z-40 p-3 bg-ink/90 backdrop-blur-md border-t border-white/10 flex items-center gap-3 sm:hidden transition-transform duration-300 ease-in-out " + (thumbBarHidden ? 'translate-y-full' : 'translate-y-0')}
         >
-          <div className="min-w-0 shrink-0">
-            <p className="text-[10px] font-mono text-white/50 uppercase tracking-wider leading-none mb-1">{isService ? 'Service' : 'Item'}</p>
+          <div className="min-w-0 flex-1">
+            <p className={`text-[10px] font-mono uppercase tracking-wider leading-none mb-1 ${listing.sold_at ? 'text-red-300' : 'text-white/50'}`}>
+              {listing.sold_at ? '🏷️ Sold' : isService ? 'Service' : 'Item'}
+            </p>
             <p className="text-lg font-bold text-white leading-none truncate">{priceLabel}</p>
           </div>
           {/* WhatsApp link removed — Campus Plug chat only */}

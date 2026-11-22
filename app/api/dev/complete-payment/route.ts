@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { momoSimulated } from '@/lib/momoServer'
 
 export const runtime = 'nodejs'
 
@@ -11,14 +12,15 @@ export const runtime = 'nodejs'
  * provider credentials.
  *
  * Hard rules:
- *   * 404 unless MOMO_API_KEY is unset. With real credentials configured this
- *     route does not exist, so nobody can mark an order paid for free.
+ *   * 404 unless the shared local-only simulation guard allows it. Production
+ *     and every configured real provider disable this route, even without an
+ *     MTN MOMO_API_KEY.
  *   * The caller must be signed in AND be the buyer on that order.
  *   * record_payment() is service-role-only (see add_marketplace_payments.sql),
  *     so the browser can never reach it directly.
  */
 export async function POST(req: NextRequest) {
-  if (process.env.MOMO_API_KEY) {
+  if (!momoSimulated()) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
@@ -69,11 +71,39 @@ export async function POST(req: NextRequest) {
   if (order.buyer_id !== authData.user.id) {
     return NextResponse.json({ error: 'Not your order' }, { status: 403 })
   }
+  if (order.status !== 'awaiting_payment') {
+    return NextResponse.json({ error: 'Order is not awaiting payment' }, { status: 409 })
+  }
+
+  // Sandbox settlement must use the same pending intent created by
+  // /api/momo/initiate. It cannot invent a reference and bypass reference
+  // ownership, terminal-state, or one-successful-payment checks.
+  const { data: payment, error: paymentError } = await admin
+    .from('payment_transactions')
+    .select('id, mo_mo_reference, amount')
+    .eq('order_id', order.id)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (paymentError) {
+    return NextResponse.json({ error: 'Could not load payment intent' }, { status: 500 })
+  }
+  if (!payment?.mo_mo_reference) {
+    return NextResponse.json(
+      { error: 'Start MoMo checkout before completing this sandbox payment' },
+      { status: 409 }
+    )
+  }
+  if (Number(payment.amount) !== Number(order.amount)) {
+    return NextResponse.json({ error: 'Payment intent amount does not match order' }, { status: 409 })
+  }
 
   const { error: rpcError } = await admin.rpc('record_payment', {
     p_order_id: order.id,
-    p_mo_mo_reference: 'dev_sim_' + order.id,
-    p_amount: Number(order.amount),
+    p_mo_mo_reference: payment.mo_mo_reference,
+    p_amount: Number(payment.amount),
   })
 
   if (rpcError) {

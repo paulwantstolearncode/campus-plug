@@ -22,10 +22,9 @@ interface DisputeRow {
     id: string
     amount: number
     status: string
-    title: string | null
+    listing?: { title: string | null } | null
     buyer_id: string | null
     seller_id: string
-    listing?: { title: string | null } | null
     buyer?: { full_name: string | null } | null
     seller?: { full_name: string | null } | null
   }

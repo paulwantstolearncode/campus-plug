@@ -15,7 +15,7 @@ export interface AdminPayoutTransaction {
   amount: number
   platform_fee: number
   seller_receives: number
-  status: 'pending' | 'paid' | 'released' | 'refunded' | 'failed'
+  status: 'pending' | 'paid' | 'released' | 'refund_pending' | 'refunded' | 'failed'
   created_at: string
   paid_at: string | null
   released_at: string | null
@@ -42,7 +42,7 @@ type RawAdminPayoutRow = {
   order_payments: {
     order_id: string
     orders: {
-      title: string | null
+      listing: { title: string | null } | null
       buyer: { full_name: string | null }[] | null
       seller_id: string
     } | null
@@ -58,7 +58,7 @@ export async function getAllPayouts(): Promise<AdminPayoutTransaction[]> {
       order_payments (
         order_id,
         orders (
-          title,
+          listing:listings!listing_id (title),
           buyer:profiles!buyer_id (full_name),
           seller_id
         )
@@ -73,7 +73,9 @@ export async function getAllPayouts(): Promise<AdminPayoutTransaction[]> {
     return {
       id: r.id,
       order_id: r.order_id,
-      order_title: order?.title || null,
+      // The orders table has no title column; the item name lives on the
+      // listing the order references.
+      order_title: order?.listing?.title || null,
       buyer_name: order?.buyer?.[0]?.full_name || null,
       seller_id: order?.seller_id || '',
       seller_name: '', // filled below

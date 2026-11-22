@@ -7,6 +7,8 @@ export interface SellerProfile {
   whatsapp_number: string | null
   campus_location: string | null
   avatar_url: string | null
+  student_id_verified: boolean
+  student_id_verified_at: string | null
 }
 
 export interface SellerWithListings extends SellerProfile {
@@ -66,7 +68,7 @@ export async function getSellerWithListings(
     // If the user has listings, they are a seller regardless of profile flags.
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .select('id, full_name, whatsapp_number, campus_location, avatar_url')
+      .select('id, full_name, whatsapp_number, campus_location, avatar_url, student_id_verified, student_id_verified_at')
       .eq('id', trimmedId)
       .maybeSingle()
 
@@ -103,6 +105,8 @@ export async function getSellerWithListings(
       whatsapp_number: null,
       campus_location: null,
       avatar_url: null,
+      student_id_verified: false,
+      student_id_verified_at: null,
     }
 
     return {
@@ -115,3 +119,4 @@ export async function getSellerWithListings(
     return null
   }
 }
+

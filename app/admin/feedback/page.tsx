@@ -24,7 +24,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 const CATEGORY_COLORS: Record<string, string> = {
   bug: 'bg-red-100 text-red-700',
   feature: 'bg-blue-100 text-blue-700',
-  general: 'bg-gray-100 text-gray-600',
+  general: 'bg-paper-deep text-ink-muted',
   complaint: 'bg-amber-100 text-amber-700',
 }
 
@@ -200,7 +200,7 @@ export default function AdminFeedbackPage() {
                 <button
                   key={cf.value}
                   onClick={() => setFilterCategory(cf.value)}
-                  className={'px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap transition-all ' + (filterCategory === cf.value ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-gray-200')}
+                  className={'px-5 py-2.5 rounded-full font-semibold text-sm whitespace-nowrap transition-all ' + (filterCategory === cf.value ? 'bg-charcoal text-white shadow-lg' : 'bg-white text-charcoal border border-rule')}
                 >
                   {cf.label}
                 </button>
@@ -211,25 +211,25 @@ export default function AdminFeedbackPage() {
                 type="checkbox"
                 checked={filterUnread}
                 onChange={(e) => setFilterUnread(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-300 text-gold focus:ring-gold accent-gold"
+                className="w-4 h-4 rounded border-rule text-gold focus:ring-gold accent-gold"
               />
               <span className="text-sm font-semibold text-charcoal">Unread only</span>
             </label>
           </div>
 
           {/* Count badges */}
-          <div className="flex items-center gap-3 mb-6 text-sm text-gray-500 font-semibold">
+          <div className="flex items-center gap-3 mb-6 text-sm text-ink-muted font-semibold">
             <span>{total} total</span>
-            <span className="text-gray-300">·</span>
+            <span className="text-rule">·</span>
             <span>{unread} unread</span>
           </div>
 
           {/* List */}
           {feedback.length === 0 ? (
-            <div className="bg-white rounded-card p-12 text-center border border-gray-100">
+            <div className="bg-white rounded-card p-12 text-center border border-rule">
               <div className="text-5xl mb-4">💬</div>
               <p className="text-xl font-bold text-charcoal">No feedback yet</p>
-              <p className="text-gray-500 mt-2">Submissions from users will appear here.</p>
+              <p className="text-ink-muted mt-2">Submissions from users will appear here.</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -240,26 +240,26 @@ export default function AdminFeedbackPage() {
                 return (
                   <div
                     key={item.id}
-                    className={'bg-white rounded-card p-6 shadow-lg border transition-colors ' + (item.is_read ? 'border-gray-100' : 'border-gold/40')}
+                    className={'bg-white rounded-card p-6 shadow-lg border transition-colors ' + (item.is_read ? 'border-rule' : 'border-gold/40')}
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className={'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ' + (CATEGORY_COLORS[item.category] || 'bg-gray-100 text-gray-600')}>
+                        <span className={'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold ' + (CATEGORY_COLORS[item.category] || 'bg-paper-deep text-ink-muted')}>
                           {CATEGORY_LABELS[item.category] || item.category}
                         </span>
                         {item.rating ? (
                           <span className="flex items-center gap-0.5">
                             {[1, 2, 3, 4, 5].map((n) => (
-                              <svg key={n} viewBox="0 0 24 24" className={'w-3.5 h-3.5 fill-current ' + (n <= item.rating! ? 'text-gold' : 'text-gray-300')}>
+                              <svg key={n} viewBox="0 0 24 24" className={'w-3.5 h-3.5 fill-current ' + (n <= item.rating! ? 'text-gold' : 'text-rule')}>
                                 <path d="M12 2l2.92 6.26 6.88.6-5.2 4.56 1.53 6.72L12 16.4l-6.13 3.74 1.53-6.72L2.2 8.86l6.88-.6L12 2z" />
                               </svg>
                             ))}
                           </span>
                         ) : (
-                          <span className="text-[11px] text-gray-400">No rating</span>
+                          <span className="text-[11px] text-ink-muted">No rating</span>
                         )}
                       </div>
-                      <span className="text-[11px] text-gray-400 whitespace-nowrap">
+                      <span className="text-[11px] text-ink-muted whitespace-nowrap">
                         {formatDate(item.created_at)} at {formatTime(item.created_at)}
                       </span>
                     </div>
@@ -274,9 +274,9 @@ export default function AdminFeedbackPage() {
                       </a>
                     )}
 
-                    <p className="text-sm text-gray-700 leading-relaxed mt-2 whitespace-pre-wrap">{item.message}</p>
+                    <p className="text-sm text-ink leading-relaxed mt-2 whitespace-pre-wrap">{item.message}</p>
 
-                    <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
+                    <div className="flex items-center gap-2 mt-4 pt-3 border-t border-rule">
                       {!item.is_read ? (
                         <button
                           onClick={() => handleMarkAsRead(item.id)}
@@ -285,7 +285,7 @@ export default function AdminFeedbackPage() {
                           Mark as read
                         </button>
                       ) : (
-                        <span className="px-4 py-2 bg-gray-100 text-gray-400 rounded-full text-xs font-semibold">
+                        <span className="px-4 py-2 bg-paper-deep text-ink-muted rounded-full text-xs font-semibold">
                           Read
                         </span>
                       )}

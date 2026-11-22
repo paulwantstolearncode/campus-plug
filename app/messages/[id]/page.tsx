@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
 import { formatName } from '@/lib/formatName'
 import NavBar from '@/app/components/NavBar'
@@ -15,6 +16,7 @@ import {
   type Conversation,
   type ChatMessage,
 } from '@/lib/chat'
+import { createOrder } from '@/lib/orders'
 
 /** A thread message; `delivery` marks a local, not-yet-saved send. */
 type ThreadMessage = ChatMessage & { delivery?: 'sending' | 'failed' }
@@ -108,6 +110,12 @@ export default function MessageThread() {
   const [otherNumber, setOtherNumber] = useState<string | null>(null)
   const [hasOlder, setHasOlder] = useState(false)
   const [loadingOlder, setLoadingOlder] = useState(false)
+  // Order creation from chat (item 14): buyer can request payment / create an
+  // order from the conversation.
+  const [showOrderForm, setShowOrderForm] = useState(false)
+  const [orderAmount, setOrderAmount] = useState('')
+  const [orderCreating, setOrderCreating] = useState(false)
+  const [orderError, setOrderError] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const messagesContainerRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
@@ -393,6 +401,45 @@ export default function MessageThread() {
     }
   }
 
+  const handleCreateOrder = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!conversationId || !userId || !conversation) return
+    if (!conversation.listing_id || conversation.listing?.listing_type !== 'product') {
+      setOrderError('Service orders require an appointment. Use the service booking page instead.')
+      return
+    }
+    const amount = Number(orderAmount)
+    if (!amount || amount <= 0) {
+      setOrderError('Please enter a valid amount.')
+      return
+    }
+
+    setOrderCreating(true)
+    setOrderError('')
+    try {
+      const result = await createOrder({
+        listingId: conversation.listing_id,
+        kind: 'product',
+        amount,
+        paymentMethod: 'prepaid',
+      })
+      if (result.error) {
+        setOrderError(result.error)
+        return
+      }
+      if (result.id) {
+        // Redirect to checkout so the buyer can pay via MoMo.
+        router.push('/checkout/' + result.id)
+        return
+      }
+    } catch (err) {
+      console.error('Failed to create order:', err)
+      setOrderError('Could not create the order. Please try again.')
+    } finally {
+      setOrderCreating(false)
+    }
+  }
+
   if (loading) {
     return (
       <main className="min-h-screen bg-ink">
@@ -531,6 +578,70 @@ export default function MessageThread() {
                   Your number stays private — they&apos;ll see it only when you message them.
                 </p>
               </div>
+            )}
+            {/* Create order from chat (item 14): buyer can request payment */}
+            {conversation.listing_id && conversation.listing?.listing_type === 'product' && conversation.buyer_id === userId && (
+              <div className="mt-6">
+                {!showOrderForm ? (
+                  <button
+                    onClick={() => {
+                      setOrderAmount(String(conversation.listing?.price ?? ''))
+                      setShowOrderForm(true)
+                    }}
+                    className="flex items-center justify-center gap-2 w-full bg-white border-2 border-gold text-gold-dark py-3.5 rounded-full font-semibold hover:bg-gold/10 hover:border-gold-dark transition-colors min-h-[44px]"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    Request payment / Create order
+                  </button>
+                ) : (
+                  <form onSubmit={handleCreateOrder} className="bg-white/90 backdrop-blur-sm rounded-card border border-gold/50 p-4 shadow-sm space-y-3">
+                    <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-1">
+                      Create order for {conversation.listing?.title || 'this item'}
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="number"
+                        value={orderAmount}
+                        onChange={(e) => setOrderAmount(e.target.value)}
+                        min="0"
+                        step="0.01"
+                        readOnly
+                        aria-label="Listing amount in Ghana cedis"
+                        placeholder="Amount (GH₵)"
+                        className="flex-1 px-4 py-3 rounded-full border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-all text-sm"
+                      />
+                      <button
+                        type="submit"
+                        disabled={orderCreating}
+                        className="px-6 py-3 rounded-full bg-gold text-charcoal font-bold hover:bg-gold-dark transition-colors disabled:opacity-50 min-h-[44px]"
+                      >
+                        {orderCreating ? 'Creating…' : 'Create order'}
+                      </button>
+                    </div>
+                    {orderError && (
+                      <p className="text-[11px] text-red-600 font-medium">{orderError}</p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => { setShowOrderForm(false); setOrderAmount(''); setOrderError('') }}
+                      className="text-[11px] text-ink-muted underline hover:text-charcoal"
+                    >
+                      Cancel
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
+            {conversation.listing_id && conversation.listing?.listing_type === 'service' && conversation.buyer_id === userId && (
+              <Link
+                href={'/services/' + conversation.listing_id + '/book'}
+                className="mt-6 flex items-center justify-center gap-2 w-full bg-white border-2 border-gold text-gold-dark py-3.5 rounded-full font-semibold hover:bg-gold/10 hover:border-gold-dark transition-colors min-h-[44px]"
+              >
+                Choose an appointment & book service
+              </Link>
             )}
           </div>
 

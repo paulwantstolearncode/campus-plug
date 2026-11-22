@@ -86,6 +86,11 @@ function NewReviewInner() {
             setLoading(false)
             return
           }
+          if (booking.order_id) {
+            setError('This paid booking is reviewed from its order. Open the booking order to leave a review.')
+            setLoading(false)
+            return
+          }
           if (booking.listing?.seller_id !== sellerId) {
             setError("This booking doesn't match the seller you're reviewing.")
             setLoading(false)
@@ -132,7 +137,7 @@ function NewReviewInner() {
           return
         }
 
-        // Order path: verify the order is complete and the user is a party.
+        // Order path: verify the order is confirmed and the user is a party.
         if (orderId) {
           const { data: order, error: orderError } = await supabase
             .from('orders')
@@ -145,12 +150,17 @@ function NewReviewInner() {
             setLoading(false)
             return
           }
-          if (order.listing?.seller_id !== sellerId) {
+          if (order.buyer_id !== user.id) {
+            setError('Only the buyer can review this order.')
+            setLoading(false)
+            return
+          }
+          if (order.seller_id !== sellerId) {
             setError("This order doesn't match the seller you're reviewing.")
             setLoading(false)
             return
           }
-          if (order.status !== 'complete') {
+          if (order.status !== 'confirmed') {
             setError("This order hasn't been completed yet — reviews are for finished transactions.")
             setLoading(false)
             return
@@ -168,7 +178,7 @@ function NewReviewInner() {
     }
 
     load()
-  }, [reviewId, bookingId, saleId, sellerId, router])
+  }, [reviewId, bookingId, saleId, orderId, sellerId, router])
 
   const handleSubmit = async () => {
     setFormError(null)

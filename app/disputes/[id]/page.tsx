@@ -6,6 +6,8 @@ import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/format'
 import { formatName } from '@/lib/formatName'
 import NavBar from '@/app/components/NavBar'
+import { queueRefund, type Disbursement } from '@/lib/wallet'
+import { momoProviderForPhone, type MomoProvider } from '@/lib/momo'
 
 interface DisputeDetail {
   id: string
@@ -21,11 +23,11 @@ interface DisputeDetail {
     id: string
     amount: number
     status: string
-    title: string | null
-    buyer_id: string | null
-    seller_id: string
     listing?: { title: string | null } | null
-    buyer?: { full_name: string | null } | null
+    buyer_id: string | null
+    buyer_whatsapp?: string | null
+    seller_id: string
+    buyer?: { full_name: string | null; whatsapp_number?: string | null } | null
     seller?: { full_name: string | null } | null
   }
 }
@@ -48,6 +50,16 @@ export default function DisputeDetailPage() {
   const [isAdmin, setIsAdmin] = useState(false)
   const [newMessage, setNewMessage] = useState('')
   const [sending, setSending] = useState(false)
+  // Partial refund amount state (item 12): admin can specify how much to refund.
+  const [refundAmount, setRefundAmount] = useState('')
+  const [showRefundAmountInput, setShowRefundAmountInput] = useState(false)
+  // Money movement (item 2): resolving a refund queues a MoMo transfer; the
+  // admin then sends it explicitly and sees the provider result.
+  const [refundDisbursement, setRefundDisbursement] = useState<Disbursement | null>(null)
+  const [refundPhone, setRefundPhone] = useState('')
+  const [refundProvider, setRefundProvider] = useState<MomoProvider>('mtn')
+  const [sendingRefund, setSendingRefund] = useState(false)
+  const [refundNotice, setRefundNotice] = useState<{ kind: 'ok' | 'error'; text: string } | null>(null)
   const router = useRouter()
   const params = useParams()
   const rawId = params.id
@@ -70,9 +82,9 @@ export default function DisputeDetailPage() {
         .select(`
           *,
           order:orders (
-            id, amount, status,
+            id, amount, status, buyer_whatsapp,
             listing:listings!listing_id (title),
-            buyer:profiles!buyer_id (full_name),
+            buyer:profiles!buyer_id (full_name, whatsapp_number),
             seller:profiles!seller_id (full_name)
           )
         `)
@@ -106,6 +118,26 @@ export default function DisputeDetailPage() {
       }
 
       setDispute(typed)
+
+      if (isAdminUser) {
+        const { data: refundRow } = await supabase
+          .from('disbursements')
+          .select('*')
+          .eq('dispute_id', disputeId)
+          .eq('kind', 'buyer_refund')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle()
+
+        setRefundDisbursement((refundRow as Disbursement | null) ?? null)
+
+        const detected =
+          typed.order.buyer_whatsapp || typed.order.buyer?.whatsapp_number || ''
+        if (detected) {
+          setRefundPhone((prev) => prev || detected)
+          setRefundProvider(momoProviderForPhone(detected))
+        }
+      }
 
       // Fetch messages
       const { data: msgData, error: msgError } = await supabase
@@ -168,7 +200,7 @@ export default function DisputeDetailPage() {
     }
   }
 
-  const handleResolve = async (resolution: string) => {
+  const handleResolve = async (resolution: string, refundAmount?: string) => {
     if (!disputeId || !userId) return
     if (!confirm('Resolve this dispute as "' + resolution + '"? This cannot be undone.')) return
 
@@ -179,14 +211,81 @@ export default function DisputeDetailPage() {
       const { error: rpcError } = await supabase.rpc('resolve_dispute', {
         p_dispute_id: disputeId,
         p_resolution: resolution,
+        p_refund_amount: refundAmount ? Number(refundAmount) : null,
       })
 
       if (rpcError) throw rpcError
 
       await loadDispute()
+      setRefundAmount('')
+      setShowRefundAmountInput(false)
     } catch (err) {
       console.error('Failed to resolve dispute:', err)
       setError('Failed to resolve dispute. Try again.')
+    }
+  }
+
+  const handleSendRefund = async () => {
+    if (!disputeId || !dispute) return
+    if (refundPhone.replace(/[^0-9]/g, '').length < 9) {
+      setRefundNotice({ kind: 'error', text: 'Enter a valid buyer MoMo number.' })
+      return
+    }
+    if (!confirm('Send the refund to ' + refundPhone + ' now? This moves real money.')) return
+
+    setSendingRefund(true)
+    setRefundNotice(null)
+
+    try {
+      let disbursementId = refundDisbursement?.id
+
+      if (!disbursementId) {
+        const queued = await queueRefund({
+          disputeId,
+          phone: refundPhone,
+          provider: refundProvider,
+        })
+        if (queued.error || !queued.id) {
+          setRefundNotice({ kind: 'error', text: queued.error || 'Could not queue the refund.' })
+          return
+        }
+        disbursementId = queued.id
+      }
+
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        setRefundNotice({ kind: 'error', text: 'Your session expired. Please sign in again.' })
+        return
+      }
+
+      const res = await fetch('/api/momo/disburse', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ disbursementId }),
+      })
+      const data = (await res.json()) as { status?: string; error?: string }
+
+      if (!res.ok) {
+        setRefundNotice({ kind: 'error', text: data.error || 'Could not send the refund.' })
+        return
+      }
+
+      setRefundNotice({
+        kind: 'ok',
+        text:
+          data.status === 'paid'
+            ? 'Refund sent. The payment record is now marked refunded.'
+            : 'Refund accepted by the provider. Press Re-check shortly to confirm.',
+      })
+      await loadDispute()
+    } catch (err) {
+      console.error('Refund send failed:', err)
+      setRefundNotice({ kind: 'error', text: 'Could not send the refund. Please try again.' })
+    } finally {
+      setSendingRefund(false)
     }
   }
 
@@ -240,6 +339,13 @@ export default function DisputeDetailPage() {
   const order = dispute.order
   // Admins resolve open disputes; parties only read and reply.
   const canResolve = isAdmin && dispute.status === 'open'
+  const refundOrdered =
+    dispute.resolution === 'refund_full' || dispute.resolution === 'refund_partial'
+  const canSendRefund =
+    isAdmin &&
+    dispute.status === 'resolved' &&
+    refundOrdered &&
+    refundDisbursement?.status !== 'paid'
   const otherParty = order.buyer_id === userId ? order.seller : order.buyer
 
   return (
@@ -290,7 +396,7 @@ export default function DisputeDetailPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <p className="text-xs font-bold text-ink uppercase tracking-widest mb-1">Item</p>
-                <p className="text-sm text-ink">{order.title || 'Order item'}</p>
+                <p className="text-sm text-ink">{order.listing?.title || 'Order item'}</p>
               </div>
               <div>
                 <p className="text-xs font-bold text-ink uppercase tracking-widest mb-1">Amount</p>
@@ -313,24 +419,71 @@ export default function DisputeDetailPage() {
               <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-3">Admin resolution</p>
               <p className="text-sm text-ink-muted mb-4">Choose how to resolve this dispute:</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <button
-                  onClick={() => handleResolve('release_to_seller')}
-                  className="flex items-center justify-center gap-2 bg-white border-2 border-gold text-gold-dark py-3 rounded-full font-semibold hover:bg-gold/10 hover:border-gold-dark transition-colors"
-                >
-                  Release funds to seller
-                </button>
+                {order.status === 'delivered' && (
+                  <button
+                    onClick={() => handleResolve('release_to_seller')}
+                    className="flex items-center justify-center gap-2 bg-white border-2 border-gold text-gold-dark py-3 rounded-full font-semibold hover:bg-gold/10 hover:border-gold-dark transition-colors"
+                  >
+                    Release funds to seller
+                  </button>
+                )}
                 <button
                   onClick={() => handleResolve('refund_full')}
                   className="flex items-center justify-center gap-2 bg-white border-2 border-red-200 text-red-700 py-3 rounded-full font-semibold hover:bg-red-50 hover:border-red-400 transition-colors"
                 >
                   Full refund to buyer
                 </button>
-                <button
-                  onClick={() => handleResolve('refund_partial')}
-                  className="flex items-center justify-center gap-2 bg-white border-2 border-amber-200 text-amber-800 py-3 rounded-full font-semibold hover:bg-amber-50 hover:border-amber-400 transition-colors"
-                >
-                  Partial refund
-                </button>
+                {showRefundAmountInput ? (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-xs font-bold text-charcoal uppercase tracking-widest">
+                      Refund amount (GH₵)
+                    </label>
+                    <input
+                      type="number"
+                      value={refundAmount}
+                      onChange={(e) => setRefundAmount(e.target.value)}
+                      min="0"
+                      step="0.01"
+                      placeholder="e.g. 150.00"
+                      className="px-4 py-3 rounded-full border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-all text-sm"
+                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => {
+                          if (!refundAmount || Number(refundAmount) <= 0) {
+                            setError('Please enter a valid refund amount.')
+                            return
+                          }
+                          if (!dispute?.order?.amount || Number(refundAmount) > Number(dispute.order.amount)) {
+                            setError('Refund amount cannot exceed the order amount.')
+                            return
+                          }
+                          handleResolve('refund_partial', refundAmount)
+                        }}
+                        className="flex-1 bg-amber-800 text-white py-3 rounded-full font-bold hover:bg-amber-700 transition-colors disabled:opacity-50"
+                      >
+                        Confirm refund
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowRefundAmountInput(false)
+                          setRefundAmount('')
+                          setError('')
+                        }}
+                        className="px-6 py-3 rounded-full font-semibold text-ink-muted border border-rule hover:bg-white/60 transition-colors"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowRefundAmountInput(true)}
+                    className="flex items-center justify-center gap-2 bg-white border-2 border-amber-200 text-amber-800 py-3 rounded-full font-semibold hover:bg-amber-50 hover:border-amber-400 transition-colors"
+                  >
+                    Partial refund
+                  </button>
+                )}
                 <button
                   onClick={() => handleResolve('no_action')}
                   className="flex items-center justify-center gap-2 bg-white border-2 border-rule text-ink-muted py-3 rounded-full font-semibold hover:bg-white/50 hover:border-gold transition-colors"
@@ -338,6 +491,97 @@ export default function DisputeDetailPage() {
                   No action
                 </button>
               </div>
+            </div>
+          )}
+
+          {/* Refund payout (admin only, item 2) */}
+          {isAdmin && refundOrdered && (
+            <div className="bg-white/90 backdrop-blur-sm rounded-card p-6 md:p-8 shadow-xl border border-gold/50 mb-8">
+              <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-3">
+                Refund transfer
+              </p>
+
+              {refundDisbursement?.status === 'paid' ? (
+                <p className="text-sm text-green-700 font-medium">
+                  Refund paid to the buyer
+                  {refundDisbursement.provider_reference
+                    ? ` · ref ${refundDisbursement.provider_reference.slice(-8)}`
+                    : ''}
+                  .
+                </p>
+              ) : (
+                <>
+                  <p className="text-sm text-ink-muted mb-4">
+                    Resolution is recorded. The money has not moved yet — send it to the buyer’s
+                    MoMo wallet now.
+                  </p>
+
+                  {refundNotice && (
+                    <div
+                      className={`mb-4 p-3 rounded-xl text-sm font-medium border ${
+                        refundNotice.kind === 'ok'
+                          ? 'bg-green-50 border-green-200 text-green-800'
+                          : 'bg-red-50 border-red-200 text-red-700'
+                      }`}
+                    >
+                      {refundNotice.text}
+                    </div>
+                  )}
+
+                  {refundDisbursement?.status === 'failed' && (
+                    <div className="mb-4 p-3 rounded-xl text-sm border border-red-200 bg-red-50 text-red-700">
+                      Last attempt failed: {refundDisbursement.failure_reason || 'provider error'}
+                    </div>
+                  )}
+
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="sm:col-span-2">
+                      <label className="block text-xs font-bold text-charcoal uppercase tracking-widest mb-1">
+                        Buyer MoMo number
+                      </label>
+                      <input
+                        type="tel"
+                        value={refundPhone}
+                        onChange={(e) => {
+                          const next = e.target.value.replace(/[^0-9+]/g, '')
+                          setRefundPhone(next)
+                          if (next.replace(/[^0-9]/g, '').length >= 9) {
+                            setRefundProvider(momoProviderForPhone(next))
+                          }
+                        }}
+                        placeholder="024xxxxxxx"
+                        className="w-full px-4 py-3 rounded-full border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-all font-semibold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-charcoal uppercase tracking-widest mb-1">
+                        Network
+                      </label>
+                      <select
+                        value={refundProvider}
+                        onChange={(e) => setRefundProvider(e.target.value as MomoProvider)}
+                        className="w-full px-4 py-3 rounded-full border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-all font-semibold"
+                      >
+                        <option value="mtn">MTN</option>
+                        <option value="vodafone">Telecel</option>
+                        <option value="airteltigo">AT Money</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleSendRefund}
+                    disabled={sendingRefund || !canSendRefund}
+                    className="mt-4 w-full sm:w-auto bg-gold text-charcoal px-6 py-3 rounded-full font-bold text-sm hover:bg-gold-dark transition-colors disabled:opacity-50"
+                  >
+                    {sendingRefund
+                      ? 'Sending…'
+                      : refundDisbursement?.status === 'processing'
+                        ? 'Re-check refund'
+                        : 'Send refund via MoMo'}
+                  </button>
+                </>
+              )}
             </div>
           )}
 
@@ -373,9 +617,9 @@ export default function DisputeDetailPage() {
                         }`}
                       >
                         <p className="text-sm leading-relaxed">{m.content}</p>
-                        <p className="text-[10px] mt-1 text-ink-muted {${
+                        <p className={`text-[10px] mt-1 text-ink-muted ${
                           isMine ? 'text-right' : 'text-left'
-                        }}">
+                        }`}>
                           {formatName(m.sender?.full_name || 'Unknown')} ·{' '}
                           {new Date(m.created_at).toLocaleTimeString([], {
                             hour: '2-digit',

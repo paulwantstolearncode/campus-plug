@@ -4,9 +4,9 @@
 -- Run in the Supabase SQL editor (Dashboard -> SQL Editor -> New query -> Run).
 -- Idempotent: safe to re-run.
 --
--- Adds order_id to public.reviews so a buyer can only review a seller after
--- completing an order (status = 'complete'). The existing verify_review_buyer
--- function accepts booking_id or sale_id anchors; this extends it to order_id.
+-- Adds the order_id column/index to public.reviews. The matching buyer
+-- verification, uniqueness and update-lock rules are installed by
+-- add_service_booking_orders.sql; run that migration after this one.
 -- Dependencies: reviews (add_reviews_system.sql), orders (add_orders.sql).
 -- ============================================================================
 

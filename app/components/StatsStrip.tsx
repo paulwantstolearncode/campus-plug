@@ -41,12 +41,12 @@ export default function StatsStrip() {
             supabase
               .from('orders')
               .select('*', { count: 'exact', head: true })
-              .eq('status', 'complete')
+              .eq('status', 'confirmed')
               .gte('updated_at', weekAgo),
             supabase
               .from('orders')
               .select('seller_id')
-              .eq('status', 'complete')
+              .eq('status', 'confirmed')
               .gte('updated_at', weekAgo),
           ])
 

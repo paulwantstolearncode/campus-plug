@@ -5,7 +5,8 @@ import { supabase } from '@/lib/supabase'
 import { useRouter, useParams } from 'next/navigation'
 import NavBar from '@/app/components/NavBar'
 import { formatName } from '@/lib/formatName'
-import { formatListingPrice } from '@/lib/format'
+import { formatListingPrice, formatPrice } from '@/lib/format'
+import { createServiceOrder } from '@/lib/orders'
 
 interface ServiceData {
   id: string
@@ -19,7 +20,6 @@ interface ServiceData {
   seller: {
     id: string
     full_name: string | null
-    whatsapp_number: string | null
   } | null
 }
 
@@ -53,9 +53,10 @@ export default function BookServicePage() {
 
         const { data } = await supabase
           .from('listings')
-          .select('*, seller:profiles!seller_id (id, full_name, whatsapp_number)')
+          .select('*, seller:profiles!seller_id (id, full_name)')
           .eq('id', serviceId)
           .eq('listing_type', 'service')
+          .is('deleted_at', null)
           .single()
 
         if (!data) {
@@ -82,7 +83,7 @@ export default function BookServicePage() {
   const handleBooking = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!service) {
+    if (!service || !serviceId) {
       alert('Service data is not ready. Please refresh and try again.')
       return
     }
@@ -92,67 +93,42 @@ export default function BookServicePage() {
       return
     }
 
+    const scheduledFor = new Date(`${bookingDate}T${bookingTime}:00`)
+    if (Number.isNaN(scheduledFor.getTime()) || scheduledFor.getTime() <= Date.now()) {
+      alert('Please choose an appointment in the future')
+      return
+    }
+
     setLoading(true)
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
-
       if (!user) {
         router.push('/login')
         return
       }
 
-      // Guard: seller must exist and have a WhatsApp number before we create
-      // the booking — otherwise we'd save an orphaned booking, then send the
-      // buyer to wa.me/null.
       if (!service.seller?.id) {
         alert('The seller information is missing. Please try again later.')
-        setLoading(false)
         return
       }
 
-      if (!service.seller?.whatsapp_number) {
-        alert('The seller has not set up their WhatsApp number. Please try again later.')
-        setLoading(false)
+      const { id, error } = await createServiceOrder({
+        listingId: serviceId,
+        scheduledFor: scheduledFor.toISOString(),
+        notes,
+      })
+
+      if (error || !id) {
+        alert(error || 'Could not create the booking. Please try again.')
         return
       }
 
-      const { error } = await supabase
-        .from('bookings')
-        .insert({
-          listing_id: serviceId,
-          buyer_id: user.id,
-          seller_id: service.seller.id,
-          booking_date: bookingDate,
-          booking_time: bookingTime,
-          notes: notes || null,
-        })
-
-      if (error) {
-        console.error(error)
-        alert('Could not create booking. Please try again.')
-        setLoading(false)
-        return
-      }
-
-      const message = encodeURIComponent(
-        'Hi! I just booked your service on Campus Plug 🔌\n\n' +
-        '📋 Service: ' + service.title + '\n' +
-        '📅 Date: ' + bookingDate + '\n' +
-        '⏰ Time: ' + bookingTime + '\n' +
-        '💰 Price: ' + formatListingPrice(service.price, service.max_price) + '\n' +
-        (notes ? '📝 Notes: ' + notes + '\n\n' : '\n') +
-        'Please confirm the booking and let me know payment details.'
-      )
-
-      const whatsappUrl = 'https://wa.me/' + service.seller.whatsapp_number + '?text=' + message
-
-      alert('✅ Booking created!\n\nYou will be redirected to WhatsApp to confirm with ' + (service.seller.full_name ? formatName(service.seller.full_name) : 'the seller') + '.')
-
-      window.location.href = whatsappUrl
+      router.push('/checkout/' + id)
     } catch (err) {
-      console.error(err)
-      alert('Something went wrong.')
+      console.error('Service booking failed:', err)
+      alert('Something went wrong. Please try again.')
+    } finally {
       setLoading(false)
     }
   }
@@ -198,7 +174,7 @@ export default function BookServicePage() {
             Almost <span className="font-serif-accent italic text-gold">there</span>
           </h1>
           <p className="fade-up fade-up-delay-2 text-lg text-white/70">
-            Pick your preferred time and confirm via WhatsApp.
+            Pick your preferred time, then pay securely with Mobile Money.
           </p>
         </div>
       </section>
@@ -350,6 +326,7 @@ export default function BookServicePage() {
                     className="w-full px-5 py-4 rounded-2xl border-2 border-rule text-ink placeholder:text-ink-muted focus:outline-none focus:border-gold transition-colors resize-none"
                     rows={3}
                     value={notes}
+                    maxLength={1000}
                     onChange={(e) => setNotes(e.target.value)}
                   />
                 </div>
@@ -363,7 +340,7 @@ export default function BookServicePage() {
                     <div>
                       <p className="font-bold text-ink text-sm mb-1">What happens next</p>
                       <p className="text-xs text-ink-muted leading-relaxed">
-                        Your booking is saved and you&apos;ll be sent to WhatsApp to confirm with the seller and arrange payment.
+                        You&apos;ll pay {formatPrice(service.price)} with MoMo. Payment confirms the booking, and your money stays in escrow until the service is completed.
                       </p>
                     </div>
                   </div>
@@ -376,10 +353,10 @@ export default function BookServicePage() {
                   className="w-full bg-ink text-white py-5 rounded-full font-bold text-lg hover:bg-black transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 shadow-xl shadow-ink/25 flex items-center justify-center gap-2 group"
                 >
                   {loading ? (
-                    <span>Booking...</span>
+                    <span>Creating booking...</span>
                   ) : (
                     <>
-                      <span>📅 Book & Message on WhatsApp</span>
+                      <span>📅 Continue to MoMo payment</span>
                       <span className="group-hover:translate-x-1 transition-transform">→</span>
                     </>
                   )}
@@ -388,13 +365,13 @@ export default function BookServicePage() {
                 {/* Trust indicators */}
                 <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs text-ink-muted pt-2">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-gold">✓</span> Free to book
+                    <span className="text-gold">✓</span> Escrow protected
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-gold">✓</span> No commitment
+                    <span className="text-gold">✓</span> Payment confirms booking
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="text-gold">✓</span> Direct contact
+                    <span className="text-gold">✓</span> Order-backed reviews
                   </div>
                 </div>
 

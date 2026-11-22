@@ -1,16 +1,16 @@
 -- ============================================================================
--- Escrow release on order completion
+-- Escrow release on order confirmation
 -- ----------------------------------------------------------------------------
 -- Run in the Supabase SQL editor (Dashboard -> SQL Editor -> New query -> Run).
 -- Idempotent: safe to re-run.
 --
--- When an order's status transitions to 'complete' (buyer confirmed delivery),
+-- When an order's status transitions to 'confirmed' (buyer confirmed delivery),
 -- automatically release escrow: mark the payment transaction 'released' and set
 -- released_at. This is the marketplace money moment — seller gets paid net of
--- the 5% platform fee.
+-- the 8% platform commission.
 --
 -- Runs as SECURITY DEFINER so it can update payment_transactions even though
--- the buyer (who clicked complete) only has RLS SELECT on their own orders.
+-- the buyer (who clicked confirm) only has RLS SELECT on their own orders.
 --
 -- Dependencies: orders (add_orders.sql), payment_transactions
 --   (add_marketplace_payments.sql), release_escrow() RPC
@@ -27,11 +27,11 @@ DECLARE
   v_payment_id UUID;
   v_status TEXT;
 BEGIN
-  -- Only fire on actual transition INTO 'complete'.
+  -- Only fire on actual transition INTO 'confirmed'.
   IF NEW.status IS NOT DISTINCT FROM OLD.status THEN
     RETURN NEW;
   END IF;
-  IF NEW.status <> 'complete' THEN
+  IF NEW.status <> 'confirmed' THEN
     RETURN NEW;
   END IF;
 

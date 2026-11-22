@@ -6,6 +6,17 @@
 
 import { supabase } from './supabase'
 
+export type OrderStatus =
+  | 'awaiting_payment'
+  | 'paid'
+  | 'collecting'
+  | 'out_for_delivery'
+  | 'delivered'
+  | 'confirmed'
+  | 'cancelled'
+  | 'disputed'
+  | 'refunded'
+
 export interface Order {
   id: string
   buyer_id: string | null
@@ -15,11 +26,13 @@ export interface Order {
   listing_id: string | null
   kind: 'product' | 'service'
   amount: number
-  status: 'confirmed' | 'paid' | 'preparing' | 'shipped' | 'delivered' | 'complete' | 'cancelled'
+  // The lockdown migration rewrites legacy rows before this type is used.
+  status: OrderStatus
   payment_method: 'prepaid' | 'pay_on_delivery' | null
   created_at: string
   updated_at: string
   completed_at: string | null
+  scheduled_for: string | null
   listing?: { id: string; title: string | null } | null
   buyer?: { id: string; full_name: string | null } | null
   seller?: { id: string; full_name: string | null } | null
@@ -81,37 +94,41 @@ export async function getOrderWithEvents(
 
 // ── Writes ────────────────────────────────────────────────────────────────
 
-/** Create a new order (confirmed by default). Returns the order or an error. */
+/** Create a product order through the locked-down RPC. Services use createServiceOrder. */
 export async function createOrder(input: {
-  buyerId: string | null
-  buyerWhatsapp: string | null
-  buyerName: string | null
-  sellerId: string
-  listingId: string | null
+  listingId: string
   kind: 'product' | 'service'
   amount: number
-  paymentMethod: 'prepaid' | 'pay_on_delivery' | null
+  paymentMethod: 'prepaid'
 }): Promise<{ id: string | null; error?: string }> {
-  const { data, error } = await supabase
-    .from('orders')
-    .insert({
-      buyer_id: input.buyerId,
-      buyer_whatsapp: input.buyerWhatsapp,
-      buyer_name: input.buyerName,
-      seller_id: input.sellerId,
-      listing_id: input.listingId,
-      kind: input.kind,
-      amount: input.amount,
-      status: 'confirmed',
-      payment_method: input.paymentMethod,
-    })
-    .select('id')
-    .single()
-
-  if (error) {
-    return { id: null, error: error.message }
+  if (input.kind === 'service') {
+    return { id: null, error: 'Service orders require an appointment and a linked booking.' }
   }
-  return { id: (data as { id: string }).id }
+
+  const { data, error } = await supabase.rpc('create_product_order', {
+    p_listing_id: input.listingId,
+    p_amount: input.amount,
+    p_payment_method: input.paymentMethod,
+  })
+
+  if (error) return { id: null, error: error.message }
+  return { id: data as string | null }
+}
+
+/** Atomically create a service order and its linked booking, then collect MoMo at checkout. */
+export async function createServiceOrder(input: {
+  listingId: string
+  scheduledFor: string
+  notes?: string
+}): Promise<{ id: string | null; error?: string }> {
+  const { data, error } = await supabase.rpc('create_service_order', {
+    p_listing_id: input.listingId,
+    p_scheduled_for: input.scheduledFor,
+    p_notes: input.notes?.trim() || null,
+  })
+
+  if (error) return { id: null, error: error.message }
+  return { id: data as string | null }
 }
 
 /**
@@ -120,7 +137,7 @@ export async function createOrder(input: {
  */
 export async function advanceOrderStatus(
   orderId: string,
-  toStatus: Order['status'],
+  toStatus: OrderStatus,
   note?: string
 ): Promise<{ error?: string }> {
   const { error } = await supabase.rpc('advance_order', {
@@ -132,65 +149,76 @@ export async function advanceOrderStatus(
   return {}
 }
 
-/** Record an order event manually (e.g. for audit when status changes outside the RPC). */
-export async function createOrderEvent(input: {
-  orderId: string
-  actorId: string
-  fromStatus?: string | null
-  toStatus: string
-  note?: string | null
-}): Promise<{ error?: string }> {
-  const { error } = await supabase.from('order_events').insert({
-    order_id: input.orderId,
-    actor_id: input.actorId,
-    from_status: input.fromStatus || null,
-    to_status: input.toStatus,
-    note: input.note || null,
-  })
-  if (error) return { error: error.message }
-  return {}
-}
+/** Human-readable status label, with service-specific fulfillment language. */
+export function orderStatusLabel(status: string, kind: Order['kind'] = 'product'): string {
+  if (kind === 'service' && status === 'paid') return 'Booking confirmed'
+  if (kind === 'service' && status === 'delivered') return 'Service delivered'
 
-/** Human-readable status label. */
-export function orderStatusLabel(status: string): string {
   const labels: Record<string, string> = {
-    confirmed: 'Confirmed',
+    awaiting_payment: 'Awaiting payment',
     paid: 'Paid',
-    preparing: 'Preparing',
-    shipped: 'Shipped',
+    collecting: 'Collecting',
+    out_for_delivery: 'Out for delivery',
     delivered: 'Delivered',
-    complete: 'Completed',
+    confirmed: 'Confirmed',
     cancelled: 'Cancelled',
+    disputed: 'Disputed',
+    refunded: 'Refunded',
   }
   return labels[status] ?? status
 }
 
-/** Whether the given user (buyer or seller) can advance this order to the given status. */
-export function canAdvance(order: Order, userId: string, toStatus: Order['status']): boolean {
+/** Action-oriented button label; timeline/chips continue to use orderStatusLabel. */
+export function orderActionLabel(status: string, kind: Order['kind'] = 'product'): string {
+  if (status === 'confirmed') {
+    return kind === 'service' ? 'Confirm service' : 'Confirm delivery'
+  }
+  if (status === 'cancelled') return kind === 'service' ? 'Cancel booking' : 'Cancel order'
+  return orderStatusLabel(status, kind)
+}
+
+/** Whether the given user (buyer or seller) can advance this order to the given status.
+ *  Set hasOpenDispute to true when a dispute with status = 'open' exists for
+ *  this order — all status transitions are then blocked. */
+export function canAdvance(
+  order: Order,
+  userId: string,
+  toStatus: OrderStatus,
+  hasOpenDispute = false
+): boolean {
+  if (hasOpenDispute) return false
   const isSeller = order.seller_id === userId
   const isBuyer = order.buyer_id === userId && order.buyer_id !== null
   if (!isSeller && !isBuyer) return false
-  if (order.status === 'complete' || order.status === 'cancelled') return false
+  if (['confirmed', 'cancelled', 'disputed', 'refunded'].includes(order.status)) return false
   if (order.status === toStatus) return false
 
   if (isSeller) {
-    const sellerPaths: Record<Order['status'], Order['status'][]> = {
-      confirmed: ['paid', 'cancelled'],
-      paid: ['preparing', 'cancelled'],
-      preparing: ['shipped', 'cancelled'],
-      shipped: ['delivered', 'cancelled'],
-      delivered: ['cancelled'],
-      complete: [],
-      cancelled: [],
-    }
-    return (sellerPaths[order.status] || []).includes(toStatus)
+    if (order.status === 'paid') return toStatus === 'collecting' || toStatus === 'cancelled'
+    if (order.status === 'collecting') return toStatus === 'out_for_delivery'
+    if (order.status === 'out_for_delivery') return toStatus === 'delivered'
+    if (order.status === 'delivered') return toStatus === 'disputed'
+    return order.status === 'awaiting_payment' && toStatus === 'cancelled'
   }
 
-  if (isBuyer) {
-    if (order.status === 'delivered' && toStatus === 'complete') return true
-    if (toStatus === 'cancelled') return true
-    return false
+  if (order.status === 'delivered') {
+    return toStatus === 'confirmed' || toStatus === 'disputed'
   }
+  return (
+    (order.status === 'awaiting_payment' || order.status === 'paid') &&
+    toStatus === 'cancelled'
+  )
+}
 
-  return false
+/** Check whether an order has an open dispute (client-side guard mirroring the DB). */
+export async function hasOpenDispute(orderId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('disputes')
+    .select('id')
+    .eq('order_id', orderId)
+    .eq('status', 'open')
+    .maybeSingle()
+
+  if (error) return false
+  return !!data
 }

@@ -1,13 +1,21 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useRef, useState, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import { formatPrice } from '@/lib/format'
+import { COMMISSION_RATE, commission } from '@/lib/commerceConfig'
 import { formatName } from '@/lib/formatName'
 import type { Order } from '@/lib/orders'
-import { momoCheckout, momoProviderForPhone, momoDevCompleteUrl, type MomoCheckoutRequest } from '@/lib/momo'
+import { momoDevCompleteUrl, momoProviderForPhone, type MomoProvider } from '@/lib/momo'
 import NavBar from '@/app/components/NavBar'
+
+interface ProviderOption {
+  id: MomoProvider
+  label: string
+}
+
+type PaymentStage = 'idle' | 'stk' | 'verifying' | 'paid' | 'failed'
 
 export default function CheckoutPage() {
   const [order, setOrder] = useState<Order | null>(null)
@@ -15,12 +23,26 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null)
   const [paying, setPaying] = useState(false)
   const [phone, setPhone] = useState('')
-  const [provider, setProvider] = useState<'mtn' | 'vodafone' | 'airteltigo'>('mtn')
+  const [provider, setProvider] = useState<MomoProvider>('mtn')
+  const [providers, setProviders] = useState<ProviderOption[]>([
+    { id: 'mtn', label: 'MTN Mobile Money' },
+  ])
+  const [simulated, setSimulated] = useState(false)
+  const [stage, setStage] = useState<PaymentStage>('idle')
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [paymentError, setPaymentError] = useState<string | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const aliveRef = useRef(true)
   const router = useRouter()
   const params = useParams()
   const rawId = params.orderId
   const orderId = Array.isArray(rawId) ? rawId[0] : rawId
+
+  useEffect(() => {
+    return () => {
+      aliveRef.current = false
+    }
+  }, [])
 
   const loadOrder = useCallback(async () => {
     if (!orderId) return
@@ -82,49 +104,123 @@ export default function CheckoutPage() {
     return () => { cancelled = true }
   }, [loadOrder])
 
+  // Ask the server which networks are actually configured (item 3/4). A
+  // provider without credentials is hidden instead of failing after the buyer
+  // has already typed their number.
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/momo/initiate')
+        if (!res.ok) return
+        const data = (await res.json()) as {
+          providers?: ProviderOption[]
+          simulated?: boolean
+        }
+        if (cancelled) return
+        if (data.providers?.length) setProviders(data.providers)
+        setSimulated(!!data.simulated)
+      } catch {
+        // Keep the MTN default; the pay call will surface a real error.
+      }
+    })()
+    return () => { cancelled = true }
+  }, [])
+
   const handlePay = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!order || !userId) return
     if (!phone) {
-      setError('Please enter your MoMo phone number')
+      setPaymentError('Please enter your MoMo phone number')
       return
     }
 
     setPaying(true)
-    setError(null)
+    setPaymentError(null)
+    setStage('stk')
+    setStatusMessage('Sending the payment prompt to your phone…')
 
     try {
-      const input: MomoCheckoutRequest = {
-        orderId: order.id,
-        amount: order.amount,
-        phone,
-        provider,
-        payerMessage: 'Campus Plug order #' + order.id.slice(-4),
-        payeeNote: 'Payment for ' + (order.listing?.title || 'order'),
-      }
-
-      const result = await momoCheckout(input)
-      if (result.status === 'failed') {
-        setError('MoMo checkout failed. Please try again.')
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        setPaymentError('Your session expired. Please sign in again.')
+        setStage('idle')
         setPaying(false)
         return
       }
 
-      // In dev mode, show a "simulate payment" button instead of real STK
-      if (result.transactionId.startsWith('dev_')) {
-        setError(null)
-        // Auto-redirect to dev completion page for testing
+      const initiateRes = await fetch('/api/momo/initiate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ orderId: order.id, phone, provider }),
+      })
+      const initiate = (await initiateRes.json()) as {
+        simulated?: boolean
+        error?: string
+      }
+
+      if (!initiateRes.ok) {
+        setPaymentError(initiate.error || 'Could not start the MoMo payment.')
+        setStage('failed')
+        setPaying(false)
+        return
+      }
+
+      // Local dev: no real STK prompt exists, so the dev completion route
+      // records the payment through the same RPC as a real callback.
+      if (initiate.simulated) {
         router.push(momoDevCompleteUrl(order.id, 'paid'))
         return
       }
 
-      // Real provider: user sees STK prompt on their phone
-      // Poll /api/momo/status or wait for webhook
-      setError('STK prompt sent to your phone. Approve the payment, then we’ll verify.')
+      setStage('verifying')
+      setStatusMessage(
+        'Approve the prompt on your phone. We’ll confirm automatically — keep this page open.'
+      )
+
+      // Item 5: poll the provider through our server for up to ~2 minutes. The
+      // webhook may still land first; record_payment() is idempotent either way.
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        await new Promise((resolve) => setTimeout(resolve, 3000))
+        if (!aliveRef.current) return
+
+        const statusRes = await fetch('/api/momo/status', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({ orderId: order.id }),
+        })
+
+        if (!statusRes.ok) continue
+        const status = (await statusRes.json()) as { status?: string }
+
+        if (status.status === 'paid' || status.status === 'released') {
+          setStage('paid')
+          setStatusMessage('Payment confirmed. Your money is held in escrow.')
+          router.push('/orders/' + order.id)
+          return
+        }
+        if (status.status === 'failed') {
+          setStage('failed')
+          setPaymentError('The payment was not approved. Please try again.')
+          setPaying(false)
+          return
+        }
+      }
+
+      setStatusMessage(
+        'Still waiting for confirmation. If you approved the prompt, we’ll update this order automatically.'
+      )
+      setPaying(false)
     } catch (err) {
       console.error('MoMo checkout failed:', err)
-      setError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
-    } finally {
+      setPaymentError(err instanceof Error ? err.message : 'Payment failed. Please try again.')
+      setStage('failed')
       setPaying(false)
     }
   }
@@ -179,8 +275,10 @@ export default function CheckoutPage() {
 
   const listing = order.listing as { title: string | null; image_url: string | null; price: number } | null
   const seller = order.seller as { full_name: string | null } | null
-  const platformFee = Math.round(order.amount * 0.05)
-  const sellerReceives = order.amount - platformFee
+  // Use the shared helper so this matches the fee record_payment() stores in
+  // the DB (round to 2 decimals), instead of rounding to whole cedis here.
+  const commissionAmount = commission(order.amount)
+  const sellerReceives = Number(order.amount) - commissionAmount
 
   return (
     <main className="min-h-screen bg-ink">
@@ -220,13 +318,26 @@ export default function CheckoutPage() {
                 <p className="text-xs font-bold text-ink uppercase tracking-widest mb-1">Seller</p>
                 <p className="text-sm text-ink">{formatName(seller?.full_name || 'Unknown')}</p>
               </div>
+              {order.kind === 'service' && (
+                <div>
+                  <p className="text-xs font-bold text-ink uppercase tracking-widest mb-1">Appointment</p>
+                  <p className="text-sm font-semibold text-ink">
+                    {order.scheduled_for
+                      ? new Date(order.scheduled_for).toLocaleString('en-GB', {
+                          dateStyle: 'long',
+                          timeStyle: 'short',
+                        })
+                      : 'Not specified'}
+                  </p>
+                </div>
+              )}
               <div>
                 <p className="text-xs font-bold text-ink uppercase tracking-widest mb-1">Amount</p>
                 <p className="text-lg font-bold text-gold-dark">{formatPrice(order.amount)}</p>
               </div>
               <div>
-                <p className="text-xs font-bold text-ink uppercase tracking-widest mb-1">Platform fee (5%)</p>
-                <p className="text-sm text-ink-muted">-{formatPrice(platformFee)}</p>
+                <p className="text-xs font-bold text-ink uppercase tracking-widest mb-1">Platform fee ({Math.round(COMMISSION_RATE * 100)}%)</p>
+                <p className="text-sm text-ink-muted">-{formatPrice(commissionAmount)}</p>
               </div>
               <div>
                 <p className="text-xs font-bold text-ink uppercase tracking-widest mb-1">Seller receives</p>
@@ -244,7 +355,9 @@ export default function CheckoutPage() {
             <p className="text-xs font-bold text-charcoal uppercase tracking-widest mb-4">Mobile Money</p>
             <p className="text-sm text-ink-muted mb-6">
               Enter the phone number linked to your MoMo wallet. You’ll receive an STK prompt
-              to approve the payment. Funds are held in escrow until you confirm delivery.
+              to approve the payment. {order.kind === 'service'
+                ? 'Payment confirms the booking; funds stay in escrow until the service is completed.'
+                : 'Funds are held in escrow until you confirm delivery.'}
             </p>
 
             <form onSubmit={handlePay} className="space-y-4">
@@ -255,7 +368,13 @@ export default function CheckoutPage() {
                 <input
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value.replace(/[^0-9+]/g, ''))}
+                  onChange={(e) => {
+                    const next = e.target.value.replace(/[^0-9+]/g, '')
+                    setPhone(next)
+                    if (next.replace(/[^0-9]/g, '').length >= 9) {
+                      setProvider(momoProviderForPhone(next))
+                    }
+                  }}
                   placeholder="024xxxxxxx"
                   className="w-full px-4 py-3 rounded-full border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-all text-lg font-semibold"
                 />
@@ -267,17 +386,37 @@ export default function CheckoutPage() {
                 </label>
                 <select
                   value={provider}
-                  onChange={(e) => setProvider(e.target.value as 'mtn' | 'vodafone' | 'airteltigo')}
+                  onChange={(e) => setProvider(e.target.value as MomoProvider)}
                   className="w-full px-4 py-3 rounded-full border-2 border-rule text-charcoal focus:outline-none focus:border-gold transition-all text-lg font-semibold"
                 >
-                  <option value="mtn">MTN Ghana</option>
-                  <option value="vodafone">Vodafone Ghana</option>
-                  <option value="airteltigo">AirtelTigo</option>
+                  {providers.map((p) => (
+                    <option key={p.id} value={p.id}>{p.label}</option>
+                  ))}
                 </select>
                 <p className="text-[11px] text-ink-muted mt-1">
-                  Detected: {momoProviderForPhone(phone || '0') === 'mtn' ? 'MTN' : momoProviderForPhone(phone || '0') === 'vodafone' ? 'Vodafone' : 'AirtelTigo'}
+                  Detected: {providers.find((p) => p.id === provider)?.label || 'MTN Mobile Money'}
                 </p>
               </div>
+
+              {paymentError && (
+                <div className="p-3 rounded-xl text-xs font-medium border bg-red-50 border-red-200 text-red-700">
+                  {paymentError}
+                </div>
+              )}
+
+              {statusMessage && (
+                <div
+                  className={`p-3 rounded-xl text-xs font-medium border ${
+                    stage === 'paid'
+                      ? 'bg-green-50 border-green-200 text-green-800'
+                      : stage === 'failed'
+                        ? 'bg-red-50 border-red-200 text-red-700'
+                        : 'bg-gold/5 border-gold/30 text-gold-dark'
+                  }`}
+                >
+                  {statusMessage}
+                </div>
+              )}
 
               <button
                 type="submit"
@@ -291,15 +430,19 @@ export default function CheckoutPage() {
                   <line x1="12" y1="2" x2="12" y2="22" />
                   <line x1="2" y1="12" x2="22" y2="12" />
                 </svg>
-                {paying ? 'Sending STK prompt...' : 'Pay with MoMo'}
+                {paying
+                  ? stage === 'verifying'
+                    ? 'Waiting for approval…'
+                    : 'Sending prompt…'
+                  : 'Pay with MoMo'}
               </button>
 
-              {process.env.NEXT_PUBLIC_MOMO_ENV === 'sandbox' && (
+              {simulated && (
                 <div className="mt-4 p-3 rounded-xl border border-gold/30 bg-gold/5">
                   <p className="text-xs text-gold-dark font-semibold mb-1">Sandbox mode</p>
                   <p className="text-xs text-ink-muted">
-                    No real MOMO_API_KEY set. In production this sends a real STK prompt.
-                    For testing, the payment will auto-complete.
+                    Local simulation is active and no real provider is configured, so no real
+                    STK prompt is sent. For testing, the payment completes automatically.
                   </p>
                 </div>
               )}

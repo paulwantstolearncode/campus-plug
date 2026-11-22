@@ -76,10 +76,17 @@ export default function ShopClient({ seller }: ShopClientProps) {
 
               {/* Trust & availability pills */}
               <div className="flex flex-wrap gap-2 mt-2">
-                <span className="inline-flex items-center gap-1.5 bg-gold/10 text-gold-vivid px-2.5 py-1 rounded-full text-xs font-bold border border-gold/40">
-                  <span className="w-1.5 h-1.5 rounded-full bg-gold-vivid"></span>
-                  ⚡ Verified Student Seller
-                </span>
+                {seller.student_id_verified ? (
+                  <span className="inline-flex items-center gap-1.5 bg-green-500/10 text-green-300 px-2.5 py-1 rounded-full text-xs font-bold border border-green-500/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
+                    ✅ Verified Student
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 bg-white/5 text-white/80 px-2.5 py-1 rounded-full text-xs font-semibold border border-white/15">
+                    <span className="w-1.5 h-1.5 rounded-full bg-white/40"></span>
+                    Student Seller
+                  </span>
+                )}
                 <span className="inline-flex items-center gap-1.5 bg-white/5 text-white/80 px-2.5 py-1 rounded-full text-xs font-semibold border border-white/15">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-400"></span>
                   📍 {seller.campus_location || 'Legon Campus'}

@@ -225,10 +225,10 @@ export default function AdminLocationsPage() {
           </div>
 
           {listings.length === 0 ? (
-            <div className="bg-white rounded-card p-12 text-center border border-gray-100">
+            <div className="bg-white rounded-card p-12 text-center border border-rule">
               <div className="text-5xl mb-4">✨</div>
               <p className="text-xl font-bold text-charcoal">All caught up!</p>
-              <p className="text-gray-500 mt-2">Every listing has a campus location assigned.</p>
+              <p className="text-ink-muted mt-2">Every listing has a campus location assigned.</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -240,10 +240,10 @@ export default function AdminLocationsPage() {
                 const hasAssignment = !!currentAssignment
 
                 return (
-                  <div key={listing.id} className="bg-white rounded-card p-5 shadow-lg border border-gray-100 hover:shadow-xl transition-shadow">
+                  <div key={listing.id} className="bg-white rounded-card p-5 shadow-lg border border-rule hover:shadow-xl transition-shadow">
                     <div className="flex flex-col md:flex-row gap-4">
                       {/* Thumbnail */}
-                      <div className="w-full md:w-24 h-24 rounded-2xl overflow-hidden bg-gray-100 shrink-0">
+                      <div className="w-full md:w-24 h-24 rounded-2xl overflow-hidden bg-paper-deep shrink-0">
                         {listing.image_url ? (
                           <Image src={listing.image_url} alt={listing.title} width={96} height={96} className="w-full h-full object-cover" />
                         ) : (
@@ -260,11 +260,11 @@ export default function AdminLocationsPage() {
                             {listing.listing_type === 'service' ? 'SERVICE' : 'PRODUCT'}
                           </span>
                           {listing.category && (
-                            <span className="text-xs text-gray-500">{listing.category}</span>
+                            <span className="text-xs text-ink-muted">{listing.category}</span>
                           )}
                         </div>
                         <h3 className="font-bold text-charcoal text-base line-clamp-1">{listing.title}</h3>
-                        <p className="text-xs text-gray-500 mt-0.5">by {sellerName}</p>
+                        <p className="text-xs text-ink-muted mt-0.5">by {sellerName}</p>
 
                         {/* Smart suggestion badge */}
                         {hasSuggestion && !hasAssignment && (
@@ -287,7 +287,7 @@ export default function AdminLocationsPage() {
                         <select
                           value={currentAssignment}
                           onChange={(e) => setAssignments(prev => ({ ...prev, [listing.id]: e.target.value }))}
-                          className="w-full px-4 py-2.5 rounded-2xl border-2 border-gray-200 text-sm font-semibold text-charcoal bg-white focus:outline-none focus:border-gold transition-colors"
+                          className="w-full px-4 py-2.5 rounded-2xl border-2 border-rule text-sm font-semibold text-charcoal bg-white focus:outline-none focus:border-gold transition-colors"
                         >
                           <option value="">— Select location —</option>
                           <optgroup label="🏠 Halls">

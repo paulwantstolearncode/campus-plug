@@ -21,7 +21,7 @@ export interface PayoutTransaction {
   amount: number
   platform_fee: number
   seller_receives: number
-  status: 'pending' | 'paid' | 'released' | 'refunded' | 'failed'
+  status: 'pending' | 'paid' | 'released' | 'refund_pending' | 'refunded' | 'failed'
   created_at: string
   paid_at: string | null
   released_at: string | null
@@ -31,19 +31,22 @@ export interface PayoutTransaction {
 export async function getPayoutSummary(sellerId: string): Promise<PayoutSummary> {
   const { data } = await supabase
     .from('payment_transactions')
-    .select('*, order_payments(order_id, orders!inner(title, seller_id))')
+    .select('amount, platform_fee, status')
     .eq('seller_id', sellerId)
 
-  const rows = (data as PayoutTransaction[] | null) || []
+  const rows = (data as { amount: string; platform_fee: string; status: PayoutTransaction['status'] }[] | null) || []
 
   let totalEarned = 0
   let heldInEscrow = 0
 
   for (const r of rows) {
+    // Net to the seller is the amount minus the recorded platform fee. The
+    // columns come back as strings from NUMERIC, so parse before subtracting.
+    const sellerReceives = Number(r.amount) - Number(r.platform_fee)
     if (r.status === 'released') {
-      totalEarned += r.seller_receives
+      totalEarned += sellerReceives
     } else if (r.status === 'paid') {
-      heldInEscrow += r.seller_receives
+      heldInEscrow += sellerReceives
     }
   }
 
@@ -67,7 +70,7 @@ type RawPayoutRow = {
   order_payments: {
     order_id: string
     orders: {
-      title: string | null
+      listing: { title: string | null } | null
       buyer: { full_name: string | null }[] | null
     } | null
   }[] | null
@@ -82,7 +85,7 @@ export async function getSellerPayouts(sellerId: string): Promise<PayoutTransact
       order_payments (
         order_id,
         orders (
-          title,
+          listing:listings!listing_id (title),
           buyer:profiles!buyer_id (full_name)
         )
       )
@@ -97,7 +100,9 @@ export async function getSellerPayouts(sellerId: string): Promise<PayoutTransact
     return {
       id: r.id,
       order_id: r.order_id,
-      order_title: order?.title || null,
+      // The orders table has no title column; the item name lives on the
+      // listing the order references.
+      order_title: order?.listing?.title || null,
       buyer_name: order?.buyer?.[0]?.full_name || null,
       amount: Number(r.amount),
       platform_fee: Number(r.platform_fee),
