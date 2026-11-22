@@ -60,7 +60,7 @@ been applied in its own dependency order.
 After step 17, run:
 
 ```text
-supabase/verify_order_write_lockdown.sql
+supabase/verify/order_write_lockdown.sql
 ```
 
 Expected notice:
